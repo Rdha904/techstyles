@@ -1,0 +1,193 @@
+.workspace-dashboard {
+  max-width: 1320px;
+  margin: 8px auto 32px;
+}
+.workspace-dashboard-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+.workspace-dashboard-intro h2 {
+  font-size: clamp(25px, 2vw, 33px);
+  letter-spacing: -0.7px;
+  margin: 12px 0 9px;
+}
+.workspace-dashboard p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.workspace-dashboard-intro p {
+  margin: 0;
+}
+.workspace-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.workspace-stat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: white;
+}
+.workspace-stat svg {
+  grid-column: 2;
+  grid-row: 1;
+  color: #6276ad;
+}
+.workspace-stat strong {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 30px;
+  letter-spacing: -0.8px;
+}
+.workspace-stat span {
+  grid-column: 1/-1;
+  font-size: 12px;
+  color: var(--muted);
+}
+.workspace-stat-note {
+  margin: 9px 0 22px;
+  font-size: 11px !important;
+}
+.workspace-recent {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+  margin: 24px 0 28px;
+}
+.workspace-recent header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.workspace-dashboard h3 {
+  font-size: 17px;
+  margin: 0 0 5px;
+}
+.workspace-recent header p {
+  margin: 0;
+  font-size: 12px;
+}
+.workspace-recent header > a {
+  display: flex;
+  gap: 6px;
+  color: #5065aa;
+  font-size: 12px;
+}
+.workspace-recent-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.workspace-recent-product {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px;
+  border: 1px solid #e9ecf2;
+  border-radius: 10px;
+  min-width: 0;
+}
+.workspace-product-image {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 54px;
+  background: #f2f4fa;
+  border-radius: 7px;
+  color: #7685aa;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.workspace-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.workspace-recent-product > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.workspace-recent-product strong {
+  display: block;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-recent-product small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+}
+.workspace-recent-product > svg {
+  flex-shrink: 0;
+  color: #6576a2;
+}
+.workspace-empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+.workspace-empty p {
+  flex: 1;
+}
+.workspace-areas > p {
+  margin: 0 0 18px;
+}
+.workspace-area-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.workspace-area {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: white;
+  padding: 20px;
+}
+.workspace-area > svg {
+  color: #6578ab;
+  flex-shrink: 0;
+}
+.workspace-area > div {
+  flex: 1;
+  min-width: 0;
+}
+.workspace-area strong {
+  font-size: 13px;
+}
+.workspace-area p {
+  font-size: 11px;
+  margin: 6px 0;
+}
+.workspace-area small {
+  font-size: 10px;
+  color: #8c94a5;
+}
+.workspace-area:hover,
+.workspace-stat:hover,
+.workspace-recent-product:hover {
+  border-color: #9aaace;
+  background: #fbfcff;
+}
+.workspace-dashboard a:focus-visible {
+  outline: 2px solid #5065aa;
+  outline-offset: 3px;
+}
