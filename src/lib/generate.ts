@@ -1,6 +1,8 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { ApiError, getDatabase } from "./store";
+import { ApiError } from "./store";
+import { repository } from "./repository";
+import { currentWorkspaceId } from "./workspace";
 import { brandContext } from "./brand";
 import { localAssetUrl, object, string } from "./api";
 import { detectFile, mimeTypes, saveUpload, uploadDirectory } from "./uploads";
@@ -79,7 +81,9 @@ export async function generateImage(
   const model = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
   const brand =
     input.useBrandProfile === true
-      ? brandContext((await getDatabase()).brandProfile)
+      ? brandContext(
+          (await repository.read(await currentWorkspaceId())).brandProfile,
+        )
       : "";
   const fullPrompt = `${instructions[kind]}\n${input.image ? "Preserve reference design details unless the user explicitly asks to change them.\n" : ""}${prompt}\n${brand}`;
   const headers: Record<string, string> = { Authorization: `Bearer ${key}` };

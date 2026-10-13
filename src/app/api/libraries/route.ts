@@ -1,14 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { api, body } from "@/lib/api";
-import { getDatabase, transaction } from "@/lib/store";
+import { repository } from "@/lib/repository";
+import { currentWorkspaceId } from "@/lib/workspace";
 import { libraryPatch } from "@/lib/library";
 export function GET() {
-  return api(async () => (await getDatabase()).libraries);
+  return api(
+    async () => (await repository.read(await currentWorkspaceId())).libraries,
+  );
 }
 export function POST(request: Request) {
   return api(async () => {
     const patch = libraryPatch(await body(request), true);
-    return transaction((database) => {
+    return repository.update(await currentWorkspaceId(), (database) => {
       const item = {
         id: randomUUID(),
         collection: "materials",

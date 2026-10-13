@@ -7,11 +7,12 @@ const ts = require('typescript');
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'techstyles-test-'));
 process.env.TECHSTYLES_DATA_DIR = path.join(temporary, 'data');
-for (const name of ['store','api','library','uploads','share','generate','brand','brand-types']) {
+for (const name of ['store','workspace','json-repository','repository','api','library','uploads','share','generate','brand','brand-types']) {
   const source = fs.readFileSync(path.join(__dirname, '../src/lib', `${name}.ts`), 'utf8');
   fs.writeFileSync(path.join(temporary, `${name}.js`), ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
 }
 const store = require(path.join(temporary, 'store.js'));
+const {repository} = require(path.join(temporary, 'repository.js'));
 const validation = require(path.join(temporary, 'api.js'));
 const uploads = require(path.join(temporary, 'uploads.js'));
 function route(relative) {
@@ -24,15 +25,15 @@ function jsonRequest(payload) { return new Request('http://localhost/api', {meth
 after(() => fs.rmSync(temporary, {recursive:true,force:true}));
 
 test('mutations persist and simultaneous requests do not lose changes', async () => {
-  await Promise.all(Array.from({length:20}, (_, index) => store.transaction(database => {
+  await Promise.all(Array.from({length:20}, (_, index) => repository.update('default', database => {
     database.products.push({...store.emptyProduct(),name:`Product ${index}`});
   })));
-  const database = await store.getDatabase();
+  const database = await repository.read('default');
   assert.equal(database.products.length,21);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(temporary,'data/workspace.json'),'utf8')).products.length,21);
-  await assert.rejects(store.transaction(() => {throw new Error('abort');}));
-  await store.transaction(database => {store.findProduct(database,'demo-hoodie').name = 'Still works';});
-  assert.equal(store.findProduct(await store.getDatabase(),'demo-hoodie').name,'Still works');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(temporary,'data/workspace.json'),'utf8')).workspaces.default.products.length,21);
+  await assert.rejects(repository.update('default', () => {throw new Error('abort');}));
+  await repository.update('default', database => {store.findProduct(database,'demo-hoodie').name = 'Still works';});
+  assert.equal(store.findProduct(await repository.read('default'),'demo-hoodie').name,'Still works');
 });
 
 test('snapshots are independent and omit access tokens and version history', () => {
@@ -126,11 +127,22 @@ test('AI requires a server key and generates/edits through mocked transport only
     });
     await assert.rejects(generate({prompt:'Hoodie',kind:'mockup',image:'https://external.example/test.png'},async()=>{throw new Error('Must not call');}));
     const {emptyBrandProfile} = require(path.join(temporary,'brand-types.js'));
-    await store.transaction(db=>{db.brandProfile={...emptyBrandProfile(),name:'Shared Studio',tone:'Direct and practical',revision:1};});
+    await repository.update('default', db=>{db.brandProfile={...emptyBrandProfile(),name:'Shared Studio',tone:'Direct and practical',revision:1};});
     await generate({prompt:'Hoodie',kind:'sketch',useBrandProfile:true},async(url,options)=>{
       assert.match(JSON.parse(options.body).prompt,/Shared Studio/);
       assert.match(JSON.parse(options.body).prompt,/Direct and practical/);
       return Response.json({data:[{b64_json:png.toString('base64')}]});
     });
   } finally { if (previous === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previous; }
+});
+
+test('workspaces are isolated and legacy single-workspace files are migrated', async () => {
+  await repository.update('other', data => {data.products.push({...store.emptyProduct(),name:'Other brand',shareToken:'other-token'});});
+  assert.equal((await repository.read('other')).products.length,1);
+  assert.ok(!(await repository.read('default')).products.some(item => item.name === 'Other brand'));
+  assert.equal((await repository.findProductByShareToken('other-token')).name,'Other brand');
+  assert.equal(await repository.findProductByShareToken('missing'),null);
+  const legacy = {products:[{...store.emptyProduct(),name:'Legacy'}],libraries:[],brandProfile:null};
+  fs.writeFileSync(path.join(temporary,'data/workspace.json'),JSON.stringify(legacy));
+  assert.equal((await repository.read('default')).products[0].name,'Legacy');
 });

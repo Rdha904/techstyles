@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
-import { ApiError, getDatabase } from "@/lib/store";
+import { ApiError } from "@/lib/store";
+import { repository } from "@/lib/repository";
 import { sharedProduct } from "@/lib/share";
 export const dynamic = "force-dynamic";
 export function GET(
@@ -8,9 +9,7 @@ export function GET(
 ) {
   return api(async () => {
     const { token } = await context.params;
-    const product = (await getDatabase()).products.find(
-      (item) => item.shareToken === token,
-    );
+    const product = await repository.findProductByShareToken(token);
     if (!product)
       throw new ApiError(
         "This share link is unavailable or has been revoked.",

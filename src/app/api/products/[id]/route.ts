@@ -1,16 +1,21 @@
 import { api, body, productPatch } from "@/lib/api";
-import { findProduct, getDatabase, transaction } from "@/lib/store";
+import { findProduct } from "@/lib/store";
+import { repository } from "@/lib/repository";
+import { currentWorkspaceId } from "@/lib/workspace";
 type Context = { params: Promise<{ id: string }> };
 export function GET(_request: Request, context: Context) {
   return api(async () =>
-    findProduct(await getDatabase(), (await context.params).id),
+    findProduct(
+      await repository.read(await currentWorkspaceId()),
+      (await context.params).id,
+    ),
   );
 }
 export function PATCH(request: Request, context: Context) {
   return api(async () => {
     const { id } = await context.params;
     const patch = productPatch(await body(request));
-    return transaction((database) =>
+    return repository.update(await currentWorkspaceId(), (database) =>
       Object.assign(findProduct(database, id), patch, {
         updatedAt: new Date().toISOString(),
       }),
@@ -20,7 +25,7 @@ export function PATCH(request: Request, context: Context) {
 export function DELETE(_request: Request, context: Context) {
   return api(async () => {
     const { id } = await context.params;
-    return transaction((database) => {
+    return repository.update(await currentWorkspaceId(), (database) => {
       findProduct(database, id);
       database.products = database.products.filter((item) => item.id !== id);
       return { ok: true };

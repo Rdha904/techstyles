@@ -4,7 +4,7 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
 const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'techstyles-brand-test-'));
 process.env.TECHSTYLES_DATA_DIR=path.join(temporary,'data');
 fs.symlinkSync(path.resolve(__dirname,'../node_modules'),path.join(temporary,'node_modules'),'dir');
-for(const name of ['store','api','uploads','brand-types','brand','safe-web','brand-import']) {
+for(const name of ['store','workspace','json-repository','repository','api','uploads','brand-types','brand','safe-web','brand-import']) {
  const source=fs.readFileSync(path.join(__dirname,'../src/lib',`${name}.ts`),'utf8');
  fs.writeFileSync(path.join(temporary,`${name}.js`),ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
 }
@@ -13,19 +13,20 @@ const brand=require(path.join(temporary,'brand.js'));
 const imports=require(path.join(temporary,'brand-import.js'));
 const safe=require(path.join(temporary,'safe-web.js'));
 const store=require(path.join(temporary,'store.js'));
+const {repository}=require(path.join(temporary,'repository.js'));
 const source=fs.readFileSync(path.join(__dirname,'../src/app/api/brand-profile/route.ts'),'utf8').replace(/(['"])@\/lib\//g,'$1./');
 fs.writeFileSync(path.join(temporary,'route.js'),ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
 const route=require(path.join(temporary,'route.js'));
 after(()=>fs.rmSync(temporary,{recursive:true,force:true}));
 const request=(data)=>new Request('http://localhost/api/brand-profile',{method:'PUT',body:JSON.stringify(data)});
 test('legacy workspace remains compatible; saving requires review and rejects stale revisions',async()=>{
- const before=await store.getDatabase();assert.equal((await (await route.GET()).json()).profile,null);
+ const before=await repository.read('default');assert.equal((await (await route.GET()).json()).profile,null);
  const draft={...types.emptyBrandProfile(),name:'North Studio',colors:['#123456']};
  assert.equal((await route.PUT(request(draft))).status,400);
  const response=await route.PUT(request({...draft,reviewed:true}));assert.equal(response.status,200);
  const saved=(await response.json()).profile;assert.equal(saved.revision,1);
  assert.equal((await route.PUT(request({...draft,reviewed:true}))).status,409);
- assert.equal((await store.getDatabase()).products.length,before.products.length);
+ assert.equal((await repository.read('default')).products.length,before.products.length);
  assert.equal((await (await route.GET()).json()).profile.name,'North Studio');
  assert.match(brand.brandContext(saved),/North Studio/);
 });
@@ -49,11 +50,11 @@ test('website extraction uses actual evidence and does not invent brand strategy
  assert.ok(result.suggestions.every(s=>s.source&&s.excerpt));
 });
 test('file extraction stays a draft and accepts explicitly labeled text and JSON',async()=>{
- const before=await store.getDatabase();
+ const before=await repository.read('default');
  const result=await imports.importFiles([new File(['Brand name: Field Studio\nTarget audience: Trail runners\nTone of voice: Clear and practical'], 'brief.txt'),new File([JSON.stringify({colors:['#abcdef'],fonts:['Inter']})],'palette.json')]);
  assert.ok(result.suggestions.some(s=>s.field==='audience'&&s.value==='Trail runners'));
  assert.ok(result.suggestions.some(s=>s.field==='colors'&&s.value==='#ABCDEF'));
- assert.deepEqual((await store.getDatabase()).brandProfile,before.brandProfile);
+ assert.deepEqual((await repository.read('default')).brandProfile,before.brandProfile);
  const noEvidence=imports.extractText('We sell jackets.','unknown.txt');assert.equal(noEvidence.suggestions.length,0);assert.ok(noEvidence.warnings.length);
 });
 test('URL guard blocks local, credentialed and non-HTTPS targets',async()=>{
