@@ -13,6 +13,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { request, uploadFile } from "@/lib/client-api";
 import {
   brandBookImageLimit,
   type BrandBook,
@@ -26,13 +27,6 @@ const bookPath = "/modules/concept/brand-book";
 type BookProfile = PublishedBrandBook["profile"];
 type BookImages = PublishedBrandBook["book"];
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || "The request could not be completed.");
-  return data;
-}
 function useBrandBook() {
   const [profile, setProfile] = useState<BrandProfile | null>(null);
   const [book, setBook] = useState<BrandBook | null>(null);
@@ -133,18 +127,7 @@ export function BrandBookPage() {
     try {
       const urls: string[] = [];
       for (const file of files) {
-        if (!/\.(png|jpe?g|webp)$/i.test(file.name))
-          throw new Error("Choose PNG, JPEG or WebP images.");
-        const body = new FormData();
-        body.append("file", file);
-        urls.push(
-          (
-            await request<{ url: string }>("/api/uploads", {
-              method: "POST",
-              body,
-            })
-          ).url,
-        );
+        urls.push(await uploadFile(file, { imagesOnly: true }));
       }
       setUploaded((current) => [...current, ...urls]);
     } catch (e) {
@@ -161,8 +144,7 @@ export function BrandBookPage() {
         "/api/brand-book",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
+          json: draft,
         },
       );
       setBook(saved);

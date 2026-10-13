@@ -56,7 +56,9 @@ import type {
 } from "@/lib/types";
 import { productSections } from "@/lib/types";
 import { BrandProfileSummary } from "./brand-profile";
-import { api, assets, Modal, ProductForm, Brand } from "./workspace";
+import { request, uploadFile, assetsPath } from "@/lib/client-api";
+import { Modal, Brand } from "./ui";
+import { ProductForm } from "./product-form";
 const sectionLabels: Record<ProductSection, string> = {
   overview: "Overview",
   sketch: "Sketch / Design",
@@ -72,14 +74,6 @@ const sectionLabels: Record<ProductSection, string> = {
 };
 const sections = productSections.map((id) => [id, sectionLabels[id]] as const);
 const uid = () => crypto.randomUUID();
-export async function upload(file: File) {
-  const form = new FormData();
-  form.append("file", file);
-  const res = await fetch("/api/uploads", { method: "POST", body: form });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Upload failed");
-  return data.url as string;
-}
 function UploadButton({
   children,
   onUpload,
@@ -106,7 +100,7 @@ function UploadButton({
             setBusy(true);
             setError("");
             try {
-              onUpload(await upload(file), file.name);
+              onUpload(await uploadFile(file), file.name);
             } catch (e) {
               setError((e as Error).message);
             } finally {
@@ -310,11 +304,10 @@ export function ProductEditor({
       .catch(() => undefined)
       .then(async () => {
         try {
-          const result = await api<Product>(
-            `/api/products/${p.id}`,
-            "PATCH",
-            merged,
-          );
+          const result = await request<Product>(`/api/products/${p.id}`, {
+            method: "PATCH",
+            json: merged,
+          });
           if (version === revision.current) {
             latest.current = result;
             onChange(result);
@@ -333,7 +326,7 @@ export function ProductEditor({
     setError("");
     try {
       setLibrary(
-        (await api<LibraryItem[]>("/api/libraries")).filter(
+        (await request<LibraryItem[]>("/api/libraries")).filter(
           (x) =>
             x.collection === collection &&
             (collection !== "sketches" ||
@@ -348,9 +341,9 @@ export function ProductEditor({
   }
   async function share() {
     try {
-      const data = await api<{ token: string; url: string }>(
+      const data = await request<{ token: string; url: string }>(
         `/api/products/${p.id}/share`,
-        "POST",
+        { method: "POST" },
       );
       setShareUrl(new URL(data.url, location.origin).href);
       onChange({ ...p, shareToken: data.token });
@@ -1049,7 +1042,7 @@ export function ProductEditor({
                     <div className="sketch-view" key={src}>
                       <img
                         style={{ height: 180 }}
-                        src={assets + src}
+                        src={assetsPath + src}
                         alt={
                           ["Hangtag", "Main label", "Care label", "Poly bag"][i]
                         }
@@ -1106,9 +1099,9 @@ export function ProductEditor({
                     onClick={async () => {
                       try {
                         onChange(
-                          await api<Product>(
+                          await request<Product>(
                             `/api/products/${p.id}/versions/${v.id}/restore`,
-                            "POST",
+                            { method: "POST" },
                           ),
                         );
                         notify("Version restored; previous state backed up");
@@ -1197,11 +1190,10 @@ export function ProductEditor({
               try {
                 if (modal === "version")
                   onChange(
-                    await api<Product>(
-                      `/api/products/${p.id}/versions`,
-                      "POST",
-                      { name: label },
-                    ),
+                    await request<Product>(`/api/products/${p.id}/versions`, {
+                      method: "POST",
+                      json: { name: label },
+                    }),
                   );
                 else await save({ [modal]: label });
                 setModal("");
@@ -1279,7 +1271,9 @@ export function ProductEditor({
             <button
               className="btn"
               onClick={async () => {
-                await api(`/api/products/${p.id}/share`, "DELETE");
+                await request(`/api/products/${p.id}/share`, {
+                  method: "DELETE",
+                });
                 onChange({ ...p, shareToken: null });
                 setModal("");
                 notify("Share link revoked");
@@ -1663,13 +1657,16 @@ function AIModal({
           setBusy(true);
           setError("");
           try {
-            const data = await api<{ url: string }>("/api/generate", "POST", {
-              kind,
-              prompt,
-              useBrandProfile,
-              ...(kind === "mockup" && product.sketch
-                ? { image: product.sketch }
-                : {}),
+            const data = await request<{ url: string }>("/api/generate", {
+              method: "POST",
+              json: {
+                kind,
+                prompt,
+                useBrandProfile,
+                ...(kind === "mockup" && product.sketch
+                  ? { image: product.sketch }
+                  : {}),
+              },
             });
             await onGenerated(data.url, kind);
           } catch (e) {
@@ -1725,7 +1722,7 @@ export function SharedProduct({
   const [error, setError] = useState("");
   useEffect(() => {
     if (token)
-      api<Product>(`/api/share/${encodeURIComponent(token)}`)
+      request<Product>(`/api/share/${encodeURIComponent(token)}`)
         .then(setP)
         .catch((e) => setError(e.message));
   }, [token]);
@@ -2033,18 +2030,21 @@ export function ProductCanvas({
           "image/png",
         ),
       );
-      const sketch = await upload(
+      const sketch = await uploadFile(
         new File([blob], "canvas.png", { type: "image/png" }),
       );
-      const product = await api<Product>(`/api/products/${p.id}`, "PATCH", {
-        ...(colorwayId
-          ? {
-              colors: p.colors.map((c) =>
-                c.id === colorwayId ? { ...c, image: sketch } : c,
-              ),
-            }
-          : { sketch }),
-        annotations,
+      const product = await request<Product>(`/api/products/${p.id}`, {
+        method: "PATCH",
+        json: {
+          ...(colorwayId
+            ? {
+                colors: p.colors.map((c) =>
+                  c.id === colorwayId ? { ...c, image: sketch } : c,
+                ),
+              }
+            : { sketch }),
+          annotations,
+        },
       });
       onChange(product);
       setSaved(true);

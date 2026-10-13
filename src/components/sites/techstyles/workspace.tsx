@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -47,79 +47,9 @@ import { ConceptOverview } from "./concept-overview";
 import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-export const assets = "/sites/techstyles/";
-export async function api<T>(
-  url: string,
-  method = "GET",
-  body?: unknown,
-): Promise<T> {
-  const response = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data as T;
-}
-export function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const f = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", f);
-    return () => document.removeEventListener("keydown", f);
-  }, [onClose]);
-  return (
-    <div
-      className="modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button className="icon-button" aria-label="Close" onClick={onClose}>
-            <X size={19} />
-          </button>
-        </div>
-        {children}
-      </section>
-    </div>
-  );
-}
-export function Brand() {
-  return (
-    <Link href="/" className="brand">
-      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
-        {[
-          [6, 6],
-          [19, 6],
-          [32, 6],
-          [19, 19],
-          [19, 32],
-        ].map(([x, y]) => (
-          <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" rx="2.4" />
-        ))}
-      </svg>
-      techstyles
-    </Link>
-  );
-}
+import { request, assetsPath } from "@/lib/client-api";
+import { Modal, Brand } from "./ui";
+import { ProductForm } from "./product-form";
 const nav = [
   ["dashboard", "Dashboard", LayoutDashboard],
   ["products", "Products", Shirt],
@@ -224,152 +154,6 @@ const subtitles: Record<string, string> = {
   attachments: "Reference files for your products",
   settings: "Workspace preferences and integrations",
 };
-export function ProductForm({
-  product,
-  onClose,
-  onSave,
-}: {
-  product?: Product;
-  onClose: () => void;
-  onSave: (p: Product) => void;
-}) {
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const data = Object.fromEntries(new FormData(e.currentTarget));
-    if (!String(data.code || "").trim())
-      data.code = `${String(data.category).slice(0, 3).toUpperCase()}-${String(data.name).slice(0, 3).toUpperCase()}-${crypto.randomUUID().slice(0, 3).toUpperCase()}`;
-    try {
-      const p = await api<Product>(
-        product ? `/api/products/${product.id}` : "/api/products",
-        product ? "PATCH" : "POST",
-        data,
-      );
-      onSave(p);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <Modal
-      title={product ? "Edit Product" : "Add New Product"}
-      onClose={onClose}
-    >
-      <p className="muted">
-        Core product details — you&apos;ll add the full tech pack next.
-      </p>
-      <form onSubmit={submit}>
-        <div className="form-grid">
-          <label className="full">
-            Product Name *
-            <input
-              name="name"
-              required
-              defaultValue={product?.name}
-              placeholder="e.g. Relaxed Fleece Hoodie"
-              autoFocus
-            />
-          </label>
-          <label>
-            Product Code
-            <input
-              name="code"
-              defaultValue={product?.code}
-              placeholder="Leave blank to auto-generate"
-            />
-          </label>
-          <label>
-            Category *
-            <select
-              name="category"
-              required
-              defaultValue={product?.category || ""}
-            >
-              <option value="" disabled>
-                Choose a category
-              </option>
-              {[
-                "Hoodies",
-                "T-Shirts",
-                "Shirts",
-                "Jackets",
-                "Trousers",
-                "Sweatshirts",
-                "Shorts",
-                "Dresses",
-                "Knitwear",
-                "Accessories",
-              ].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Stage
-            <select name="stage" defaultValue={product?.stage || "Idea"}>
-              {[
-                "Idea",
-                "Development",
-                "Sampling",
-                "Production",
-                "Completed",
-              ].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Base size
-            <select name="baseSize" defaultValue={product?.baseSize || "M"}>
-              {["XS", "S", "M", "L", "XL", "XXL"].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Project
-            <input
-              name="project"
-              defaultValue={product?.project}
-              placeholder="No project"
-            />
-          </label>
-          <label>
-            Supplier
-            <input name="supplier" defaultValue={product?.supplier} />
-          </label>
-          <label className="full">
-            Description
-            <textarea
-              name="description"
-              defaultValue={product?.description}
-              placeholder="Describe the fit, fabric and key details…"
-            />
-          </label>
-        </div>
-        {error && <p className="error">{error}</p>}
-        <div className="modal-footer">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn primary" disabled={busy}>
-            {busy
-              ? "Saving…"
-              : product
-                ? "Save Changes"
-                : "Continue to Add Details"}{" "}
-            <ArrowUpRight size={16} />
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
 function useNavigationPreference(key: string) {
   const [value, setValue] = useState(() => {
     try {
@@ -438,7 +222,7 @@ export function Workspace({ path }: { path: string[] }) {
   useEffect(() => {
     if (pathKey.startsWith("share/")) return;
     let live = true;
-    api<Product[]>("/api/products")
+    request<Product[]>("/api/products")
       .then((p) => {
         if (live) {
           setProducts(p);
@@ -1049,7 +833,9 @@ function Dashboard({ products }: { products: Product[] }) {
               key={p.id}
             >
               <img
-                src={p.cover || p.sketch || assets + "hero-sketch-hoodie.png"}
+                src={
+                  p.cover || p.sketch || assetsPath + "hero-sketch-hoodie.png"
+                }
                 alt=""
               />
               <div>
@@ -1329,9 +1115,11 @@ function SettingsPage({ notify }: { notify: (s: string) => void }) {
         className="btn"
         onClick={async () => {
           try {
-            const data = await api("/api/products");
-            const libraries = await api("/api/libraries");
-            const brand = await api<{ profile: unknown }>("/api/brand-profile");
+            const data = await request("/api/products");
+            const libraries = await request("/api/libraries");
+            const brand = await request<{ profile: unknown }>(
+              "/api/brand-profile",
+            );
             const url = URL.createObjectURL(
               new Blob(
                 [

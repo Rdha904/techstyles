@@ -9,6 +9,7 @@ import {
   Images,
   Users,
 } from "lucide-react";
+import { request } from "@/lib/client-api";
 import type { BrandProfile } from "@/lib/brand-types";
 import "./concept-overview.css";
 
@@ -19,11 +20,9 @@ export function ConceptOverview() {
   );
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/brand-profile", { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Unable to load profile");
-        return response.json() as Promise<{ profile: BrandProfile | null }>;
-      })
+    request<{ profile: BrandProfile | null }>("/api/brand-profile", {
+      signal: controller.signal,
+    })
       .then(({ profile }) => {
         setProfile(profile);
         setStatus("loaded");

@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   RefreshCw,
 } from "lucide-react";
+import { request, uploadFile } from "@/lib/client-api";
 import {
   brandTextFields,
   brandLimits,
@@ -42,13 +43,6 @@ const detailHelp: Record<BrandTextField, string> = {
   audience: "Who you design and create for.",
   tone: "How your brand sounds in words.",
 };
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || "The request could not be completed.");
-  return data;
-}
 export function BrandProfileSummary({
   compact = false,
 }: {
@@ -255,20 +249,19 @@ export function BrandProfilePage() {
     setReview(null);
     setSelected([]);
     try {
-      let init: RequestInit;
+      let init: Parameters<typeof request>[1];
       if (files) {
         const body = new FormData();
         Array.from(files).forEach((file) => body.append("files", file));
-        init = { method: "POST", body };
+        init = { method: "POST", form: body };
       } else
         init = {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          json: {
             url: /^https?:\/\//i.test(website.trim())
               ? website.trim()
               : `https://${website.trim()}`,
-          }),
+          },
         };
       const result = await request<BrandImport>(
         "/api/brand-profile/import",
@@ -363,14 +356,7 @@ export function BrandProfilePage() {
     try {
       const assets = [];
       for (const file of files) {
-        if (!/\.(png|jpe?g|webp)$/i.test(file.name))
-          throw new Error("Choose PNG, JPEG or WebP images.");
-        const body = new FormData();
-        body.append("file", file);
-        const { url } = await request<{ url: string }>("/api/uploads", {
-          method: "POST",
-          body,
-        });
+        const url = await uploadFile(file, { imagesOnly: true });
         assets.push({ url, name: file.name });
       }
       if (role === "logo") update("logo", assets[0]);
@@ -389,8 +375,7 @@ export function BrandProfilePage() {
         "/api/brand-profile",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...profile, reviewed: confirmed }),
+          json: { ...profile, reviewed: confirmed },
         },
       );
       setProfile(result.profile);
