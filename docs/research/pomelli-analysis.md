@@ -31,8 +31,8 @@ Sources:
 | | Profile fields: fonts, colors, values, images (+ tone seen in canvas) | Documented / observed |
 | Brand Book | Auto-generated from the profile, no separate data entry | Documented |
 | | Cover: pick, upload or generate; up to 7 images; "Edit Images" | Documented |
-| | "Download PDF", "Preview in New Tab", Publish toggle + share link | Documented |
-| | Section structure / layout | **Unknown** |
+| | "Download PDF", "Preview in New Tab", Publish toggle + share link | Documented; toggle/Download observed 2026-10-13, not triggered |
+| | Section structure / layout | **Observed 2026-10-13** |
 | Websites | "Create Website", "Regenerate", prompt-based "Edit", versions (restore/delete) | Documented |
 | | Custom URL suffix, Preview, Publish toggle, share link | Documented |
 | | Site type (landing/multi-page/shop), hosting domain, custom domains | **Unknown** |
@@ -88,10 +88,10 @@ Brand Book and website creation do exist in Pomelli, but only the official help 
 - Revisit after pilot feedback.
 
 ## Open items needing browser access or user screenshots
-- Brand Book page layout and sections.
+- ~~Brand Book page layout and sections.~~ **Observed 2026-10-13**; see `brand-profile.md` and `screenshots/pomelli-brandbook-*`. Numbered two-column editorial pages (cover, 01 Brand Overview, 02 Brand Logo, 03 Typography, 04 Color Palette, 05 Brand Voice) with a publish toggle and Edit / Download PDF / Open in New Tab.
 - Website editor and a published site example.
-- Pomelli Agent chat behaviour.
-- Populated profile editor after generation.
+- Pomelli Agent chat behaviour (greeting and quick-action chips observed 2026-10-13; sending a prompt was not tested).
+- ~~Populated profile editor after generation.~~ **Observed 2026-10-13** on an account that already had a profile; see `brand-profile.md` and `screenshots/pomelli-*`. Business Details uses per-card pencil → modal editing; Brand Overview uses a card canvas (hero name, logo + "Aa" fonts, circular colour swatches, pill values/tone, business overview) with a right "Pomelli Agent" panel.
 
 ## Implemented: Brand Book (2026-10-13)
 
