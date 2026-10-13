@@ -75,3 +75,20 @@ export function emptyBrandProfile(): BrandProfile {
     updatedAt: "",
   };
 }
+
+export const brandBookImageLimit = 7;
+/** Presentation settings only; all brand content comes from the Brand Profile. */
+export interface BrandBook {
+  coverUrl: string;
+  imageUrls: string[];
+  shareToken: string | null;
+  updatedAt: string;
+}
+export function emptyBrandBook(): BrandBook {
+  return { coverUrl: "", imageUrls: [], shareToken: null, updatedAt: "" };
+}
+/** Public, read-only brand book: no import evidence, revision or share token. */
+export interface PublishedBrandBook {
+  profile: Omit<BrandProfile, "evidence" | "revision">;
+  book: Pick<BrandBook, "coverUrl" | "imageUrls" | "updatedAt">;
+}

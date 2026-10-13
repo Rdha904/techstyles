@@ -1,11 +1,12 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Product, ProductSnapshot, LibraryItem } from "./types";
-import type { BrandProfile } from "./brand-types";
+import type { BrandBook, BrandProfile } from "./brand-types";
 
 /** Everything that belongs to one workspace (one brand / customer). */
 export interface WorkspaceData {
   brandProfile?: BrandProfile | null;
+  brandBook?: BrandBook | null;
   products: Product[];
   libraries: LibraryItem[];
 }

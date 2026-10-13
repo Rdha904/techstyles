@@ -224,4 +224,12 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
     }
     return null;
   }
+  async findBrandBookByShareToken(token: string) {
+    await settled();
+    const file = await readFileDatabase();
+    for (const data of Object.values(file.workspaces))
+      if (data.brandBook?.shareToken === token && data.brandProfile)
+        return { profile: data.brandProfile, book: data.brandBook };
+    return null;
+  }
 }

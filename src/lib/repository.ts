@@ -1,4 +1,5 @@
 import type { Product } from "./types";
+import type { BrandBook, BrandProfile } from "./brand-types";
 import type { WorkspaceData } from "./store";
 import { JsonWorkspaceRepository } from "./json-repository";
 
@@ -17,6 +18,10 @@ export interface WorkspaceRepository {
   ): Promise<T>;
   /** Looks up a product by its public supplier share token across workspaces. */
   findProductByShareToken(token: string): Promise<Product | null>;
+  /** Looks up a published brand book and its profile by share token. */
+  findBrandBookByShareToken(
+    token: string,
+  ): Promise<{ profile: BrandProfile; book: BrandBook } | null>;
 }
 
 const globalRepository = globalThis as typeof globalThis & {

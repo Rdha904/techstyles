@@ -44,6 +44,7 @@ import type { Product } from "@/lib/types";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
+import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 export const assets = "/sites/techstyles/";
@@ -469,7 +470,16 @@ export function Workspace({ path }: { path: string[] }) {
     return () => document.removeEventListener("keydown", dismiss);
   }, [sidebar]);
   const product = products.find((p) => p.id === path[1]);
+  if (section === "share" && path[1] === "brand-book")
+    return <SharedBrandBook token={path[2] || ""} />;
   if (section === "share") return <SharedProduct token={path[1] || ""} />;
+  if (
+    section === "modules" &&
+    path[1] === "concept" &&
+    path[2] === "brand-book" &&
+    path[3] === "print"
+  )
+    return <BrandBookPrint />;
   if (section === "products" && path[2] === "canvas" && product)
     return (
       <ProductCanvas
@@ -825,6 +835,10 @@ export function Workspace({ path }: { path: string[] }) {
                 activeModule.id === "concept" &&
                 modulePage === "Brand Profile" ? (
                 <BrandProfilePage />
+              ) : section === "modules" &&
+                activeModule.id === "concept" &&
+                modulePage === "Brand Book" ? (
+                <BrandBookPage />
               ) : section === "modules" &&
                 activeModule.id === "concept" &&
                 modulePage === "Overview" ? (

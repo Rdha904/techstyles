@@ -4,6 +4,10 @@ Start the app from `techstyles/`. Products, versions, library records and the br
 
 The app has no authentication or user isolation. Keep the development server bound to localhost. Do not expose it publicly as a production service without implementing authentication and authorization for all editor, library, upload and AI routes. Supplier token routes are read-only, omit comments/version history/access tokens, and redact excluded sections. A token is not a substitute for protecting the other application routes. Uploaded files are accessible by their random URLs; revoking a product link does not delete or revoke already copied asset URLs.
 
+## Brand book
+
+`GET/PUT /api/brand-book` reads the profile plus brand book settings and saves `{coverUrl, imageUrls}` (local PNG/JPEG/WebP, max 7). `POST/DELETE /api/brand-book/share` publishes or revokes a read-only link. `GET /api/share/brand-book/<token>` returns the profile without import evidence or revision. Brand content always comes from the Brand Profile.
+
 ## Optional image generation
 
 Set `OPENAI_API_KEY` in the server environment or `.env.local`, then restart. Never use a `NEXT_PUBLIC_` key. Requests to `/api/generate` cost money on that OpenAI account. No provider calls run when the key is absent (HTTP 503), and automated tests use a mock transport.

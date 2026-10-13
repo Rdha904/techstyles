@@ -1,11 +1,14 @@
 import { object, string, localAssetUrl } from "./api";
 import { ApiError } from "./store";
 import {
+  brandBookImageLimit,
   brandTextFields,
   brandLabels,
   type BrandAsset,
+  type BrandBook,
   type BrandField,
   type BrandProfile,
+  type PublishedBrandBook,
 } from "./brand-types";
 export function validateBrand(input: Record<string, unknown>): BrandProfile {
   const result = {} as BrandProfile;
@@ -58,10 +61,10 @@ export function validateBrand(input: Record<string, unknown>): BrandProfile {
   ];
   function asset(value: unknown): BrandAsset {
     const a = object(value);
-    const url = string(a.url, "image URL", 1000);
-    if (!localAssetUrl(url) || !/\.(png|jpe?g|webp)$/i.test(url))
-      throw new ApiError("Use an uploaded PNG, JPEG or WebP image.");
-    return { name: string(a.name, "image name", 250), url };
+    return {
+      name: string(a.name, "image name", 250),
+      url: brandImageUrl(a.url),
+    };
   }
   result.logo = input.logo === null ? null : asset(input.logo);
   result.referenceImages = list(
@@ -106,4 +109,43 @@ export function brandContext(profile: BrandProfile | null | undefined) {
   ]
     .filter(Boolean)
     .join("\n");
+}
+function brandImageUrl(value: unknown) {
+  const url = string(value, "image URL", 1000);
+  if (!localAssetUrl(url) || !/\.(png|jpe?g|webp)$/i.test(url))
+    throw new ApiError("Use an uploaded PNG, JPEG or WebP image.");
+  return url;
+}
+export function validateBrandBook(
+  input: Record<string, unknown>,
+): Pick<BrandBook, "coverUrl" | "imageUrls"> {
+  const coverUrl = input.coverUrl === "" ? "" : brandImageUrl(input.coverUrl);
+  if (!Array.isArray(input.imageUrls))
+    throw new ApiError("Invalid brand book images.");
+  const imageUrls = [...new Set(input.imageUrls.map(brandImageUrl))];
+  if (imageUrls.length > brandBookImageLimit)
+    throw new ApiError(
+      `Choose up to ${brandBookImageLimit} images for the brand book.`,
+    );
+  return { coverUrl, imageUrls };
+}
+export function publishedBrandBook(
+  profile: BrandProfile,
+  book: BrandBook,
+): PublishedBrandBook {
+  const {
+    evidence: _evidence,
+    revision: _revision,
+    ...content
+  } = structuredClone(profile);
+  void _evidence;
+  void _revision;
+  return {
+    profile: content,
+    book: {
+      coverUrl: book.coverUrl,
+      imageUrls: [...book.imageUrls],
+      updatedAt: book.updatedAt,
+    },
+  };
 }

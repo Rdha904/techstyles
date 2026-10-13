@@ -70,10 +70,17 @@ export function ConceptOverview() {
       eyebrow: "YOUR GUIDELINES",
       description:
         "Bring your logo, colors, typography and tone of voice together in a consistent brand guide.",
-      status: "Coming soon",
-      action: "View brand book workspace",
-      detail: "A home for the rules behind your brand.",
-      available: false,
+      status:
+        status !== "loaded"
+          ? "Available"
+          : profile
+            ? "Ready to view"
+            : "Needs brand profile",
+      action: "Open brand book",
+      detail: profile
+        ? "Generated from your saved brand profile."
+        : "Save a brand profile first, then open your brand book.",
+      available: true,
     },
     {
       title: "Target Audience",
