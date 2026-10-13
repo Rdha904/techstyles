@@ -107,3 +107,13 @@ Route `/modules/concept/brand-book` (component `brand-book.tsx`). The page rende
 Font samples use the named font only when it is installed on the viewer's device.
 
 Verified: lint, TypeScript, production build, 19 tests (4 new). Pages and API were smoke-tested over HTTP on an isolated data directory. Not verified: visual rendering in a browser (no browser access this session).
+
+## Concept & Audience structure (2026-10-13)
+
+Concept & Audience now follows the workflow. The pages are:
+1. Brand Profile
+2. Audience & Market — target audience plus competitors and price positioning
+3. Moodboards — collection concept: inspiration, seasonal colors, materials, silhouettes
+4. Brand Book — the shareable output
+
+Brand Website moved to Store & Sales; it is a sales and online-presence concern, not concept. Audience & Market, Moodboards and Brand Website remain "Coming soon" until they are built. Page slugs now drop punctuation (`Audience & Market` → `audience-market`).

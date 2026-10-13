@@ -145,9 +145,9 @@ const modules = [
     pages: [
       "Overview",
       "Brand Profile",
+      "Audience & Market",
+      "Moodboards",
       "Brand Book",
-      "Target Audience",
-      "Brand Website",
     ],
   },
   { id: "design", label: "Design & Tech Packs", icon: Pencil, pages: [] },
@@ -179,7 +179,13 @@ const modules = [
     id: "store",
     label: "Store & Sales",
     icon: ShoppingBag,
-    pages: ["Overview", "Product Listings", "Orders", "Sales Analytics"],
+    pages: [
+      "Overview",
+      "Product Listings",
+      "Orders",
+      "Sales Analytics",
+      "Brand Website",
+    ],
   },
   {
     id: "shipping",
@@ -201,7 +207,10 @@ const modules = [
   },
 ];
 function pageSlug(label: string) {
-  return label.toLowerCase().replaceAll(" ", "-");
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 const subtitles: Record<string, string> = {
   dashboard: "Product development overview",

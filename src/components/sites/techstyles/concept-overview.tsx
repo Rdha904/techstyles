@@ -6,7 +6,7 @@ import {
   ArrowUpRight,
   BookOpen,
   Fingerprint,
-  Globe,
+  Images,
   Users,
 } from "lucide-react";
 import type { BrandProfile } from "@/lib/brand-types";
@@ -63,50 +63,52 @@ export function ConceptOverview() {
       available: true,
     },
     {
+      title: "Audience & Market",
+      slug: "audience-market",
+      icon: Users,
+      tone: "teal",
+      eyebrow: "YOUR PEOPLE & MARKET",
+      description:
+        "Define who you design for and where you stand: style, needs, buying habits, competitors and price positioning.",
+      status: "Coming soon",
+      action: "View audience workspace",
+      detail: "Turn audience and market insights into a clear direction.",
+      available: false,
+    },
+    {
+      title: "Moodboards",
+      slug: "moodboards",
+      icon: Images,
+      tone: "amber",
+      eyebrow: "YOUR COLLECTION CONCEPT",
+      description:
+        "Collect inspiration, seasonal colors, materials and silhouettes that set the direction for each collection.",
+      status: "Coming soon",
+      action: "View moodboards",
+      detail: "The bridge from brand concept to design and tech packs.",
+      available: false,
+    },
+    {
       title: "Brand Book",
       slug: "brand-book",
       icon: BookOpen,
       tone: "violet",
       eyebrow: "YOUR GUIDELINES",
       description:
-        "Bring your logo, colors, typography and tone of voice together in a consistent brand guide.",
+        "Bring your logo, colors, typography and tone of voice together in a consistent brand guide to share.",
       status:
-        status !== "loaded"
-          ? "Available"
-          : profile
-            ? "Ready to view"
-            : "Needs brand profile",
+        status === "loading"
+          ? "Loading…"
+          : status === "error"
+            ? "Available"
+            : profile
+              ? "Ready to view"
+              : "Needs brand profile",
       action: "Open brand book",
       detail: profile
         ? "Generated from your saved brand profile."
         : "Save a brand profile first, then open your brand book.",
       available: true,
-    },
-    {
-      title: "Target Audience",
-      slug: "target-audience",
-      icon: Users,
-      tone: "teal",
-      eyebrow: "YOUR PEOPLE",
-      description:
-        "Explore who you design for: their style, needs and buying habits, from first discovery to loyalty.",
-      status: "Coming soon",
-      action: "View audience workspace",
-      detail: "Turn audience insights into a clear creative direction.",
-      available: false,
-    },
-    {
-      title: "Brand Website",
-      slug: "brand-website",
-      icon: Globe,
-      tone: "amber",
-      eyebrow: "YOUR ONLINE PRESENCE",
-      description:
-        "Shape a digital home for your clothing brand, from its story and collections to its visual identity.",
-      status: "Coming soon",
-      action: "View website workspace",
-      detail: "Bring your brand identity to the web.",
-      available: false,
     },
   ];
 
