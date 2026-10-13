@@ -1,11 +1,12 @@
 import { readFile, stat } from "node:fs/promises";
+import { fileStorage } from "./file-storage";
 import path from "node:path";
 import { ApiError } from "./store";
 import { repository } from "./repository";
 import { currentWorkspaceId } from "./workspace";
 import { brandContext } from "./brand";
 import { localAssetUrl, object, string } from "./api";
-import { detectFile, mimeTypes, saveUpload, uploadDirectory } from "./uploads";
+import { detectFile, mimeTypes, saveUpload } from "./uploads";
 
 const instructions: Record<string, string> = {
   sketch:
@@ -20,13 +21,22 @@ const instructions: Record<string, string> = {
 async function referenceImage(url: string) {
   if (!localAssetUrl(url))
     throw new ApiError("Choose an uploaded or bundled reference image.");
-  const file = url.startsWith("/api/uploads/")
-    ? path.join(uploadDirectory, path.basename(url))
-    : path.join(process.cwd(), "public", url);
   try {
-    if ((await stat(file)).size > 10 * 1024 * 1024)
+    let bytes: Buffer | null;
+    if (url.startsWith("/api/uploads/")) {
+      bytes = await fileStorage.read(
+        await currentWorkspaceId(),
+        path.basename(url),
+      );
+    } else {
+      const file = path.join(process.cwd(), "public", url);
+      if ((await stat(file)).size > 10 * 1024 * 1024)
+        throw new ApiError("Reference image is too large.");
+      bytes = await readFile(file);
+    }
+    if (!bytes) throw new ApiError("Reference image not found.", 404);
+    if (bytes.length > 10 * 1024 * 1024)
       throw new ApiError("Reference image is too large.");
-    const bytes = await readFile(file);
     const extension = detectFile(bytes);
     if (extension === "pdf")
       throw new ApiError("Choose a PNG, JPEG or WebP reference image.");

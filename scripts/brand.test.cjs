@@ -4,7 +4,7 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
 const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'techstyles-brand-test-'));
 process.env.TECHSTYLES_DATA_DIR=path.join(temporary,'data');
 fs.symlinkSync(path.resolve(__dirname,'../node_modules'),path.join(temporary,'node_modules'),'dir');
-for(const name of ['store','workspace','json-repository','repository','api','uploads','brand-types','brand','safe-web','brand-import']) {
+for(const name of ['store','workspace','file-storage','local-file-storage','json-repository','repository','api','uploads','brand-types','brand','safe-web','brand-import']) {
  const source=fs.readFileSync(path.join(__dirname,'../src/lib',`${name}.ts`),'utf8');
  fs.writeFileSync(path.join(temporary,`${name}.js`),ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
 }

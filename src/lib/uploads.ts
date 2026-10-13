@@ -1,8 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import path from "node:path";
-import { ApiError, dataDirectory } from "./store";
-export const uploadDirectory = path.join(dataDirectory, "uploads");
+import { ApiError } from "./store";
+import { fileStorage } from "./file-storage";
+import { currentWorkspaceId } from "./workspace";
 export const mimeTypes: Record<string, string> = {
   png: "image/png",
   jpg: "image/jpeg",
@@ -23,14 +22,15 @@ export function detectFile(buffer: Buffer): string {
   if (buffer.subarray(0, 5).toString() === "%PDF-") return "pdf";
   throw new ApiError("Please upload a PNG, JPEG, WebP or PDF file.");
 }
-export async function saveUpload(buffer: Buffer) {
+export async function saveUpload(buffer: Buffer, workspaceId?: string) {
   if (buffer.length > 10 * 1024 * 1024)
     throw new ApiError("Maximum file size is 10 MB.", 413);
   const extension = detectFile(buffer);
-  await mkdir(uploadDirectory, { recursive: true });
   const filename = `${randomUUID()}.${extension}`;
-  await writeFile(path.join(uploadDirectory, filename), buffer, {
-    mode: 0o600,
-  });
+  await fileStorage.save(
+    workspaceId ?? (await currentWorkspaceId()),
+    filename,
+    buffer,
+  );
   return { url: `/api/uploads/${filename}` };
 }

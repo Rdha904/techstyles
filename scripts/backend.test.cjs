@@ -7,7 +7,7 @@ const ts = require('typescript');
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'techstyles-test-'));
 process.env.TECHSTYLES_DATA_DIR = path.join(temporary, 'data');
-for (const name of ['store','workspace','json-repository','repository','api','library','uploads','share','generate','brand','brand-types']) {
+for (const name of ['store','workspace','file-storage','local-file-storage','json-repository','repository','api','library','uploads','share','generate','brand','brand-types']) {
   const source = fs.readFileSync(path.join(__dirname, '../src/lib', `${name}.ts`), 'utf8');
   fs.writeFileSync(path.join(temporary, `${name}.js`), ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
 }
@@ -62,7 +62,7 @@ test('uploads inspect bytes and assign isolated random paths', async () => {
   assert.throws(() => uploads.detectFile(Buffer.from('<svg onload="evil()"/>')));
   const result = await uploads.saveUpload(Buffer.from([137,80,78,71,13,10,26,10]));
   assert.match(result.url,/^\/api\/uploads\/[0-9a-f-]{36}\.png$/);
-  assert.equal(fs.existsSync(path.join(temporary,'data/uploads',path.basename(result.url))),true);
+  assert.equal(fs.existsSync(path.join(temporary,'data/uploads/default',path.basename(result.url))),true);
 });
 
 test('product API creates, versions, restores, shares live changes, revokes and deletes', async () => {
@@ -145,4 +145,19 @@ test('workspaces are isolated and legacy single-workspace files are migrated', a
   const legacy = {products:[{...store.emptyProduct(),name:'Legacy'}],libraries:[],brandProfile:null};
   fs.writeFileSync(path.join(temporary,'data/workspace.json'),JSON.stringify(legacy));
   assert.equal((await repository.read('default')).products[0].name,'Legacy');
+});
+
+test('uploads are scoped per workspace and legacy flat files stay with the default workspace', async () => {
+  const {fileStorage} = require(path.join(temporary, 'file-storage.js'));
+  const name = '11111111-1111-1111-1111-111111111111.png';
+  await fileStorage.save('brand-a', name, Buffer.from('a'));
+  assert.equal((await fileStorage.read('brand-a', name)).toString(), 'a');
+  assert.equal(await fileStorage.read('brand-b', name), null);
+  const legacy = '22222222-2222-2222-2222-222222222222.png';
+  fs.mkdirSync(path.join(temporary,'data/uploads'),{recursive:true});
+  fs.writeFileSync(path.join(temporary,'data/uploads',legacy), 'old');
+  assert.equal((await fileStorage.read('default', legacy)).toString(), 'old');
+  assert.equal(await fileStorage.read('brand-a', legacy), null);
+  await assert.rejects(fileStorage.read('../x', name));
+  await assert.rejects(fileStorage.read('default', '../../etc/passwd'));
 });

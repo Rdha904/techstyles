@@ -1,6 +1,6 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { mimeTypes, uploadDirectory } from "@/lib/uploads";
+import { fileStorage } from "@/lib/file-storage";
+import { mimeTypes } from "@/lib/uploads";
+import { currentWorkspaceId } from "@/lib/workspace";
 export async function GET(
   _request: Request,
   context: { params: Promise<{ filename: string }> },
@@ -9,8 +9,9 @@ export async function GET(
   if (!/^[0-9a-f-]{36}\.(png|jpg|webp|pdf)$/.test(filename))
     return new Response("Not found", { status: 404 });
   try {
-    const bytes = await readFile(path.join(uploadDirectory, filename));
-    return new Response(bytes, {
+    const bytes = await fileStorage.read(await currentWorkspaceId(), filename);
+    if (!bytes) return new Response("Not found", { status: 404 });
+    return new Response(new Uint8Array(bytes), {
       headers: {
         "Content-Type": mimeTypes[filename.split(".").pop()!],
         "X-Content-Type-Options": "nosniff",
