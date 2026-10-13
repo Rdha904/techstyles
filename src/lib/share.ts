@@ -1,10 +1,12 @@
-import type { Product } from "./types";
+import {
+  productSections,
+  type Product,
+  type ProductSection,
+  type ProductSnapshot,
+} from "./types";
 import { snapshot } from "./store";
-export function sharedProduct(product: Product) {
-  const content = snapshot(product);
-  content.comments = [];
-  const excluded = new Set(content.excludedSections);
-  if (excluded.has("overview"))
+const redactions: Record<ProductSection, (content: ProductSnapshot) => void> = {
+  overview: (content) => {
     Object.assign(content, {
       category: "",
       stage: "",
@@ -14,21 +16,48 @@ export function sharedProduct(product: Product) {
       description: "",
       cover: "",
     });
-  if (excluded.has("sketch"))
+  },
+  sketch: (content) => {
     Object.assign(content, {
       sketch: "",
       mockup: "",
       annotations: [],
       cover: "",
     });
-  if (excluded.has("colorways")) content.colors = [];
-  if (excluded.has("bom")) content.materials = [];
-  if (excluded.has("artworks")) content.artworks = [];
-  if (excluded.has("instructions")) content.instructions = "";
-  if (excluded.has("sizes")) content.measurements = [];
-  if (excluded.has("attachments")) content.attachments = [];
-  if (excluded.has("samplings")) content.samples = [];
-  if (excluded.has("packaging")) content.labels = "";
+  },
+  colorways: (content) => {
+    content.colors = [];
+  },
+  bom: (content) => {
+    content.materials = [];
+  },
+  artworks: (content) => {
+    content.artworks = [];
+  },
+  instructions: (content) => {
+    content.instructions = "";
+  },
+  sizes: (content) => {
+    content.measurements = [];
+  },
+  attachments: (content) => {
+    content.attachments = [];
+  },
+  samplings: (content) => {
+    content.samples = [];
+  },
+  packaging: (content) => {
+    content.labels = "";
+  },
+  // snapshot() already strips versions from shared payloads.
+  versions: () => {},
+};
+export function sharedProduct(product: Product) {
+  const content = snapshot(product);
+  content.comments = [];
+  const excluded = new Set(content.excludedSections);
+  for (const section of productSections)
+    if (excluded.has(section)) redactions[section](content);
   return {
     ...content,
     id: product.id,

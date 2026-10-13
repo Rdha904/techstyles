@@ -2,6 +2,7 @@ import { object, string, localAssetUrl } from "./api";
 import { ApiError } from "./store";
 import {
   brandBookImageLimit,
+  brandLimits,
   brandTextFields,
   brandLabels,
   type BrandAsset,
@@ -42,7 +43,7 @@ export function validateBrand(input: Record<string, unknown>): BrandProfile {
   }
   result.colors = [
     ...new Set(
-      list(input.colors, "colors", 20).map((v) => {
+      list(input.colors, "colors", brandLimits.colors).map((v) => {
         const hex = string(v, "color", 7).toUpperCase();
         if (!/^#[0-9A-F]{6}$/.test(hex))
           throw new ApiError(
@@ -54,7 +55,7 @@ export function validateBrand(input: Record<string, unknown>): BrandProfile {
   ];
   result.fonts = [
     ...new Set(
-      list(input.fonts, "fonts", 12)
+      list(input.fonts, "fonts", brandLimits.fonts)
         .map((v) => string(v, "font name", 120).trim())
         .filter(Boolean),
     ),
@@ -70,9 +71,9 @@ export function validateBrand(input: Record<string, unknown>): BrandProfile {
   result.referenceImages = list(
     input.referenceImages,
     "reference images",
-    20,
+    brandLimits.referenceImages,
   ).map(asset);
-  result.evidence = list(input.evidence, "source records", 200)
+  result.evidence = list(input.evidence, "source records", brandLimits.evidence)
     .map((v) => {
       const e = object(v);
       const field = string(e.field, "source field", 30) as BrandField;

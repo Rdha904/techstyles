@@ -1,6 +1,6 @@
 import { object, string } from "./api";
 import { ApiError } from "./store";
-import type { LibraryItem } from "./types";
+import { libraryCollections, type LibraryItem } from "./types";
 export function libraryPatch(
   input: Record<string, unknown>,
   required = false,
@@ -17,15 +17,7 @@ export function libraryPatch(
     throw new ApiError("Name is required");
   if (
     result.collection &&
-    ![
-      "projects",
-      "sketches",
-      "materials",
-      "artworks",
-      "colors",
-      "size-charts",
-      "attachments",
-    ].includes(result.collection)
+    !libraryCollections.some((collection) => collection === result.collection)
   )
     throw new ApiError("Unknown library collection");
   if (input.data !== undefined) {

@@ -1,3 +1,29 @@
+export const productSections = [
+  "overview",
+  "sketch",
+  "colorways",
+  "bom",
+  "artworks",
+  "instructions",
+  "sizes",
+  "attachments",
+  "samplings",
+  "packaging",
+  "versions",
+] as const;
+export type ProductSection = (typeof productSections)[number];
+
+export const libraryCollections = [
+  "projects",
+  "sketches",
+  "materials",
+  "artworks",
+  "colors",
+  "size-charts",
+  "attachments",
+] as const;
+export type LibraryCollection = (typeof libraryCollections)[number];
+
 export interface ProductColor {
   id: string;
   name: string;
@@ -67,7 +93,7 @@ export interface ProductSnapshot {
   attachments: ProductAsset[];
   artworks: ProductAsset[];
   samples: ProductSample[];
-  excludedSections: string[];
+  excludedSections: ProductSection[];
   archived: boolean;
   measurementUnit: "cm" | "in";
 }

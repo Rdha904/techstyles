@@ -1,5 +1,5 @@
 import { ApiError } from "./store";
-import type { ProductSnapshot } from "./types";
+import { productSections, type ProductSnapshot } from "./types";
 
 export async function api(action: () => unknown | Promise<unknown>) {
   try {
@@ -87,9 +87,15 @@ export function productPatch(
       input.excludedSections.length > 50
     )
       throw new ApiError("Invalid excluded sections");
-    patch.excludedSections = input.excludedSections.map((value) =>
-      string(value, "section", 100),
-    );
+    patch.excludedSections = [
+      ...new Set(
+        input.excludedSections.map((value) => {
+          const section = productSections.find((id) => id === value);
+          if (!section) throw new ApiError("Invalid excluded section");
+          return section;
+        }),
+      ),
+    ];
   }
   for (const key of stringFields)
     if (input[key] !== undefined) {

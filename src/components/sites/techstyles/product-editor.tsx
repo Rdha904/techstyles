@@ -50,24 +50,27 @@ import {
 import type {
   Product,
   ProductSnapshot,
+  ProductSection,
   LibraryItem,
   Annotation,
 } from "@/lib/types";
+import { productSections } from "@/lib/types";
 import { BrandProfileSummary } from "./brand-profile";
 import { api, assets, Modal, ProductForm, Brand } from "./workspace";
-const sections = [
-  ["overview", "Overview"],
-  ["sketch", "Sketch / Design"],
-  ["colorways", "Colorways"],
-  ["bom", "BOM / Materials"],
-  ["artworks", "Artworks"],
-  ["instructions", "Instructions"],
-  ["sizes", "Sizes / Measurements"],
-  ["attachments", "Attachments"],
-  ["samplings", "Samplings"],
-  ["packaging", "Packaging / Labels"],
-  ["versions", "Version History"],
-] as const;
+const sectionLabels: Record<ProductSection, string> = {
+  overview: "Overview",
+  sketch: "Sketch / Design",
+  colorways: "Colorways",
+  bom: "BOM / Materials",
+  artworks: "Artworks",
+  instructions: "Instructions",
+  sizes: "Sizes / Measurements",
+  attachments: "Attachments",
+  samplings: "Samplings",
+  packaging: "Packaging / Labels",
+  versions: "Version History",
+};
+const sections = productSections.map((id) => [id, sectionLabels[id]] as const);
 const uid = () => crypto.randomUUID();
 export async function upload(file: File) {
   const form = new FormData();
@@ -1734,7 +1737,7 @@ export function SharedProduct({
       </div>
     );
   if (!p) return <div className="empty">Loading tech pack…</div>;
-  const show = (id: string) => !p.excludedSections.includes(id);
+  const show = (id: ProductSection) => !p.excludedSections.includes(id);
   return (
     <main className="print-pack">
       <header className="print-header">

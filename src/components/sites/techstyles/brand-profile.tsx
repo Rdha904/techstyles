@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import {
   brandTextFields,
+  brandLimits,
   brandLabels,
   emptyBrandProfile,
   type BrandProfile,
@@ -314,13 +315,13 @@ export function BrandProfilePage() {
       if (field === "colors" || field === "fonts")
         next[field] = [...new Set([...next[field], value])].slice(
           0,
-          field === "colors" ? 20 : 12,
+          brandLimits[field],
         );
       else if (field === "logo") next.logo = { url: value, name: "Brand logo" };
       else if (field === "referenceImages") {
         if (
           !next.referenceImages.some((a) => a.url === value) &&
-          next.referenceImages.length < 20
+          next.referenceImages.length < brandLimits.referenceImages
         )
           next.referenceImages.push({ url: value, name: source.slice(0, 250) });
       } else next[field] = value;
@@ -334,8 +335,8 @@ export function BrandProfilePage() {
       );
       next.evidence.push({ field, value, source, excerpt });
     }
-    update("evidence", next.evidence.slice(-200));
-    setProfile({ ...next, evidence: next.evidence.slice(-200) });
+    update("evidence", next.evidence.slice(-brandLimits.evidence));
+    setProfile({ ...next, evidence: next.evidence.slice(-brandLimits.evidence) });
     setReview(null);
     setSelected([]);
     setStep("editor");

@@ -19,17 +19,9 @@ import {
   Upload,
   ArrowUpRight,
 } from "lucide-react";
+import type { LibraryCollection, LibraryItem } from "@/lib/types";
 import "./libraries.css";
 
-type LibraryItem = {
-  id: string;
-  collection: string;
-  name: string;
-  description: string;
-  color: string;
-  createdAt: string;
-  data?: Record<string, unknown>;
-};
 type Draft = {
   name: string;
   description: string;
@@ -37,7 +29,7 @@ type Draft = {
   data: Record<string, unknown>;
 };
 const definitions: Record<
-  string,
+  LibraryCollection,
   { title: string; singular: string; description: string; icon: typeof Folder }
 > = {
   projects: {
@@ -95,7 +87,8 @@ const blankDraft = (): Draft => ({
 });
 
 export function LibraryPage({ collection }: { collection: string }) {
-  const definition = definitions[collection] ?? definitions.projects;
+  const definition =
+    definitions[collection as LibraryCollection] ?? definitions.projects;
   const Icon = definition.icon;
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
