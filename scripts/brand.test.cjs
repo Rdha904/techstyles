@@ -1,22 +1,15 @@
 const {test,after}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const ts=require('typescript');
+const fs=require('node:fs');const os=require('node:os');const path=require('node:path');require('./support/load-ts.cjs');
 const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'techstyles-brand-test-'));
 process.env.TECHSTYLES_DATA_DIR=path.join(temporary,'data');
-fs.symlinkSync(path.resolve(__dirname,'../node_modules'),path.join(temporary,'node_modules'),'dir');
-for(const name of ['store','workspace','file-storage','local-file-storage','json-repository','repository','api','uploads','brand-types','brand','safe-web','brand-import']) {
- const source=fs.readFileSync(path.join(__dirname,'../src/lib',`${name}.ts`),'utf8');
- fs.writeFileSync(path.join(temporary,`${name}.js`),ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
-}
-const types=require(path.join(temporary,'brand-types.js'));
-const brand=require(path.join(temporary,'brand.js'));
-const imports=require(path.join(temporary,'brand-import.js'));
-const safe=require(path.join(temporary,'safe-web.js'));
-const store=require(path.join(temporary,'store.js'));
-const {repository}=require(path.join(temporary,'repository.js'));
-const source=fs.readFileSync(path.join(__dirname,'../src/app/api/brand-profile/route.ts'),'utf8').replace(/(['"])@\/lib\//g,'$1./');
-fs.writeFileSync(path.join(temporary,'route.js'),ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
-const route=require(path.join(temporary,'route.js'));
+const types=require('../src/lib/brand-types.ts');
+const brand=require('../src/lib/brand.ts');
+const imports=require('../src/lib/brand-import.ts');
+const safe=require('../src/lib/safe-web.ts');
+const store=require('../src/lib/store.ts');
+const {repository}=require('../src/lib/repository.ts');
+const route=require('../src/app/api/brand-profile/route.ts');
 after(()=>fs.rmSync(temporary,{recursive:true,force:true}));
 const request=(data)=>new Request('http://localhost/api/brand-profile',{method:'PUT',body:JSON.stringify(data)});
 test('legacy workspace remains compatible; saving requires review and rejects stale revisions',async()=>{
