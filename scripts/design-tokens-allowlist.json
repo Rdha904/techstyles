@@ -1,9 +1,9 @@
 {
   "src/app/globals.css": {
-    "hex": 36,
+    "hex": 21,
     "rgb": 0,
-    "borderRadius": 19,
-    "fontWeight": 3
+    "borderRadius": 16,
+    "fontWeight": 2
   },
   "src/components/sites/techstyles/brand-book.css": {
     "hex": 11,

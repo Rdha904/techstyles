@@ -478,7 +478,6 @@ export function Workspace({ path }: { path: string[] }) {
               )}
             </button>
           </div>
-          <span className="nav-label">WORKSPACE</span>
           <nav
             className="nav-links module-links"
             aria-label="Primary navigation"
@@ -556,7 +555,7 @@ export function Workspace({ path }: { path: string[] }) {
                 >
                   <Search size={14} /> Search...
                 </button>
-                <span className="nav-label">MAIN</span>
+                <span className="nav-label">Main</span>
                 <nav className="nav-links" aria-label="Design pages">
                   {nav.slice(0, 2).map(([key, label, Icon]) => (
                     <div key={key}>
@@ -600,7 +599,7 @@ export function Workspace({ path }: { path: string[] }) {
                     Brand Profile
                   </Link>
                 </nav>
-                <span className="nav-label">LIBRARY</span>
+                <span className="nav-label">Library</span>
                 <nav className="nav-links" aria-label="Library">
                   {nav.slice(2).map(([key, label, Icon]) => (
                     <Link
@@ -644,7 +643,7 @@ export function Workspace({ path }: { path: string[] }) {
                 <span className="avatar">{identity.initials}</span>
                 <div>
                   <span>{identity.name}</span>
-                  <small style={{ display: "block", fontSize: 10 }}>
+                  <small className="workspace-caption">
                     Your workspace
                   </small>
                 </div>
@@ -716,8 +715,10 @@ export function Workspace({ path }: { path: string[] }) {
               {focusMode ? "Exit focus" : "Focus mode"}
             </button>
           </div>
-          <Clock size={13} /> Independent workspace · Saved on this computer{" "}
-          <Link href="/settings" style={{ marginLeft: "auto" }}>
+          <span className="workspace-save-note">
+            <Clock size={13} /> Independent workspace · Saved on this computer
+          </span>
+          <Link href="/settings" className="workspace-settings-link">
             Workspace settings
           </Link>
         </div>
@@ -745,7 +746,7 @@ export function Workspace({ path }: { path: string[] }) {
           />
         ) : (
           <>
-            <header className="app-header">
+            <header className="app-header workspace-header">
               <button
                 className="icon-button mobile-only-toggle"
                 aria-label="Toggle navigation"
@@ -771,13 +772,9 @@ export function Workspace({ path }: { path: string[] }) {
               {section === "products" && (
                 <button className="btn primary" onClick={() => setCreate(true)}>
                   <Plus size={17} />
-                  Create New Tech Pack
+                  New tech pack
                 </button>
               )}
-              <Link className="btn" href="/settings">
-                <Settings size={14} />
-                <span className="header-subtitle">Workspace</span>
-              </Link>
               <button
                 className="icon-button"
                 aria-label="Recent activity"

@@ -113,7 +113,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 
 | Task | Status | Commit |
 |---|---|---|
-| 1. Foundation | queued | |
+| 1. Foundation | done | 4cf4d7b |
 | 2. Shell | queued | |
 | 3. Dashboard | queued | |
 | 4. Products library and editor | queued | |
@@ -124,3 +124,5 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 ### Needs your eyes
 
 (Design decisions made during implementation that you may want to overrule.)
+
+- **Toggle buttons are dark, not indigo.** The list/grid toggles, the Archived filter and choosing a quote used the main-button style to show "on". They now use a dark selected state, so indigo stays reserved for the one main action. A chosen quote shows as a pressed dark button.
