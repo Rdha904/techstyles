@@ -509,6 +509,12 @@
   opacity: 0.5;
   cursor: wait;
 }
+@media (min-width: 901px) {
+  .library-table-materials th,
+  .library-table-materials td {
+    padding-inline: 16px;
+  }
+}
 @media (max-width: 900px) {
   .library-toolbar {
     flex-wrap: wrap;

@@ -397,8 +397,10 @@ td input:hover {
   top: 0;
   z-index: 20;
 }
-.app-header h1 {
+.app-header h1,
+.app-header .app-header-title {
   font-size: 17px;
+  font-weight: 700;
   line-height: 1.2;
   margin: 0 0 3px;
 }
@@ -605,8 +607,10 @@ td input:hover {
   font-size: 10px;
   letter-spacing: 0.7px;
 }
-.overview-info h1 {
+.overview-info h1,
+.overview-info .overview-product-title {
   font-size: 24px;
+  font-weight: 700;
   margin: 10px 0;
 }
 .detail-grid {
@@ -1066,7 +1070,8 @@ td input:hover {
   .sketch-view img {
     height: 250px;
   }
-  .print-pack h1 {
+  .print-pack h1,
+  .print-pack .overview-product-title {
     font-size: 26px;
   }
   .panel {

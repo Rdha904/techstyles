@@ -1439,14 +1439,16 @@ export function ProductEditor({
 function Overview({
   product: p,
   manufacturerName,
+  headingAs: Heading = "h1",
 }: {
   product: ProductSnapshot;
   manufacturerName?: string;
+  headingAs?: "h1" | "div";
 }) {
   return (
     <div className="overview-info">
       <small>CORE PRODUCT INFORMATION</small>
-      <h1>{p.name}</h1>
+      <Heading className="overview-product-title">{p.name}</Heading>
       <div className="toolbar">
         <span className="badge">{p.code}</span>
         <span className={`badge ${p.stage.toLowerCase()}`}>{p.stage}</span>
@@ -1784,7 +1786,7 @@ export function SharedProduct({
       </p>
       {show("overview") && (
         <Section id="overview" title="Overview">
-          <Overview product={p} />
+          <Overview product={p} headingAs="div" />
         </Section>
       )}
       {show("sketch") && (

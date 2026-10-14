@@ -59,6 +59,7 @@ import {
   moduleRoutes,
   pageSlug,
   resolveView,
+  viewOwnsPageHeading,
 } from "./workspace-routes";
 const navIcons = {
   products: Shirt,
@@ -755,7 +756,11 @@ export function Workspace({ path }: { path: string[] }) {
                 <PanelLeft size={16} />
               </button>
               <div>
-                <h1>{title}</h1>
+                {viewOwnsPageHeading(view) ? (
+                  <p className="app-header-title">{title}</p>
+                ) : (
+                  <h1>{title}</h1>
+                )}
                 <small>
                   {section === "modules"
                     ? activeModule.label

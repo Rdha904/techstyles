@@ -102,6 +102,17 @@ export type WorkspaceView =
   | { kind: "library"; collection: string }
   | { kind: "not-found" };
 
+export function viewOwnsPageHeading(view: WorkspaceView): boolean {
+  return [
+    "settings",
+    "library",
+    "manufacturers",
+    "quote-requests",
+    "quote-comparison",
+    "brand-book",
+  ].includes(view.kind);
+}
+
 export function resolveView(path: string[]) {
   const section = path[0] || "dashboard";
   const activeModule =

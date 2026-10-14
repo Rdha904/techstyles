@@ -437,7 +437,13 @@ export function LibraryPage({ collection }: { collection: string }) {
         </div>
       ) : (
         <div className="library-table-wrap">
-          <table className="library-table">
+          <table
+            className={
+              collection === "materials"
+                ? "library-table library-table-materials"
+                : "library-table"
+            }
+          >
             <thead>
               <tr>
                 {collection === "materials" && <th>Code</th>}
