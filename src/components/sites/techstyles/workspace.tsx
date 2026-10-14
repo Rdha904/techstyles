@@ -46,6 +46,7 @@ import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
 import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
+import { ManufacturersPage } from "./manufacturers";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 import { request, assetsPath, manufacturersApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
@@ -189,6 +190,13 @@ export function Workspace({ path }: { path: string[] }) {
     setCreate(false);
     router.push(`/products/${p.id}`);
   }
+  function saveManufacturer(manufacturer: Manufacturer) {
+    setManufacturers((old) =>
+      old.some((item) => item.id === manufacturer.id)
+        ? old.map((item) => (item.id === manufacturer.id ? manufacturer : item))
+        : [manufacturer, ...old],
+    );
+  }
   useEffect(() => {
     if (!sidebar) return;
     const dismiss = (event: KeyboardEvent) => {
@@ -288,6 +296,21 @@ export function Workspace({ path }: { path: string[] }) {
     }
     if (loading) return <div className="empty">Loading your workspace…</div>;
     switch (view.kind) {
+      case "manufacturers":
+        if (error)
+          return (
+            <div className="empty">Manufacturers could not be loaded.</div>
+          );
+        return (
+          <ManufacturersPage
+            manufacturers={manufacturers}
+            products={products}
+            onSave={saveManufacturer}
+            onDelete={(id) =>
+              setManufacturers((old) => old.filter((item) => item.id !== id))
+            }
+          />
+        );
       case "product":
       case "product-canvas":
       case "product-print":
@@ -631,6 +654,7 @@ export function Workspace({ path }: { path: string[] }) {
           <ProductEditor
             product={product}
             manufacturers={manufacturers}
+            onManufacturerSave={saveManufacturer}
             onChange={(p) =>
               setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
             }
@@ -685,6 +709,7 @@ export function Workspace({ path }: { path: string[] }) {
       {create && (
         <ProductForm
           manufacturers={manufacturers}
+          onManufacturerSave={saveManufacturer}
           onClose={() => setCreate(false)}
           onSave={saved}
         />

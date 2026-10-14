@@ -92,6 +92,7 @@ export type WorkspaceView =
   | { kind: "module-home" }
   | { kind: "brand-profile" }
   | { kind: "brand-book" }
+  | { kind: "manufacturers" }
   | { kind: "concept-overview" }
   | { kind: "module-page" }
   | { kind: "dashboard" }
@@ -139,6 +140,12 @@ export function resolveView(path: string[]) {
         if (modulePage === "Brand Book") return { kind: "brand-book" };
         if (modulePage === "Overview") return { kind: "concept-overview" };
       }
+      if (
+        activeModule.id === "manufacturers" &&
+        modulePage === "Manufacturers" &&
+        path.length === 3
+      )
+        return { kind: "manufacturers" };
       if (modulePage) return { kind: "module-page" };
     }
     if (section === "products" && path[1])

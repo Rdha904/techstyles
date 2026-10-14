@@ -2,24 +2,60 @@
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { Product, Manufacturer } from "@/lib/types";
-import { request } from "@/lib/client-api";
+import { request, manufacturersApi } from "@/lib/client-api";
 import { Modal } from "./ui";
+import "./product-form.css";
 
 export function ProductForm({
   product,
   manufacturers,
+  onManufacturerSave,
   onClose,
   onSave,
 }: {
   product?: Product;
   manufacturers: Manufacturer[];
+  onManufacturerSave: (manufacturer: Manufacturer) => void;
   onClose: () => void;
   onSave: (p: Product) => void;
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [manufacturerId, setManufacturerId] = useState(
+    product?.manufacturerId || "",
+  );
+  const [creatingManufacturer, setCreatingManufacturer] = useState(false);
+  const [manufacturerName, setManufacturerName] = useState("");
+  const [manufacturerError, setManufacturerError] = useState("");
+  const [manufacturerBusy, setManufacturerBusy] = useState(false);
+  function cancelManufacturer() {
+    setCreatingManufacturer(false);
+    setManufacturerName("");
+    setManufacturerError("");
+  }
+  async function addManufacturer() {
+    if (manufacturerBusy) return;
+    const name = manufacturerName.trim();
+    if (!name) {
+      setManufacturerError("Manufacturer name is required");
+      return;
+    }
+    setManufacturerBusy(true);
+    setManufacturerError("");
+    try {
+      const manufacturer = await manufacturersApi.create({ name });
+      onManufacturerSave(manufacturer);
+      setManufacturerId(manufacturer.id);
+      cancelManufacturer();
+    } catch (error) {
+      setManufacturerError((error as Error).message);
+    } finally {
+      setManufacturerBusy(false);
+    }
+  }
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy || creatingManufacturer || manufacturerBusy) return;
     setBusy(true);
     setError("");
     const data = Object.fromEntries(new FormData(e.currentTarget));
@@ -30,7 +66,7 @@ export function ProductForm({
         product ? `/api/products/${product.id}` : "/api/products",
         {
           method: product ? "PATCH" : "POST",
-          json: { ...data, manufacturerId: data.manufacturerId || null },
+          json: { ...data, manufacturerId: manufacturerId || null },
         },
       );
       onSave(p);
@@ -43,7 +79,9 @@ export function ProductForm({
   return (
     <Modal
       title={product ? "Edit Product" : "Add New Product"}
-      onClose={onClose}
+      onClose={() => {
+        if (!manufacturerBusy) onClose();
+      }}
     >
       <p className="muted">
         Core product details — you&apos;ll add the full tech pack next.
@@ -128,7 +166,17 @@ export function ProductForm({
             Manufacturer
             <select
               name="manufacturerId"
-              defaultValue={product?.manufacturerId || ""}
+              value={creatingManufacturer ? "__new__" : manufacturerId}
+              disabled={busy || manufacturerBusy}
+              onChange={(event) => {
+                if (event.target.value === "__new__") {
+                  setCreatingManufacturer(true);
+                  setManufacturerError("");
+                } else {
+                  setManufacturerId(event.target.value);
+                  cancelManufacturer();
+                }
+              }}
             >
               <option value="">None</option>
               {manufacturers.map((manufacturer) => (
@@ -136,8 +184,53 @@ export function ProductForm({
                   {manufacturer.name}
                 </option>
               ))}
+              <option value="__new__">+ New manufacturer…</option>
             </select>
           </label>
+          {creatingManufacturer && (
+            <div className="inline-manufacturer full">
+              <label>
+                New manufacturer name
+                <input
+                  value={manufacturerName}
+                  onChange={(event) => setManufacturerName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void addManufacturer();
+                    }
+                  }}
+                  maxLength={200}
+                  disabled={manufacturerBusy}
+                  placeholder="e.g. Knitwear Studio"
+                  autoFocus
+                />
+              </label>
+              <div className="inline-manufacturer-actions">
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={manufacturerBusy}
+                  onClick={addManufacturer}
+                >
+                  {manufacturerBusy ? "Adding…" : "Add"}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={manufacturerBusy}
+                  onClick={cancelManufacturer}
+                >
+                  Cancel
+                </button>
+              </div>
+              {manufacturerError && (
+                <p className="error" role="alert">
+                  {manufacturerError}
+                </p>
+              )}
+            </div>
+          )}
           <label className="full">
             Description
             <textarea
@@ -149,10 +242,18 @@ export function ProductForm({
         </div>
         {error && <p className="error">{error}</p>}
         <div className="modal-footer">
-          <button type="button" className="btn" onClick={onClose}>
+          <button
+            type="button"
+            className="btn"
+            disabled={manufacturerBusy}
+            onClick={onClose}
+          >
             Cancel
           </button>
-          <button className="btn primary" disabled={busy}>
+          <button
+            className="btn primary"
+            disabled={busy || creatingManufacturer || manufacturerBusy}
+          >
             {busy
               ? "Saving…"
               : product

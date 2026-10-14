@@ -225,11 +225,13 @@ function Section({
 export function ProductEditor({
   product,
   manufacturers,
+  onManufacturerSave,
   onChange,
   onToggleSidebar,
 }: {
   product: Product;
   manufacturers: Manufacturer[];
+  onManufacturerSave: (manufacturer: Manufacturer) => void;
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
 }) {
@@ -1094,6 +1096,7 @@ export function ProductEditor({
         <ProductForm
           product={p}
           manufacturers={manufacturers}
+          onManufacturerSave={onManufacturerSave}
           onClose={() => setModal("")}
           onSave={(x) => {
             draft.replace(x);
