@@ -27,7 +27,7 @@ export function ManufacturersOverview({
       tone: "blue",
       description:
         "Build your directory of garment manufacturers and keep contact details close at hand.",
-      detail: `${manufacturers.length} manufacturers in your directory`,
+      detail: `${manufacturers.length} manufacturer${manufacturers.length === 1 ? "" : "s"} in your directory`,
     },
     {
       title: "Quote Requests",
@@ -45,7 +45,7 @@ export function ManufacturersOverview({
       tone: "violet",
       description:
         "Compare prices, minimum quantities and lead times, then choose a manufacturer for your product.",
-      detail: `${counts.chosenProducts} products with a chosen request`,
+      detail: `${counts.chosenProducts} product${counts.chosenProducts === 1 ? "" : "s"} with a chosen request`,
     },
   ];
   return (
