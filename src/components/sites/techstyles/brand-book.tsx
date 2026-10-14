@@ -64,21 +64,33 @@ export function BrandBookPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  if (loadError) return <p className="error">{loadError}</p>;
-  if (!book) return <div className="empty">Loading your brand book…</div>;
+  if (loadError)
+    return (
+      <section className="bb-start">
+        <h1>Brand book</h1>
+        <p className="error">{loadError}</p>
+      </section>
+    );
+  if (!book)
+    return (
+      <section className="bb-start">
+        <h1>Brand book</h1>
+        <p className="muted">Loading your brand book…</p>
+      </section>
+    );
   if (!profile)
     return (
       <section className="bb-start">
         <span className="bb-start-icon">
           <BookOpen size={28} strokeWidth={1.7} />
         </span>
-        <h2>Create your brand profile first</h2>
+        <h1>Create your brand profile first</h1>
         <p>
           Your brand book is built from your saved Brand Profile: logo, colors,
           typography, values and tone of voice.
         </p>
         <Link className="btn primary" href={profilePath}>
-          Open Brand Profile <ArrowUpRight size={15} />
+          Open brand profile <ArrowUpRight size={15} />
         </Link>
       </section>
     );
@@ -191,8 +203,8 @@ export function BrandBookPage() {
     <section className="bb-page">
       <header className="bb-toolbar">
         <div>
-          <span className="module-eyebrow">CONCEPT &amp; AUDIENCE</span>
-          <h2>Brand Book</h2>
+          <span className="module-eyebrow">Concept &amp; audience</span>
+          <h2>Brand book</h2>
           <p className="muted">
             Generated from your saved Brand Profile. Edit the profile to change
             the content; choose the cover and images here.
@@ -200,13 +212,13 @@ export function BrandBookPage() {
         </div>
         <div className="bb-actions">
           <Link className="btn" href={profilePath}>
-            <Pencil size={14} /> Edit Brand Profile
+            <Pencil size={14} /> Edit brand profile
           </Link>
           <button className="btn" onClick={startEditing} disabled={editing}>
             <ImageIcon size={14} /> Edit images
           </button>
           <Link className="btn" href={`${bookPath}/print`}>
-            <Download size={14} /> Print / Save PDF
+            <Download size={14} /> Print / save PDF
           </Link>
         </div>
       </header>
@@ -230,7 +242,7 @@ export function BrandBookPage() {
               <Copy size={14} /> Copy
             </button>
             <button
-              className="btn"
+              className="btn destructive"
               disabled={busy === "publish"}
               onClick={() => setPublished(false)}
             >
@@ -239,7 +251,7 @@ export function BrandBookPage() {
           </div>
         ) : (
           <button
-            className="btn primary"
+            className={editing ? "btn" : "btn primary"}
             disabled={busy === "publish"}
             onClick={() => setPublished(true)}
           >
@@ -344,14 +356,26 @@ export function BrandBookPage() {
 
 export function BrandBookPrint() {
   const { profile, book, error } = useBrandBook();
-  if (error) return <p className="error">{error}</p>;
-  if (!book) return <div className="empty">Loading brand book…</div>;
+  if (error)
+    return (
+      <section className="bb-start">
+        <h1>Brand book</h1>
+        <p className="error">{error}</p>
+      </section>
+    );
+  if (!book)
+    return (
+      <section className="bb-start">
+        <h1>Brand book</h1>
+        <p className="muted">Loading brand book…</p>
+      </section>
+    );
   if (!profile)
     return (
       <div className="empty">
-        <h2>No brand profile yet</h2>
+        <h1>No brand profile yet</h1>
         <Link className="btn" href={profilePath}>
-          Open Brand Profile
+          Open brand profile
         </Link>
       </div>
     );
@@ -359,10 +383,10 @@ export function BrandBookPrint() {
     <main className="bb-standalone">
       <div className="bb-standalone-bar no-print">
         <Link className="btn" href={bookPath}>
-          Back to Brand Book
+          Back to brand book
         </Link>
         <button className="btn primary" onClick={() => window.print()}>
-          <Download size={15} /> Print / Save PDF
+          <Download size={15} /> Print / save PDF
         </button>
       </div>
       <BrandBookDocument profile={profile} book={book} />
@@ -387,13 +411,19 @@ export function SharedBrandBook({ token }: { token: string }) {
         <p>{error}</p>
       </div>
     );
-  if (!data) return <div className="empty">Loading brand book…</div>;
+  if (!data)
+    return (
+      <section className="bb-start">
+        <h1>Brand book</h1>
+        <p className="muted">Loading brand book…</p>
+      </section>
+    );
   return (
     <main className="bb-standalone">
       <div className="bb-standalone-bar no-print">
         <span className="muted">Read-only brand book</span>
         <button className="btn primary" onClick={() => window.print()}>
-          <Download size={15} /> Print / Save PDF
+          <Download size={15} /> Print / save PDF
         </button>
       </div>
       <BrandBookDocument profile={data.profile} book={data.book} />
@@ -451,7 +481,7 @@ function BrandBookDocument({
   book: BookImages;
   editable?: boolean;
 }) {
-  const accent = profile.colors[0] || "#1e2026";
+  const accent = profile.colors[0] || "#000000";
   const coverDark = book.coverUrl ? true : isDark(accent);
   const updated = book.updatedAt || profile.updatedAt;
   return (

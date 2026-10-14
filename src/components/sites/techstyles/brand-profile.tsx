@@ -495,7 +495,7 @@ export function BrandProfilePage() {
     >
       <div className="brand-page-intro">
         <div>
-          <span className="module-eyebrow">YOUR BRAND FOUNDATION</span>
+          <span className="module-eyebrow">Your brand foundation</span>
           <p className="muted">
             One shared identity for your products, designs and marketing.
           </p>
@@ -592,7 +592,7 @@ export function BrandProfilePage() {
           )}
           {step === "choices" && (
             <section className="brand-choice-step brand-choice-expanded">
-              <h2>Build your Brand Profile</h2>
+              <h2>Build your brand profile</h2>
               <p>Pick how you’d like to get started.</p>
               <p className="muted">
                 Add your own information from scratch, or start with an editable
@@ -613,7 +613,7 @@ export function BrandProfilePage() {
                     Upload your brand materials or enter your details manually.
                   </p>
                   <div className="brand-choice-preview">
-                    <span>YOUR BRAND</span>
+                    <span>Your brand</span>
                     <i />
                     <i />
                     <div>
@@ -722,7 +722,7 @@ export function BrandProfilePage() {
         >
           <div className="brand-section-title">
             <div>
-              <span className="module-eyebrow">REVIEW BEFORE APPLYING</span>
+              <span className="module-eyebrow">Review before applying</span>
               <h3>{review.suggestions.length} suggestions found</h3>
               <p>
                 Nothing is selected automatically. Text replaces the matching
@@ -821,7 +821,7 @@ export function BrandProfilePage() {
           >
             <div className="brand-studio-main">
               <div className="brand-studio-heading">
-                <h2>Your Business Profile</h2>
+                <h2>Your business profile</h2>
                 <p>
                   Build the foundation for your designs, tech packs and
                   marketing.
@@ -861,7 +861,7 @@ export function BrandProfilePage() {
                       }
                     }}
                   >
-                    {tab === "overview" ? "Brand Overview" : "Business Details"}
+                    {tab === "overview" ? "Brand overview" : "Business details"}
                   </button>
                 ))}
               </div>
@@ -976,7 +976,9 @@ export function BrandProfilePage() {
                             </div>
                           ))}
                           {!profile.fonts.length && (
-                            <p className="brand-empty">No font names confirmed.</p>
+                            <p className="brand-empty">
+                              No font names confirmed.
+                            </p>
                           )}
                         </div>
                         <form
@@ -1139,7 +1141,9 @@ export function BrandProfilePage() {
                           ))}
                         </div>
                         {!profile.referenceImages.length && (
-                          <p className="brand-empty">No reference images added.</p>
+                          <p className="brand-empty">
+                            No reference images added.
+                          </p>
                         )}
                         <label className="btn brand-upload">
                           <Plus size={15} /> Add images
@@ -1150,7 +1154,9 @@ export function BrandProfilePage() {
                             accept="image/png,image/jpeg,image/webp"
                             multiple
                             disabled={!!busy}
-                            onChange={(e) => void uploadAsset(e, "referenceImages")}
+                            onChange={(e) =>
+                              void uploadAsset(e, "referenceImages")
+                            }
                           />
                         </label>
                       </section>
@@ -1201,8 +1207,8 @@ export function BrandProfilePage() {
                       <section className="brand-card brand-shared brand-cell-shared">
                         <h3>One profile, shared everywhere</h3>
                         <p>
-                          Only your saved, reviewed profile is available to other
-                          modules.
+                          Only your saved, reviewed profile is available to
+                          other modules.
                         </p>
                         <Link href="/">
                           Design &amp; Tech Packs <ArrowUpRight size={14} />
@@ -1213,8 +1219,8 @@ export function BrandProfilePage() {
                         {saved.updatedAt && (
                           <small>
                             Last saved{" "}
-                            {new Date(saved.updatedAt).toLocaleString("en-US")} ·
-                            Version {saved.revision}
+                            {new Date(saved.updatedAt).toLocaleString("en-US")}{" "}
+                            · Version {saved.revision}
                           </small>
                         )}
                       </section>
@@ -1250,7 +1256,11 @@ export function BrandProfilePage() {
                     Reload saved
                   </button>
                   <button
-                    className="btn primary"
+                    className={
+                      step === "scratch" || review || editField
+                        ? "btn"
+                        : "btn primary"
+                    }
                     disabled={
                       !!busy ||
                       step === "scratch" ||
@@ -1285,8 +1295,8 @@ export function BrandProfilePage() {
                 <div className="brand-assistant-body">
                   <span className="module-eyebrow">
                     {step === "scratch"
-                      ? "LET’S GET STARTED"
-                      : "YOUR PROFILE GUIDE"}
+                      ? "Let’s get started"
+                      : "Your profile guide"}
                   </span>
                   <h3>
                     {step === "scratch"
@@ -1413,7 +1423,7 @@ export function BrandProfilePage() {
                           rows={3}
                         />
                         <button
-                          className="btn primary"
+                          className="btn"
                           disabled={!!busy || !guideAnswer.trim()}
                         >
                           Add to draft

@@ -117,7 +117,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 | 2. Shell | done | bd161e2 |
 | 3. Dashboard | done | c4da66f |
 | 4. Products library and editor | done | 0c67198 |
-| 5. Sourcing | queued | |
+| 5. Sourcing | done | 182fb1d |
 | 6. Libraries, Settings, Concept, Brand Profile and Brand Book | queued | |
 | 7. Cleanup | queued | |
 
@@ -132,3 +132,4 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 - **Editor section buttons are all ghost buttons** (for example "Select sketch"). The editor has no indigo button, so nothing competes for attention. On the canvas, "Save" is the one indigo button and "Save to tech pack" became a ghost button.
 - **Long BOM values are shortened with "…"** so all six columns fit at 1440px without sideways scrolling. Hovering shows the full value, and clicking edits it as before.
 - **Uppercase labels are now sentence case** in the editor (for example "CORE PRODUCT INFORMATION" became "Core product information", and table headers like "MATERIAL" became "Material"). Printed and shared tech packs keep their original casing and layout. Only their fonts and colors changed, and Inter's taller line spacing makes the page slightly longer.
+- **Quote states have one look everywhere.** Draft, Sent and Quoted are light gray. Chosen is black and Declined is red. In the comparison, a chosen manufacturer's button reads "Chosen", and screen readers announce it as a pressed "Choose" button.

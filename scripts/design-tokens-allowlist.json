@@ -1,33 +1,33 @@
 {
   "src/app/globals.css": {
-    "hex": 11,
+    "hex": 6,
     "rgb": 0,
-    "borderRadius": 6,
+    "borderRadius": 5,
     "fontWeight": 2
   },
   "src/components/sites/techstyles/brand-book.css": {
-    "hex": 11,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 6,
-    "fontWeight": 2
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/brand-profile.css": {
-    "hex": 91,
+    "hex": 5,
     "rgb": 0,
-    "borderRadius": 29,
-    "fontWeight": 5
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/concept-overview.css": {
-    "hex": 19,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 3,
-    "fontWeight": 2
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/libraries.css": {
-    "hex": 80,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 20,
-    "fontWeight": 9
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/manufacturer-quotes.css": {
     "hex": 0,

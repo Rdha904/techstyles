@@ -304,9 +304,16 @@ export function Workspace({ path }: { path: string[] }) {
                         : `/modules/${activeModule.id}/${pageSlug(page)}`
                     }
                   >
-                    <LayoutDashboard size={21} />
+                    <span className="module-page-icon">
+                      <LayoutDashboard size={18} />
+                    </span>
                     <h3>{page}</h3>
-                    <span>
+                    {page !== "Brand Profile" && (
+                      <span className="module-page-status">
+                        Tools in development
+                      </span>
+                    )}
+                    <span className="module-page-action">
                       Open workspace <ArrowUpRight size={16} />
                     </span>
                   </Link>
@@ -1083,71 +1090,77 @@ function ProductLibrary({
 }
 function SettingsPage({ notify }: { notify: (s: string) => void }) {
   return (
-    <section className="panel settings-panel">
+    <section className="settings-panel">
       <h1>Workspace settings</h1>
       <p className="muted">Your independent Techstyles workspace</p>
-      <h2 style={{ marginTop: 30 }}>Storage</h2>
-      <p>
-        Brand profiles, tech packs, libraries and uploads are saved on this
-        computer, inside this application&apos;s data folder.
-      </p>
-      <h2 style={{ marginTop: 30 }}>AI generation</h2>
-      <p>
-        Add your own <code>OPENAI_API_KEY</code> to <code>.env.local</code> and
-        restart the application to enable sketch and mockup generation. Without
-        a configured key, no AI request is sent.
-      </p>
-      <p className="muted">
-        This local workspace has no subscription or credit billing.
-      </p>
-      <h2 style={{ marginTop: 30 }}>Backup</h2>
-      <button
-        className="btn"
-        onClick={async () => {
-          try {
-            const [data, libraries, brand, manufacturers, quoteRequests] =
-              await Promise.all([
-                request("/api/products"),
-                request("/api/libraries"),
-                request<{ profile: unknown }>("/api/brand-profile"),
-                manufacturersApi.list(),
-                quoteRequestsApi.list(),
-              ]);
-            const url = URL.createObjectURL(
-              new Blob(
-                [
-                  JSON.stringify(
-                    {
-                      products: data,
-                      libraries,
-                      brandProfile: brand.profile,
-                      manufacturers,
-                      quoteRequests,
-                    },
-                    null,
-                    2,
-                  ),
-                ],
-                { type: "application/json" },
-              ),
-            );
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "techstyles-workspace.json";
-            a.click();
-            URL.revokeObjectURL(url);
-            notify("Workspace data exported");
-          } catch (e) {
-            notify((e as Error).message);
-          }
-        }}
-      >
-        Export workspace data
-      </button>
-      <p className="muted" style={{ marginTop: 12 }}>
-        Includes structured data. Keep the data/uploads folder with your backup
-        for uploaded files.
-      </p>
+      <section className="panel">
+        <h2>Storage</h2>
+        <p>
+          Brand profiles, tech packs, libraries and uploads are saved on this
+          computer, inside this application&apos;s data folder.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>AI generation</h2>
+        <p>
+          Add your own <code>OPENAI_API_KEY</code> to <code>.env.local</code>{" "}
+          and restart the application to enable sketch and mockup generation.
+          Without a configured key, no AI request is sent.
+        </p>
+        <p className="muted">
+          This local workspace has no subscription or credit billing.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Backup</h2>
+        <button
+          className="btn primary"
+          onClick={async () => {
+            try {
+              const [data, libraries, brand, manufacturers, quoteRequests] =
+                await Promise.all([
+                  request("/api/products"),
+                  request("/api/libraries"),
+                  request<{ profile: unknown }>("/api/brand-profile"),
+                  manufacturersApi.list(),
+                  quoteRequestsApi.list(),
+                ]);
+              const url = URL.createObjectURL(
+                new Blob(
+                  [
+                    JSON.stringify(
+                      {
+                        products: data,
+                        libraries,
+                        brandProfile: brand.profile,
+                        manufacturers,
+                        quoteRequests,
+                      },
+                      null,
+                      2,
+                    ),
+                  ],
+                  { type: "application/json" },
+                ),
+              );
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "techstyles-workspace.json";
+              a.click();
+              URL.revokeObjectURL(url);
+              notify("Workspace data exported");
+            } catch (e) {
+              notify((e as Error).message);
+            }
+          }}
+        >
+          Export workspace data
+        </button>
+        <p className="muted settings-help">
+          Includes structured data. Keep the data/uploads folder with your
+          backup for uploaded files.
+        </p>
+      </section>
     </section>
   );
 }
