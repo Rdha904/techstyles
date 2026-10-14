@@ -15,8 +15,11 @@ import {
   ShoppingBag,
   Truck,
   Megaphone,
+  Package,
+  CircleCheck,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
+import { dashboardSummary } from "@/lib/dashboard";
 import { BrandProfileSummary } from "./brand-profile";
 import "./workspace-dashboard.css";
 
@@ -30,7 +33,7 @@ const areas = [
   },
   {
     name: "Design & Tech Packs",
-    href: "/",
+    href: "/products",
     icon: Pencil,
     text: "Develop your products and collections",
     ready: true,
@@ -89,35 +92,45 @@ export function WorkspaceDashboard({
   loading: boolean;
   failed: boolean;
 }) {
-  const active = products.filter((product) => !product.archived);
-  const recent = [...active]
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-    .slice(0, 4);
+  const summary = dashboardSummary(products);
+  const recent = summary.recentActivity
+    .slice(0, 4)
+    .map(({ id }) => products.find((product) => product.id === id)!);
   const stats = [
     {
       name: "Active products",
-      value: active.length,
+      value: summary.activeProducts,
       icon: Shirt,
       href: "/products",
     },
     {
       name: "Collections",
-      value: new Set(
-        active.map((product) => product.project.trim()).filter(Boolean),
-      ).size,
+      value: summary.collections,
       icon: FolderKanban,
       href: "/projects",
     },
     {
       name: "Products with a manufacturer",
-      value: active.filter((product) => product.manufacturerId !== null).length,
+      value: summary.productsWithManufacturer,
       icon: Factory,
       href: "/products",
     },
     {
       name: "Shared tech packs",
-      value: active.filter((product) => product.shareToken).length,
+      value: summary.sharedTechPacks,
       icon: Share2,
+      href: "/products",
+    },
+    {
+      name: "Products in development",
+      value: summary.productsInDevelopment,
+      icon: Package,
+      href: "/products",
+    },
+    {
+      name: "Products in production",
+      value: summary.productsInProduction,
+      icon: CircleCheck,
       href: "/products",
     },
   ];
@@ -200,6 +213,33 @@ export function WorkspaceDashboard({
               Start a product <ArrowUpRight size={15} />
             </Link>
           </div>
+        )}
+      </section>
+      <section className="workspace-recent">
+        <header>
+          <h3>Recent activity</h3>
+        </header>
+        {loading ? (
+          <p role="status">Loading activity…</p>
+        ) : failed ? (
+          <p>Recent activity is unavailable.</p>
+        ) : summary.recentActivity.length ? (
+          <ul className="workspace-activity-list">
+            {summary.recentActivity.map((product) => (
+              <li key={product.id}>
+                <Link href={`/products/${product.id}`}>{product.name}</Link>
+                <time dateTime={product.updatedAt}>
+                  {new Date(product.updatedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </time>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No product updates yet.</p>
         )}
       </section>
       <section className="workspace-areas">

@@ -24,7 +24,7 @@
 }
 .workspace-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 .workspace-stat {
@@ -141,6 +141,31 @@
   align-items: center;
   gap: 14px;
   padding: 12px 0;
+}
+.workspace-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.workspace-activity-list li {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.workspace-activity-list a {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-activity-list time {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .workspace-empty p {
   flex: 1;

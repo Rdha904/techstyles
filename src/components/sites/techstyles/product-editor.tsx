@@ -57,6 +57,7 @@ import type {
   Annotation,
 } from "@/lib/types";
 import { productSections } from "@/lib/types";
+import type { WorkspaceIdentity } from "@/lib/workspace-identity";
 import { BrandProfileSummary } from "./brand-profile";
 import { request, uploadFile, assetsPath } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
@@ -121,10 +122,12 @@ function CommentBox({
   product,
   section,
   save,
+  identity,
 }: {
   product: Product;
   section: string;
   save: (data: Partial<Product>) => Promise<void>;
+  identity: WorkspaceIdentity;
 }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -157,7 +160,7 @@ function CommentBox({
                 ...product.comments,
                 {
                   id: uid(),
-                  author: "Local Studio",
+                  author: identity.name,
                   section,
                   text: text.trim(),
                   createdAt: new Date().toISOString(),
@@ -194,6 +197,7 @@ function Section({
   complete,
   product,
   save,
+  identity,
 }: {
   id: string;
   title: string;
@@ -202,6 +206,7 @@ function Section({
   complete?: boolean;
   product?: Product;
   save?: (data: Partial<Product>) => Promise<void>;
+  identity?: WorkspaceIdentity;
 }) {
   return (
     <section id={id} className="pack-section">
@@ -217,8 +222,13 @@ function Section({
       </div>
       <div className="panel section-body">
         {children}
-        {product && save && (
-          <CommentBox product={product} section={id} save={save} />
+        {product && save && identity && (
+          <CommentBox
+            product={product}
+            section={id}
+            save={save}
+            identity={identity}
+          />
         )}
       </div>
     </section>
@@ -226,6 +236,7 @@ function Section({
 }
 export function ProductEditor({
   product,
+  identity,
   manufacturers,
   onManufacturerSave,
   quoteRequests = [],
@@ -235,6 +246,7 @@ export function ProductEditor({
   onToggleSidebar,
 }: {
   product: Product;
+  identity: WorkspaceIdentity;
   manufacturers: Manufacturer[];
   onManufacturerSave: (manufacturer: Manufacturer) => void;
   quoteRequests?: QuoteRequest[];
@@ -310,6 +322,7 @@ export function ProductEditor({
       id,
       title: sections.find((s) => s[0] === id)?.[1] || id,
       product: p,
+      identity,
     };
   }
   return (
@@ -478,7 +491,7 @@ export function ProductEditor({
               />
               <div className="toolbar">
                 <small>OWNERS</small>
-                <span className="badge blue">Local Studio</span>
+                <span className="badge blue">{identity.name}</span>
                 <span className="spacer" />
                 <button
                   className="icon-button"
@@ -1426,14 +1439,16 @@ export function ProductEditor({
 function Overview({
   product: p,
   manufacturerName,
+  headingAs: Heading = "h1",
 }: {
   product: ProductSnapshot;
   manufacturerName?: string;
+  headingAs?: "h1" | "div";
 }) {
   return (
     <div className="overview-info">
       <small>CORE PRODUCT INFORMATION</small>
-      <h1>{p.name}</h1>
+      <Heading className="overview-product-title">{p.name}</Heading>
       <div className="toolbar">
         <span className="badge">{p.code}</span>
         <span className={`badge ${p.stage.toLowerCase()}`}>{p.stage}</span>
@@ -1771,7 +1786,7 @@ export function SharedProduct({
       </p>
       {show("overview") && (
         <Section id="overview" title="Overview">
-          <Overview product={p} />
+          <Overview product={p} headingAs="div" />
         </Section>
       )}
       {show("sketch") && (

@@ -720,6 +720,7 @@ test("editor sourcing is separate from the pack, shows only valid actions, and s
     product.manufacturerId = manufacturer.id;
     const props = {
       product,
+      identity: { name: 'My workspace', initials: 'MW' },
       quoteRequests: [qr],
       manufacturers: [manufacturer],
       onChange() {},

@@ -4,6 +4,16 @@ A workspace where a fashion brand founder defines their brand, develops products
 
 ## Language
 
+### Brand
+
+**Workspace**:
+One brand's space in Techstyles: its Brand Profile, products, libraries and sourcing. It goes by the Brand Profile's name, or "My workspace" until one is set.
+_Avoid_: Studio, account, Local Studio
+
+**Brand Profile**:
+The brand's shared identity (name, logo, values, audience, tone, colors) that designs and marketing draw on.
+_Avoid_: Brand settings, brand kit
+
 ### Products
 
 **Tech Pack**:

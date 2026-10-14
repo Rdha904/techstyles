@@ -279,11 +279,13 @@ test('founder overview shows manufacturer while share and print overview omit it
   const product = { ...emptyProduct(), manufacturerId: manufacturer.id, supplier: 'Legacy confidential factory' };
   const founder = renderToStaticMarkup(React.createElement(ProductEditor, {
     product, manufacturers: [manufacturer], onChange() {}, onToggleSidebar() {},
+    identity: { name: 'My workspace', initials: 'MW' },
   }));
   assert.match(founder, /MANUFACTURER/);
   assert.match(founder, /Confidential Factory/);
   const unlinked = renderToStaticMarkup(React.createElement(ProductEditor, {
     product: { ...product, manufacturerId: null }, manufacturers: [manufacturer], onChange() {}, onToggleSidebar() {},
+    identity: { name: 'My workspace', initials: 'MW' },
   }));
   assert.match(unlinked, /MANUFACTURER<\/small>—/);
   for (const excludedSections of [[], ['overview'], [...productSections]]) {

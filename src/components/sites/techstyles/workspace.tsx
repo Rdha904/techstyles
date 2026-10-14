@@ -15,13 +15,11 @@ import {
   Search,
   Plus,
   PanelLeft,
-  LifeBuoy,
   Settings,
   ChevronDown,
   Grid2X2,
   List,
   Package,
-  CircleCheck,
   X,
   ArrowUpRight,
   Clock,
@@ -41,6 +39,8 @@ import {
   Minimize2,
 } from "lucide-react";
 import type { Product, Manufacturer, QuoteRequest } from "@/lib/types";
+import type { BrandProfile } from "@/lib/brand-types";
+import { workspaceIdentity } from "@/lib/workspace-identity";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
@@ -51,12 +51,7 @@ import { ManufacturersOverview } from "./manufacturers-overview";
 import { QuoteRequestsPage } from "./quote-requests";
 import { QuoteComparisonPage } from "./quote-comparison";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-import {
-  request,
-  assetsPath,
-  manufacturersApi,
-  quoteRequestsApi,
-} from "@/lib/client-api";
+import { request, manufacturersApi, quoteRequestsApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
 import {
@@ -64,9 +59,9 @@ import {
   moduleRoutes,
   pageSlug,
   resolveView,
+  viewOwnsPageHeading,
 } from "./workspace-routes";
 const navIcons = {
-  dashboard: LayoutDashboard,
   products: Shirt,
   projects: FolderKanban,
   sketches: Pencil,
@@ -96,7 +91,6 @@ const modules = moduleRoutes.map((module) => ({
   icon: moduleIcons[module.id as keyof typeof moduleIcons],
 }));
 const subtitles: Record<string, string> = {
-  dashboard: "Product development overview",
   products: "Manage styles across all seasons and stages",
   projects: "Organize your collections and seasons",
   sketches: "Your reusable technical sketches",
@@ -152,6 +146,8 @@ export function Workspace({ path }: { path: string[] }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
+  const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
+  const identity = workspaceIdentity(brandProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebar, setSidebar] = useState(
@@ -176,12 +172,16 @@ export function Workspace({ path }: { path: string[] }) {
       request<Product[]>("/api/products"),
       manufacturersApi.list(),
       quoteRequestsApi.list(),
+      request<{ profile: BrandProfile | null }>("/api/brand-profile").catch(
+        () => ({ profile: null }),
+      ),
     ])
-      .then(([p, manufacturers, requests]) => {
+      .then(([p, manufacturers, requests, { profile }]) => {
         if (live) {
           setProducts(p);
           setManufacturers(manufacturers);
           setQuoteRequests(requests);
+          setBrandProfile(profile ?? null);
           setLoading(false);
         }
       })
@@ -318,7 +318,7 @@ export function Workspace({ path }: { path: string[] }) {
                   Manage your designs and tech packs while this module is being
                   prepared.
                 </p>
-                <Link className="btn" href="/">
+                <Link className="btn" href="/products">
                   Open Design &amp; Tech Packs
                 </Link>
               </div>
@@ -416,13 +416,6 @@ export function Workspace({ path }: { path: string[] }) {
             onCreate={() => setCreate(true)}
           />
         );
-      case "dashboard":
-        return (
-          <>
-            <BrandProfileSummary />
-            <Dashboard products={products} />
-          </>
-        );
       case "product-library":
         return (
           <ProductLibrary
@@ -506,9 +499,11 @@ export function Workspace({ path }: { path: string[] }) {
                       );
                   }}
                   href={
-                    module.id === "design"
+                    module.id === "home"
                       ? "/"
-                      : `/modules/${module.id}/overview`
+                      : module.id === "design"
+                        ? "/products"
+                        : `/modules/${module.id}/overview`
                   }
                   className={activeModule.id === module.id ? "active" : ""}
                   aria-current={
@@ -522,9 +517,10 @@ export function Workspace({ path }: { path: string[] }) {
             })}
           </nav>
           <div className="module-footer">
-            <span className="avatar">LS</span>
+            <span className="avatar">{identity.initials}</span>
             <span>
-              Local Studio<small>Your workspace</small>
+              {identity.name}
+              <small>Your workspace</small>
             </span>
           </div>
         </aside>
@@ -562,12 +558,12 @@ export function Workspace({ path }: { path: string[] }) {
                 </button>
                 <span className="nav-label">MAIN</span>
                 <nav className="nav-links" aria-label="Design pages">
-                  {nav.slice(0, 3).map(([key, label, Icon]) => (
+                  {nav.slice(0, 2).map(([key, label, Icon]) => (
                     <div key={key}>
                       <Link
                         className={section === key ? "active" : ""}
                         aria-current={section === key ? "page" : undefined}
-                        href={key === "dashboard" ? "/" : `/${key}`}
+                        href={`/${key}`}
                         onClick={() => setSidebar(false)}
                       >
                         <Icon size={16} />
@@ -606,7 +602,7 @@ export function Workspace({ path }: { path: string[] }) {
                 </nav>
                 <span className="nav-label">LIBRARY</span>
                 <nav className="nav-links" aria-label="Library">
-                  {nav.slice(3).map(([key, label, Icon]) => (
+                  {nav.slice(2).map(([key, label, Icon]) => (
                     <Link
                       key={key}
                       className={section === key ? "active" : ""}
@@ -644,16 +640,10 @@ export function Workspace({ path }: { path: string[] }) {
               </nav>
             )}
             <div className="sidebar-bottom">
-              <nav className="nav-links" style={{ marginBottom: 0 }}>
-                <a href="mailto:support@techstyles.io">
-                  <LifeBuoy size={16} />
-                  Support
-                </a>
-              </nav>
               <div className="profile">
-                <span className="avatar">LS</span>
+                <span className="avatar">{identity.initials}</span>
                 <div>
-                  <span>Local Studio</span>
+                  <span>{identity.name}</span>
                   <small style={{ display: "block", fontSize: 10 }}>
                     Your workspace
                   </small>
@@ -738,6 +728,7 @@ export function Workspace({ path }: { path: string[] }) {
           view.kind === "product-library") ? (
           <ProductEditor
             product={product}
+            identity={identity}
             manufacturers={manufacturers}
             onManufacturerSave={saveManufacturer}
             quoteRequests={quoteRequests.filter(
@@ -765,7 +756,11 @@ export function Workspace({ path }: { path: string[] }) {
                 <PanelLeft size={16} />
               </button>
               <div>
-                <h1>{title}</h1>
+                {viewOwnsPageHeading(view) ? (
+                  <p className="app-header-title">{title}</p>
+                ) : (
+                  <h1>{title}</h1>
+                )}
                 <small>
                   {section === "modules"
                     ? activeModule.label
@@ -866,110 +861,6 @@ export function Workspace({ path }: { path: string[] }) {
         </div>
       )}
     </div>
-  );
-}
-function Dashboard({ products }: { products: Product[] }) {
-  return (
-    <>
-      <div className="stats">
-        <div className="panel stat">
-          <div>
-            <small>PRODUCTS IN DEVELOPMENT</small>
-            <strong>
-              {
-                products.filter(
-                  (p) =>
-                    !["Production", "Completed"].includes(p.stage) &&
-                    !p.archived,
-                ).length
-              }
-            </strong>
-          </div>
-          <Package size={21} />
-        </div>
-        <div className="panel stat">
-          <div>
-            <small>PRODUCTS IN PRODUCTION</small>
-            <strong>
-              {
-                products.filter((p) => p.stage === "Production" && !p.archived)
-                  .length
-              }
-            </strong>
-          </div>
-          <CircleCheck size={21} />
-        </div>
-      </div>
-      <div className="dashboard-columns">
-        <section className="panel">
-          <div className="panel-title">
-            <h2>Recent Products</h2>
-            <Link
-              href="/products"
-              className="muted"
-              style={{ color: "var(--blue)" }}
-            >
-              View all ↗
-            </Link>
-          </div>
-          {products.slice(0, 6).map((p) => (
-            <Link
-              href={`/products/${p.id}`}
-              className="recent-product"
-              key={p.id}
-            >
-              <img
-                src={
-                  p.cover || p.sketch || assetsPath + "hero-sketch-hoodie.png"
-                }
-                alt=""
-              />
-              <div>
-                {p.name}
-                <small>{p.category}</small>
-              </div>
-              <span className="spacer" />
-              <span className={`badge ${p.stage.toLowerCase()}`}>
-                {p.stage}
-              </span>
-              <small>
-                {new Date(p.updatedAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </small>
-            </Link>
-          ))}
-          {!products.length && (
-            <div className="empty">
-              Create your first tech pack in Products.
-            </div>
-          )}
-        </section>
-        <section className="panel">
-          <div className="panel-title">
-            <h2>Recent Activity</h2>
-            <Link href="/products" className="btn">
-              View All Activity <ArrowUpRight size={13} />
-            </Link>
-          </div>
-          {products.slice(0, 6).map((p) => (
-            <Link
-              className="recent-product"
-              href={`/products/${p.id}`}
-              key={p.id}
-            >
-              <Package size={18} />
-              <div>
-                Updated product &quot;{p.name}&quot;
-                <small>{new Date(p.updatedAt).toLocaleString("en-US")}</small>
-              </div>
-            </Link>
-          ))}
-        </section>
-      </div>
-    </>
   );
 }
 function ProductLibrary({

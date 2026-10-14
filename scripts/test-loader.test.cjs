@@ -27,7 +27,7 @@ test('loader transpiles TSX and resolves aliases outside lib', () => {
   const { Workspace } = require('@/components/sites/techstyles/workspace-loader');
   const element = Page();
   assert.equal(element.type, Workspace);
-  assert.deepEqual(element.props.path, ['dashboard']);
+  assert.deepEqual(element.props.path, []);
 });
 
 test('loader resolves route aliases and transitive extensionless relative imports', async () => {

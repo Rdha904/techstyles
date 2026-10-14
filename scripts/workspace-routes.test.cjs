@@ -3,15 +3,16 @@ const assert = require("node:assert/strict");
 require("./support/load-ts.cjs");
 const {
   resolveView,
+  viewOwnsPageHeading,
   navRoutes,
   moduleRoutes,
   pageSlug,
 } = require("../src/components/sites/techstyles/workspace-routes.ts");
 
-// Expectations captured from the original Workspace branch order and title logic.
+// Route expectations, including the single workspace dashboard.
 const cases = [
-  [[], "dashboard", "Dashboard"],
-  [["dashboard"], "dashboard", "Dashboard"],
+  [[], "module-home", "Dashboard", "home", "Overview"],
+  [["dashboard"], "module-home", "Dashboard", "home", "Overview"],
   [["products"], "product-library", "Products"],
   [
     ["products", "p1"],
@@ -301,7 +302,7 @@ const cases = [
     undefined,
     { token: "tok" },
   ],
-  [[""], "dashboard", "Dashboard"],
+  [[""], "module-home", "Dashboard", "home", "Overview"],
 ];
 
 for (const [
@@ -312,7 +313,7 @@ for (const [
   modulePage,
   params = {},
 ] of cases) {
-  test(`resolveView preserves ${JSON.stringify(path)}`, () => {
+  test(`resolveView maps ${JSON.stringify(path)}`, () => {
     const before = [...path];
     assert.deepEqual(resolveView(path), {
       section: path[0] || "dashboard",
@@ -338,5 +339,65 @@ test("every nav key and module page slug resolves to a known view", () => {
       assert.equal(result.moduleId, module.id);
       assert.equal(result.modulePage, page);
     }
+  }
+});
+
+test("Design & Tech Packs secondary navigation starts with Products and has no dashboard", () => {
+  assert.deepEqual(navRoutes[0], ["products", "Products"]);
+  assert.equal(
+    navRoutes.some(([key]) => key === "dashboard"),
+    false,
+  );
+});
+
+test("pages with their own heading keep the h1; other workspace pages use the shell h1", () => {
+  const pageHeadings = [
+    "settings",
+    "projects",
+    "sketches",
+    "materials",
+    "artworks",
+    "colors",
+    "size-charts",
+    "attachments",
+    "modules/manufacturers/manufacturers",
+    "modules/manufacturers/quote-requests",
+    "modules/manufacturers/quote-comparison",
+    "modules/manufacturers/quote-comparison/p1",
+    "modules/concept/brand-book",
+  ];
+  const shellHeadings = [
+    "",
+    "products",
+    "products/p1",
+    "products/p1/canvas",
+    "modules/concept/overview",
+    "modules/concept/brand-profile",
+    "modules/concept/audience-market",
+    "modules/concept/moodboards",
+    "modules/manufacturers/overview",
+    "modules/manufacturers/manufacturers/other",
+    "modules/manufacturers/quote-requests/other",
+    "modules/manufacturers/quote-comparison/p1/other",
+    ...moduleRoutes
+      .filter(({ id }) => !["concept", "manufacturers"].includes(id))
+      .flatMap(({ id, pages }) =>
+        pages.map((page) => `modules/${id}/${pageSlug(page)}`),
+      ),
+  ];
+
+  for (const path of pageHeadings) {
+    assert.equal(
+      viewOwnsPageHeading(resolveView(path.split("/")).view),
+      true,
+      path,
+    );
+  }
+  for (const path of shellHeadings) {
+    assert.equal(
+      viewOwnsPageHeading(resolveView(path.split("/")).view),
+      false,
+      path || "/",
+    );
   }
 });
