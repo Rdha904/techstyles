@@ -10,6 +10,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Agent skills
 
+### Applying skills
+
+For substantive work (planning, implementing, reviewing, debugging, writing a PR, editing agent docs), load the skills in `.agents/skills/` whose description directly matches the task, and follow them as written. Load each skill once per session and reuse it from context after that. Trivial tasks (a typo, a one-line fix, a question answered from context) run without skills. End each substantive report with `Skills: <names>` or `Skills: none`.
+
 ### Issue tracker
 
 Issues live in GitHub Issues (`Rdha904/techstyles`), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
