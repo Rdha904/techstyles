@@ -45,7 +45,7 @@ The app has two pages called "Dashboard". `/` renders the old Design & Tech Pack
 
 Delegated to Codex one at a time. Each is reviewed and its gates rerun before the next starts.
 
-1. **One dashboard at `/`.** Criteria 1–3, plus `dashboardSummary` and its tests. Status: not started.
+1. **One dashboard at `/`.** Criteria 1–3, plus `dashboardSummary` and its tests. Status: done, commit `1469b03`. Redirects are temporary (307) so the old URLs stay reusable.
 2. **Workspace name and support link.** Criteria 4–5, plus `workspaceIdentity` and its tests. Status: not started.
 3. **Desktop polish.** Criterion 6. Audit every page at 1440px and fix duplicate `<h1>`s (the shell header title and a page heading), sideways overflow and plural wording. Status: not started.
 
