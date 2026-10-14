@@ -59,6 +59,7 @@ import { BrandProfileSummary } from "./brand-profile";
 import { request, uploadFile, assetsPath } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
+import { useProductDraft, saveInBackground } from "./use-product-draft";
 const sectionLabels: Record<ProductSection, string> = {
   overview: "Overview",
   sketch: "Sketch / Design",
@@ -160,9 +161,11 @@ function CommentBox({
                 },
               ],
             });
-            setText("");
           } catch {
+            // The comment stays in the draft; its error is shown by the editor.
+            return;
           } finally {
+            setText("");
             setBusy(false);
           }
         }}
@@ -219,7 +222,7 @@ function Section({
   );
 }
 export function ProductEditor({
-  product: p,
+  product,
   onChange,
   onToggleSidebar,
 }: {
@@ -227,12 +230,16 @@ export function ProductEditor({
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
 }) {
-  const latest = useRef(p);
-  const queue = useRef<Promise<void>>(Promise.resolve());
-  const revision = useRef(0);
+  const {
+    draft,
+    product: p,
+    status,
+    error: draftError,
+    unsaved,
+  } = useProductDraft(product, onChange);
+  const saving = status === "saving";
   const [modal, setModal] = useState("");
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [toast, setToast] = useState("");
   const [tab, setTab] = useState("Sketch");
   const [viewColor, setViewColor] = useState(p.colors[0]?.id || "");
@@ -247,83 +254,16 @@ export function ProductEditor({
   const [shareUrl, setShareUrl] = useState("");
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [label, setLabel] = useState("");
-  useEffect(() => {
-    latest.current = p;
-  }, [p]);
-  function safeSave(data: Partial<Product>) {
-    void save(data).catch(() => undefined);
-  }
   function notify(t: string) {
     setToast(t);
     setTimeout(() => setToast(""), 3000);
   }
-  async function save(data: Partial<Product>) {
-    setSaving(true);
-    setError("");
-    const merged: Partial<Product> = { ...data };
-    for (const key of [
-      "materials",
-      "measurements",
-      "comments",
-      "colors",
-      "artworks",
-      "attachments",
-      "samples",
-      "annotations",
-    ] as const) {
-      const incoming = data[key];
-      if (!incoming) continue;
-      const before = p[key] as { id: string }[];
-      const current = latest.current[key] as { id: string }[];
-      const rows = (incoming as { id: string }[]).map((row) => {
-        const original = before.find((x) => x.id === row.id);
-        const fresh = current.find((x) => x.id === row.id);
-        if (!original || !fresh) return row;
-        const changed = Object.fromEntries(
-          Object.entries(row).filter(
-            ([k, v]) =>
-              JSON.stringify(v) !==
-              JSON.stringify(
-                (original as unknown as Record<string, unknown>)[k],
-              ),
-          ),
-        );
-        return { ...fresh, ...changed };
-      });
-      const added = current.filter(
-        (x) =>
-          !before.some((b) => b.id === x.id) &&
-          !rows.some((r) => r.id === x.id),
-      );
-      Object.assign(merged, { [key]: [...rows, ...added] });
-    }
-    latest.current = { ...latest.current, ...merged };
-    onChange(latest.current);
-    const version = ++revision.current;
-    const operation = queue.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          const result = await request<Product>(`/api/products/${p.id}`, {
-            method: "PATCH",
-            json: merged,
-          });
-          if (version === revision.current) {
-            latest.current = result;
-            onChange(result);
-          }
-        } catch (e) {
-          setError((e as Error).message);
-          throw e;
-        } finally {
-          if (version === revision.current) setSaving(false);
-        }
-      });
-    queue.current = operation;
-    return operation;
+  function save(data: Partial<Product>) {
+    setActionError("");
+    return draft.save(data, p);
   }
   async function openLibrary(collection: string) {
-    setError("");
+    setActionError("");
     try {
       setLibrary(
         (await request<LibraryItem[]>("/api/libraries")).filter(
@@ -336,7 +276,7 @@ export function ProductEditor({
       );
       setModal(`library:${collection}`);
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
   async function share() {
@@ -346,10 +286,10 @@ export function ProductEditor({
         { method: "POST" },
       );
       setShareUrl(new URL(data.url, location.origin).href);
-      onChange({ ...p, shareToken: data.token });
+      draft.replace({ ...p, shareToken: data.token });
       setModal("share");
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
   function sectionProps(id: string) {
@@ -383,7 +323,12 @@ export function ProductEditor({
         <strong>{p.name}</strong>
         <span className="spacer" />
         <small className="saved-label">
-          <Check size={12} /> {saving ? "Saving…" : "Saved"}
+          <Check size={12} />{" "}
+          {status === "saving"
+            ? "Saving…"
+            : status === "error"
+              ? "Not saved"
+              : "Saved"}
         </small>
         <Link className="btn" href={`/products/${p.id}/print`}>
           <Download size={15} />
@@ -403,9 +348,18 @@ export function ProductEditor({
         </button>
       </header>
       <main className="app-content">
-        {error && (
+        {(unsaved || draftError || actionError) && (
           <div role="alert" className="error">
-            {error}
+            {draftError || actionError}
+            {unsaved && (
+              <button
+                className="btn"
+                disabled={saving}
+                onClick={() => saveInBackground(draft.retry)}
+              >
+                Retry save
+              </button>
+            )}
           </div>
         )}
         <div className="pack-layout">
@@ -423,7 +377,9 @@ export function ProductEditor({
                 </div>
               )}
               <div style={{ position: "absolute", bottom: 26, left: 8 }}>
-                <UploadButton onUpload={(url) => safeSave({ cover: url })}>
+                <UploadButton
+                  onUpload={(url) => saveInBackground(save, { cover: url })}
+                >
                   Cover
                 </UploadButton>
               </div>
@@ -449,7 +405,7 @@ export function ProductEditor({
                     className="icon-button"
                     aria-label={`${p.excludedSections.includes(id) ? "Include" : "Hide"} ${title} in exports`}
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         excludedSections: p.excludedSections.includes(id)
                           ? p.excludedSections.filter((x) => x !== id)
                           : [...p.excludedSections, id],
@@ -504,7 +460,9 @@ export function ProductEditor({
                 <span className="spacer" />
                 <button
                   className="icon-button"
-                  onClick={() => safeSave({ archived: !p.archived })}
+                  onClick={() =>
+                    saveInBackground(save, { archived: !p.archived })
+                  }
                 >
                   <Archive size={14} />
                   &nbsp; {p.archived ? "Unarchive" : "Archive"}
@@ -521,7 +479,9 @@ export function ProductEditor({
                     <Pencil size={14} />
                     Edit on canvas
                   </Link>
-                  <UploadButton onUpload={(url) => safeSave({ sketch: url })}>
+                  <UploadButton
+                    onUpload={(url) => saveInBackground(save, { sketch: url })}
+                  >
                     Change sketch
                   </UploadButton>
                   <button
@@ -656,7 +616,7 @@ export function ProductEditor({
                       className="icon-button"
                       aria-label={`Remove ${c.name}`}
                       onClick={() =>
-                        safeSave({
+                        saveInBackground(save, {
                           colors: p.colors.filter((x) => x.id !== c.id),
                         })
                       }
@@ -688,7 +648,7 @@ export function ProductEditor({
                   <button
                     className="btn"
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         materials: [
                           ...p.materials,
                           {
@@ -744,7 +704,7 @@ export function ProductEditor({
                               defaultValue={m[k]}
                               onBlur={(e) => {
                                 if (e.target.value !== m[k])
-                                  safeSave({
+                                  saveInBackground(save, {
                                     materials: p.materials.map((x) =>
                                       x.id === m.id
                                         ? { ...x, [k]: e.target.value }
@@ -760,7 +720,7 @@ export function ProductEditor({
                             className="icon-button"
                             aria-label={`Remove material ${m.name}`}
                             onClick={() =>
-                              safeSave({
+                              saveInBackground(save, {
                                 materials: p.materials.filter(
                                   (x) => x.id !== m.id,
                                 ),
@@ -803,7 +763,7 @@ export function ProductEditor({
                   </button>
                   <UploadButton
                     onUpload={(url, name) =>
-                      safeSave({
+                      saveInBackground(save, {
                         artworks: [...p.artworks, { id: uid(), name, url }],
                       })
                     }
@@ -816,7 +776,9 @@ export function ProductEditor({
               <AssetCards
                 items={p.artworks}
                 remove={(id) =>
-                  safeSave({ artworks: p.artworks.filter((x) => x.id !== id) })
+                  saveInBackground(save, {
+                    artworks: p.artworks.filter((x) => x.id !== id),
+                  })
                 }
               />
               {!p.artworks.length && (
@@ -862,7 +824,7 @@ export function ProductEditor({
                   <button
                     className="btn"
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: [
                           ...p.measurements,
                           {
@@ -891,7 +853,7 @@ export function ProductEditor({
                 <UploadButton
                   accept="image/png,image/jpeg,image/webp,application/pdf"
                   onUpload={(url, name) =>
-                    safeSave({
+                    saveInBackground(save, {
                       attachments: [...p.attachments, { id: uid(), name, url }],
                     })
                   }
@@ -903,7 +865,7 @@ export function ProductEditor({
               <AssetCards
                 items={p.attachments}
                 remove={(id) =>
-                  safeSave({
+                  saveInBackground(save, {
                     attachments: p.attachments.filter((x) => x.id !== id),
                   })
                 }
@@ -922,7 +884,7 @@ export function ProductEditor({
                 <button
                   className="btn"
                   onClick={() =>
-                    safeSave({
+                    saveInBackground(save, {
                       samples: [
                         ...p.samples,
                         {
@@ -960,11 +922,12 @@ export function ProductEditor({
                             <td key={k}>
                               <input
                                 aria-label={`Sample ${k}`}
+                                key={`${s.id}-${k}-${s[k]}`}
                                 defaultValue={s[k]}
                                 type={k === "quantity" ? "number" : "text"}
                                 min={0}
                                 onBlur={(e) =>
-                                  safeSave({
+                                  saveInBackground(save, {
                                     samples: p.samples.map((x) =>
                                       x.id === s.id
                                         ? {
@@ -987,7 +950,7 @@ export function ProductEditor({
                             className="icon-button"
                             aria-label="Remove sample"
                             onClick={() =>
-                              safeSave({
+                              saveInBackground(save, {
                                 samples: p.samples.filter((x) => x.id !== s.id),
                               })
                             }
@@ -1098,7 +1061,7 @@ export function ProductEditor({
                     className="btn"
                     onClick={async () => {
                       try {
-                        onChange(
+                        draft.replace(
                           await request<Product>(
                             `/api/products/${p.id}/versions/${v.id}/restore`,
                             { method: "POST" },
@@ -1106,7 +1069,7 @@ export function ProductEditor({
                         );
                         notify("Version restored; previous state backed up");
                       } catch (e) {
-                        setError((e as Error).message);
+                        setActionError((e as Error).message);
                       }
                     }}
                   >
@@ -1123,7 +1086,7 @@ export function ProductEditor({
           product={p}
           onClose={() => setModal("")}
           onSave={(x) => {
-            onChange(x);
+            draft.replace(x);
             setModal("");
           }}
         />
@@ -1189,7 +1152,7 @@ export function ProductEditor({
               e.preventDefault();
               try {
                 if (modal === "version")
-                  onChange(
+                  draft.replace(
                     await request<Product>(`/api/products/${p.id}/versions`, {
                       method: "POST",
                       json: { name: label },
@@ -1198,7 +1161,7 @@ export function ProductEditor({
                 else await save({ [modal]: label });
                 setModal("");
               } catch (e) {
-                setError((e as Error).message);
+                if (modal === "version") setActionError((e as Error).message);
               }
             }}
           >
@@ -1274,7 +1237,7 @@ export function ProductEditor({
                 await request(`/api/products/${p.id}/share`, {
                   method: "DELETE",
                 });
-                onChange({ ...p, shareToken: null });
+                draft.replace({ ...p, shareToken: null });
                 setModal("");
                 notify("Share link revoked");
               }}
@@ -1377,7 +1340,7 @@ export function ProductEditor({
                       "\n",
                     );
                     if (!rows.some((x) => x.includes(":"))) {
-                      setError(
+                      setActionError(
                         "This size chart has no measurements. Add them in the Size Charts library.",
                       );
                       setModal("");
@@ -1459,9 +1422,6 @@ function Measurements({
   product: Product;
   save?: (data: Partial<Product>) => Promise<void>;
 }) {
-  function safeSave(data: Partial<Product>) {
-    if (save) void save(data).catch(() => undefined);
-  }
   const sizes = [
     ...new Set(p.measurements.flatMap((m) => Object.keys(m.values))),
   ];
@@ -1486,9 +1446,10 @@ function Measurements({
                 {save ? (
                   <input
                     aria-label="Measurement name"
+                    key={`${m.id}-name-${m.name}`}
                     defaultValue={m.name}
                     onBlur={(e) =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.map((x) =>
                           x.id === m.id ? { ...x, name: e.target.value } : x,
                         ),
@@ -1503,9 +1464,10 @@ function Measurements({
                 {save ? (
                   <input
                     aria-label={`${m.name} tolerance`}
+                    key={`${m.id}-tolerance-${m.tolerance}`}
                     defaultValue={m.tolerance}
                     onBlur={(e) =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.map((x) =>
                           x.id === m.id
                             ? { ...x, tolerance: e.target.value }
@@ -1527,7 +1489,7 @@ function Measurements({
                       defaultValue={m.values[s]}
                       onBlur={(e) => {
                         if (e.target.value !== m.values[s])
-                          safeSave({
+                          saveInBackground(save, {
                             measurements: p.measurements.map((x) =>
                               x.id === m.id
                                 ? {
@@ -1553,7 +1515,7 @@ function Measurements({
                     className="icon-button"
                     aria-label={`Remove measurement ${m.name}`}
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.filter(
                           (x) => x.id !== m.id,
                         ),
