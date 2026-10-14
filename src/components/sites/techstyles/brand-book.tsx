@@ -587,7 +587,7 @@ function BrandBookDocument({
             <div
               className="bb-font"
               key={font}
-              style={{ fontFamily: `"${font}", Figtree, Arial, sans-serif` }}
+              style={{ fontFamily: `"${font}", Inter, Arial, sans-serif` }}
             >
               <span className="bb-font-eyebrow">
                 {i === 0 ? "Primary typeface" : "Secondary typeface"}

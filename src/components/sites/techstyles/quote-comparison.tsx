@@ -294,7 +294,8 @@ export function QuoteComparisonPage({
                     {quotes.map((quoteRequest) => (
                       <td key={quoteRequest.id}>
                         <button
-                          className={`btn ${quoteRequest.status === "quoted" ? "primary" : ""}`}
+                          className={`btn ${quoteRequest.status === "chosen" ? "selected" : ""}`}
+                          aria-pressed={quoteRequest.status === "chosen"}
                           disabled={busy}
                           aria-label={`${quoteRequest.status === "chosen" ? "Unchoose" : "Choose"} ${manufacturerById.get(quoteRequest.manufacturerId)?.name || "manufacturer"}`}
                           onClick={() =>

@@ -1,0 +1,62 @@
+{
+  "src/app/globals.css": {
+    "hex": 36,
+    "rgb": 0,
+    "borderRadius": 19,
+    "fontWeight": 3
+  },
+  "src/components/sites/techstyles/brand-book.css": {
+    "hex": 11,
+    "rgb": 0,
+    "borderRadius": 6,
+    "fontWeight": 2
+  },
+  "src/components/sites/techstyles/brand-profile.css": {
+    "hex": 95,
+    "rgb": 0,
+    "borderRadius": 31,
+    "fontWeight": 5
+  },
+  "src/components/sites/techstyles/concept-overview.css": {
+    "hex": 19,
+    "rgb": 0,
+    "borderRadius": 3,
+    "fontWeight": 2
+  },
+  "src/components/sites/techstyles/libraries.css": {
+    "hex": 80,
+    "rgb": 0,
+    "borderRadius": 20,
+    "fontWeight": 9
+  },
+  "src/components/sites/techstyles/manufacturer-quotes.css": {
+    "hex": 36,
+    "rgb": 0,
+    "borderRadius": 9,
+    "fontWeight": 3
+  },
+  "src/components/sites/techstyles/manufacturers.css": {
+    "hex": 35,
+    "rgb": 0,
+    "borderRadius": 10,
+    "fontWeight": 3
+  },
+  "src/components/sites/techstyles/product-form.css": {
+    "hex": 2,
+    "rgb": 0,
+    "borderRadius": 0,
+    "fontWeight": 0
+  },
+  "src/components/sites/techstyles/sourcing-panel.css": {
+    "hex": 16,
+    "rgb": 0,
+    "borderRadius": 4,
+    "fontWeight": 0
+  },
+  "src/components/sites/techstyles/workspace-dashboard.css": {
+    "hex": 11,
+    "rgb": 0,
+    "borderRadius": 4,
+    "fontWeight": 0
+  }
+}

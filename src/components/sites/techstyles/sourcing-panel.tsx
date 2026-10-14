@@ -277,7 +277,12 @@ export function SourcingPanel({
               {quoteRequestActions[request.status].map((value) => (
                 <button
                   key={value}
-                  className={`btn${value === "choose" ? " primary" : ""}`}
+                  className={`btn${value === "unchoose" ? " selected" : ""}`}
+                  aria-pressed={
+                    value === "choose" || value === "unchoose"
+                      ? request.status === "chosen"
+                      : undefined
+                  }
                   disabled={disabled}
                   onClick={() => action(request, value)}
                 >

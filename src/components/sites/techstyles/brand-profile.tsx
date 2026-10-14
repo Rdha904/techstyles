@@ -916,7 +916,7 @@ export function BrandProfilePage() {
                               <span
                                 className="brand-font-aa"
                                 style={{
-                                  fontFamily: `'${font}', Figtree, sans-serif`,
+                                  fontFamily: `'${font}', Inter, sans-serif`,
                                 }}
                               >
                                 Aa

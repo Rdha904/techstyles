@@ -950,7 +950,8 @@ function ProductLibrary({
           <option value="name">Name A–Z</option>
         </select>
         <button
-          className={`btn ${archived ? "primary" : ""}`}
+          className={`btn ${archived ? "selected" : ""}`}
+          aria-pressed={archived}
           onClick={() => setArchived(!archived)}
         >
           <Archive size={14} />
@@ -959,15 +960,17 @@ function ProductLibrary({
       </div>
       <div className="view-tools">
         <button
-          className={`btn ${!grid ? "primary" : ""}`}
+          className={`btn ${!grid ? "selected" : ""}`}
           aria-label="List view"
+          aria-pressed={!grid}
           onClick={() => setGrid(false)}
         >
           <List size={17} />
         </button>
         <button
-          className={`btn ${grid ? "primary" : ""}`}
+          className={`btn ${grid ? "selected" : ""}`}
           aria-label="Grid view"
+          aria-pressed={grid}
           onClick={() => setGrid(true)}
         >
           <Grid2X2 size={17} />
