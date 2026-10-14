@@ -4,5 +4,10 @@ const config: NextConfig = {
   devIndicators: false,
   htmlLimitedBots: /.*/,
   outputFileTracingRoot: process.cwd(),
+  redirects() {
+    return ["/dashboard", "/modules/home/overview", "/modules/home"].map(
+      (source) => ({ source, destination: "/", permanent: false }),
+    );
+  },
 };
 export default config;

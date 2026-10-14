@@ -1,5 +1,4 @@
 export const navRoutes = [
-  ["dashboard", "Dashboard"],
   ["products", "Products"],
   ["projects", "Projects"],
   ["sketches", "Sketch Library"],
@@ -98,7 +97,6 @@ export type WorkspaceView =
   | { kind: "quote-comparison"; productId?: string }
   | { kind: "concept-overview" }
   | { kind: "module-page" }
-  | { kind: "dashboard" }
   | { kind: "product-library" }
   | { kind: "settings" }
   | { kind: "library"; collection: string }
@@ -108,17 +106,23 @@ export function resolveView(path: string[]) {
   const section = path[0] || "dashboard";
   const activeModule =
     moduleRoutes.find(
-      (module) => module.id === (section === "modules" ? path[1] : "design"),
+      (module) =>
+        module.id ===
+        (section === "modules"
+          ? path[1]
+          : section === "dashboard"
+            ? "home"
+            : "design"),
     ) || moduleRoutes.find((module) => module.id === "design")!;
   const modulePage = activeModule.pages.find(
     (page) => pageSlug(page) === (path[2] || "overview"),
   );
   const title =
-    section === "modules"
-      ? activeModule.id === "home"
-        ? "Dashboard"
-        : modulePage || "Page not found"
-      : navRoutes.find((entry) => entry[0] === section)?.[1] || "Settings";
+    activeModule.id === "home"
+      ? "Dashboard"
+      : section === "modules"
+        ? modulePage || "Page not found"
+        : navRoutes.find((entry) => entry[0] === section)?.[1] || "Settings";
 
   function routeView(): WorkspaceView {
     if (section === "share" && path[1] === "brand-book")
@@ -160,7 +164,7 @@ export function resolveView(path: string[]) {
     }
     if (section === "products" && path[1])
       return { kind: "product", productId: path[1] };
-    if (section === "dashboard") return { kind: "dashboard" };
+    if (section === "dashboard") return { kind: "module-home" };
     if (section === "products") return { kind: "product-library" };
     if (section === "settings") return { kind: "settings" };
     if (navRoutes.some((entry) => entry[0] === section))

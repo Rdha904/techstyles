@@ -514,45 +514,6 @@ td input:hover {
   background: #e7dbb6;
   flex: 1;
 }
-.stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.stat {
-  width: 273px;
-  padding: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.stat strong {
-  font-size: 32px;
-  display: block;
-  margin-top: 4px;
-}
-.stat svg {
-  color: var(--blue);
-  background: #f3f3f2;
-  padding: 10px;
-  box-sizing: content-box;
-  border-radius: 12px;
-}
-.dashboard-columns {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-}
-.panel-title {
-  padding: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.panel-title h2 {
-  margin: 0;
-  font-size: 15px;
-}
 .recent-product {
   display: flex;
   gap: 12px;
@@ -1027,22 +988,6 @@ td input:hover {
   .search-field {
     flex-basis: 100%;
   }
-  .dashboard-columns {
-    grid-template-columns: 1fr;
-  }
-  .stats {
-    gap: 10px;
-  }
-  .stat {
-    width: 50%;
-    padding: 15px;
-  }
-  .stat small {
-    font-size: 10px;
-  }
-  .stat svg {
-    display: none;
-  }
   .sketch-display {
     grid-template-columns: 1fr;
   }
@@ -1140,19 +1085,6 @@ td input:hover {
 }
 
 @media (max-width: 600px) {
-  .stats {
-    flex-direction: column;
-  }
-  .stat {
-    width: 100%;
-    min-height: 98px;
-  }
-  .stat svg {
-    display: block;
-  }
-  .dashboard-columns .recent-product > small {
-    display: none;
-  }
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

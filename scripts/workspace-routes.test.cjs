@@ -8,10 +8,10 @@ const {
   pageSlug,
 } = require("../src/components/sites/techstyles/workspace-routes.ts");
 
-// Expectations captured from the original Workspace branch order and title logic.
+// Route expectations, including the single workspace dashboard.
 const cases = [
-  [[], "dashboard", "Dashboard"],
-  [["dashboard"], "dashboard", "Dashboard"],
+  [[], "module-home", "Dashboard", "home", "Overview"],
+  [["dashboard"], "module-home", "Dashboard", "home", "Overview"],
   [["products"], "product-library", "Products"],
   [
     ["products", "p1"],
@@ -301,7 +301,7 @@ const cases = [
     undefined,
     { token: "tok" },
   ],
-  [[""], "dashboard", "Dashboard"],
+  [[""], "module-home", "Dashboard", "home", "Overview"],
 ];
 
 for (const [
@@ -312,7 +312,7 @@ for (const [
   modulePage,
   params = {},
 ] of cases) {
-  test(`resolveView preserves ${JSON.stringify(path)}`, () => {
+  test(`resolveView maps ${JSON.stringify(path)}`, () => {
     const before = [...path];
     assert.deepEqual(resolveView(path), {
       section: path[0] || "dashboard",
@@ -339,4 +339,12 @@ test("every nav key and module page slug resolves to a known view", () => {
       assert.equal(result.modulePage, page);
     }
   }
+});
+
+test("Design & Tech Packs secondary navigation starts with Products and has no dashboard", () => {
+  assert.deepEqual(navRoutes[0], ["products", "Products"]);
+  assert.equal(
+    navRoutes.some(([key]) => key === "dashboard"),
+    false,
+  );
 });

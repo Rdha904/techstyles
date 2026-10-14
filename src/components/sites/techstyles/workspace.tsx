@@ -21,7 +21,6 @@ import {
   Grid2X2,
   List,
   Package,
-  CircleCheck,
   X,
   ArrowUpRight,
   Clock,
@@ -51,12 +50,7 @@ import { ManufacturersOverview } from "./manufacturers-overview";
 import { QuoteRequestsPage } from "./quote-requests";
 import { QuoteComparisonPage } from "./quote-comparison";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-import {
-  request,
-  assetsPath,
-  manufacturersApi,
-  quoteRequestsApi,
-} from "@/lib/client-api";
+import { request, manufacturersApi, quoteRequestsApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
 import {
@@ -66,7 +60,6 @@ import {
   resolveView,
 } from "./workspace-routes";
 const navIcons = {
-  dashboard: LayoutDashboard,
   products: Shirt,
   projects: FolderKanban,
   sketches: Pencil,
@@ -96,7 +89,6 @@ const modules = moduleRoutes.map((module) => ({
   icon: moduleIcons[module.id as keyof typeof moduleIcons],
 }));
 const subtitles: Record<string, string> = {
-  dashboard: "Product development overview",
   products: "Manage styles across all seasons and stages",
   projects: "Organize your collections and seasons",
   sketches: "Your reusable technical sketches",
@@ -318,7 +310,7 @@ export function Workspace({ path }: { path: string[] }) {
                   Manage your designs and tech packs while this module is being
                   prepared.
                 </p>
-                <Link className="btn" href="/">
+                <Link className="btn" href="/products">
                   Open Design &amp; Tech Packs
                 </Link>
               </div>
@@ -416,13 +408,6 @@ export function Workspace({ path }: { path: string[] }) {
             onCreate={() => setCreate(true)}
           />
         );
-      case "dashboard":
-        return (
-          <>
-            <BrandProfileSummary />
-            <Dashboard products={products} />
-          </>
-        );
       case "product-library":
         return (
           <ProductLibrary
@@ -506,9 +491,11 @@ export function Workspace({ path }: { path: string[] }) {
                       );
                   }}
                   href={
-                    module.id === "design"
+                    module.id === "home"
                       ? "/"
-                      : `/modules/${module.id}/overview`
+                      : module.id === "design"
+                        ? "/products"
+                        : `/modules/${module.id}/overview`
                   }
                   className={activeModule.id === module.id ? "active" : ""}
                   aria-current={
@@ -562,12 +549,12 @@ export function Workspace({ path }: { path: string[] }) {
                 </button>
                 <span className="nav-label">MAIN</span>
                 <nav className="nav-links" aria-label="Design pages">
-                  {nav.slice(0, 3).map(([key, label, Icon]) => (
+                  {nav.slice(0, 2).map(([key, label, Icon]) => (
                     <div key={key}>
                       <Link
                         className={section === key ? "active" : ""}
                         aria-current={section === key ? "page" : undefined}
-                        href={key === "dashboard" ? "/" : `/${key}`}
+                        href={`/${key}`}
                         onClick={() => setSidebar(false)}
                       >
                         <Icon size={16} />
@@ -606,7 +593,7 @@ export function Workspace({ path }: { path: string[] }) {
                 </nav>
                 <span className="nav-label">LIBRARY</span>
                 <nav className="nav-links" aria-label="Library">
-                  {nav.slice(3).map(([key, label, Icon]) => (
+                  {nav.slice(2).map(([key, label, Icon]) => (
                     <Link
                       key={key}
                       className={section === key ? "active" : ""}
@@ -866,110 +853,6 @@ export function Workspace({ path }: { path: string[] }) {
         </div>
       )}
     </div>
-  );
-}
-function Dashboard({ products }: { products: Product[] }) {
-  return (
-    <>
-      <div className="stats">
-        <div className="panel stat">
-          <div>
-            <small>PRODUCTS IN DEVELOPMENT</small>
-            <strong>
-              {
-                products.filter(
-                  (p) =>
-                    !["Production", "Completed"].includes(p.stage) &&
-                    !p.archived,
-                ).length
-              }
-            </strong>
-          </div>
-          <Package size={21} />
-        </div>
-        <div className="panel stat">
-          <div>
-            <small>PRODUCTS IN PRODUCTION</small>
-            <strong>
-              {
-                products.filter((p) => p.stage === "Production" && !p.archived)
-                  .length
-              }
-            </strong>
-          </div>
-          <CircleCheck size={21} />
-        </div>
-      </div>
-      <div className="dashboard-columns">
-        <section className="panel">
-          <div className="panel-title">
-            <h2>Recent Products</h2>
-            <Link
-              href="/products"
-              className="muted"
-              style={{ color: "var(--blue)" }}
-            >
-              View all ↗
-            </Link>
-          </div>
-          {products.slice(0, 6).map((p) => (
-            <Link
-              href={`/products/${p.id}`}
-              className="recent-product"
-              key={p.id}
-            >
-              <img
-                src={
-                  p.cover || p.sketch || assetsPath + "hero-sketch-hoodie.png"
-                }
-                alt=""
-              />
-              <div>
-                {p.name}
-                <small>{p.category}</small>
-              </div>
-              <span className="spacer" />
-              <span className={`badge ${p.stage.toLowerCase()}`}>
-                {p.stage}
-              </span>
-              <small>
-                {new Date(p.updatedAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </small>
-            </Link>
-          ))}
-          {!products.length && (
-            <div className="empty">
-              Create your first tech pack in Products.
-            </div>
-          )}
-        </section>
-        <section className="panel">
-          <div className="panel-title">
-            <h2>Recent Activity</h2>
-            <Link href="/products" className="btn">
-              View All Activity <ArrowUpRight size={13} />
-            </Link>
-          </div>
-          {products.slice(0, 6).map((p) => (
-            <Link
-              className="recent-product"
-              href={`/products/${p.id}`}
-              key={p.id}
-            >
-              <Package size={18} />
-              <div>
-                Updated product &quot;{p.name}&quot;
-                <small>{new Date(p.updatedAt).toLocaleString("en-US")}</small>
-              </div>
-            </Link>
-          ))}
-        </section>
-      </div>
-    </>
   );
 }
 function ProductLibrary({
