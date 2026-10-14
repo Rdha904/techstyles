@@ -281,18 +281,18 @@ test('founder overview shows manufacturer while share and print overview omit it
     product, manufacturers: [manufacturer], onChange() {}, onToggleSidebar() {},
     identity: { name: 'My workspace', initials: 'MW' },
   }));
-  assert.match(founder, /MANUFACTURER/);
+  assert.match(founder, /manufacturer<\/small>/i);
   assert.match(founder, /Confidential Factory/);
   const unlinked = renderToStaticMarkup(React.createElement(ProductEditor, {
     product: { ...product, manufacturerId: null }, manufacturers: [manufacturer], onChange() {}, onToggleSidebar() {},
     identity: { name: 'My workspace', initials: 'MW' },
   }));
-  assert.match(unlinked, /MANUFACTURER<\/small>—/);
+  assert.match(unlinked, /manufacturer<\/small>—/i);
   for (const excludedSections of [[], ['overview'], [...productSections]]) {
     for (const props of [{ product: { ...product, excludedSections } },
       { token: 'share', product: sharedProduct({ ...product, excludedSections }) }]) {
       const html = renderToStaticMarkup(React.createElement(SharedProduct, props));
-      assert.doesNotMatch(html, /Confidential Factory|Legacy confidential factory|MANUFACTURER<\/small>/);
+      assert.doesNotMatch(html, /Confidential Factory|Legacy confidential factory|manufacturer<\/small>/i);
     }
   }
 });

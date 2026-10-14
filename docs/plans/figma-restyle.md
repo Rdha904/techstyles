@@ -115,7 +115,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 |---|---|---|
 | 1. Foundation | done | 4cf4d7b |
 | 2. Shell | done | bd161e2 |
-| 3. Dashboard | queued | |
+| 3. Dashboard | done | c4da66f |
 | 4. Products library and editor | queued | |
 | 5. Sourcing | queued | |
 | 6. Libraries, Settings, Concept, Brand Profile and Brand Book | queued | |

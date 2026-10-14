@@ -54,6 +54,7 @@ import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 import { request, manufacturersApi, quoteRequestsApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
+import { ProductImage } from "./product-image";
 import {
   navRoutes,
   moduleRoutes,
@@ -978,7 +979,7 @@ function ProductLibrary({
         {filtered.length} {filtered.length === 1 ? "style" : "styles"}
       </small>
       {!filtered.length ? (
-        <div className="panel empty" style={{ marginTop: 20 }}>
+        <div className="product-library-empty empty">
           <Shirt size={35} />
           <h3>
             {products.length
@@ -988,7 +989,7 @@ function ProductLibrary({
           <p>
             Keep every detail, from first sketch to production, in one place.
           </p>
-          <button className="btn primary" onClick={onCreate}>
+          <button className="btn" onClick={onCreate}>
             <Plus size={16} />
             Create New Tech Pack
           </button>
@@ -997,17 +998,15 @@ function ProductLibrary({
         <div className="product-grid">
           {filtered.map((p) => (
             <Link
-              className="panel product-card"
+              className="product-card"
               key={p.id}
               href={`/products/${p.id}`}
             >
               <div className="product-card-image">
-                {p.cover || p.sketch ? (
-                  <img src={p.cover || p.sketch} alt={p.name} />
-                ) : (
-                  <Shirt size={75} strokeWidth={0.8} />
-                )}
-                <span className={`badge ${p.stage.toLowerCase()}`}>
+                <ProductImage product={p} size="tile" />
+                <span
+                  className={`badge product-stage ${p.stage.toLowerCase()}`}
+                >
                   {p.stage}
                 </span>
               </div>
@@ -1015,22 +1014,19 @@ function ProductLibrary({
                 <h3>
                   {p.name}
                   {p.id === "demo-hoodie" && (
-                    <span className="badge sampling" style={{ marginLeft: 8 }}>
-                      DEMO
-                    </span>
+                    <span className="badge product-demo">Demo</span>
                   )}
                 </h3>
                 <code>{p.code}</code>
                 <p>
-                  {p.category}
-                  <span style={{ float: "right" }}>{p.project || "—"}</span>
+                  {p.category} · {p.project || "—"}
                 </p>
               </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="panel table-wrap" style={{ marginTop: 18 }}>
+        <div className="panel table-wrap product-list">
           <table>
             <thead>
               <tr>
@@ -1051,15 +1047,23 @@ function ProductLibrary({
               {filtered.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <Link href={`/products/${p.id}`}>{p.name}</Link>
+                    <Link
+                      className="product-list-name"
+                      href={`/products/${p.id}`}
+                    >
+                      <ProductImage product={p} size="thumb" />
+                      {p.name}
+                    </Link>
                   </td>
-                  <td>{p.code}</td>
+                  <td className="product-code">{p.code}</td>
                   <td>{p.category}</td>
                   <td>
                     <span className="badge">{p.stage}</span>
                   </td>
                   <td>{p.project || "—"}</td>
-                  <td>{new Date(p.updatedAt).toLocaleDateString("en-US")}</td>
+                  <td className="product-date">
+                    {new Date(p.updatedAt).toLocaleDateString("en-US")}
+                  </td>
                   <td>
                     <Link
                       aria-label={`Open ${p.name}`}
