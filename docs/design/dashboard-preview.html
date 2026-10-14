@@ -1,0 +1,433 @@
+<title>Techstyles Dashboard Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap">
+<style>
+/* Layout: white hairline sidebar + Bone canvas; editorial headline, one Obsidian counter band, then work (2/3) beside brand + activity (1/3), then a hairline module grid. Single deliberate light theme (the app is light-only). */
+:root {
+  color-scheme: light;
+  --highlighter: #e4f222;   /* the only accent: primary action, active nav, live marker */
+  --ink: #0c0a08;
+  --obsidian: #1a1919;
+  --paper: #ffffff;
+  --bone: #f4f2f0;
+  --ash: #6d6c6b;
+  --ash-on-dark: #a19f9d;
+  --hairline: #e5e7eb;
+  --smoke: #d3d3d3;
+  --input-line: rgba(33, 33, 33, 0.1);
+
+  --font: "Inter", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --text-caption: 10px;
+  --text-small: 13px;
+  --text-ui: 14px;
+  --text-body: 16px;
+  --text-sub: 20px;
+  --text-h-sm: 24px;
+  --text-h: 28px;
+  --text-h-lg: 40px;
+
+  --r-tag: 6px; --r-btn: 6px; --r-input: 10px; --r-wash: 12px; --r-card: 16px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bone);
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: var(--text-ui);
+  line-height: 1.5;
+  font-feature-settings: "ss01" on, "cv11" on;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, p { margin: 0; font-weight: 400; }
+h1, h2, h3 { text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.micro { font-size: var(--text-caption); letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.6; color: var(--ash); }
+
+/* Preview note sits outside the app frame */
+.preview-note {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--obsidian); color: var(--paper); font-size: var(--text-small);
+}
+.preview-note b { font-weight: 400; background: var(--highlighter); color: var(--ink); padding: 1px 8px; border-radius: var(--r-tag); }
+.preview-note span { color: var(--ash-on-dark); }
+
+/* ---------- Shell ---------- */
+.shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.sidebar {
+  background: var(--paper); border-right: 1px solid var(--hairline);
+  display: flex; flex-direction: column; padding: 16px 12px; gap: 4px;
+  position: sticky; top: 0; height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 18px; font-size: var(--text-body); }
+.brand-mark { width: 26px; height: 26px; border-radius: var(--r-tag); background: var(--ink); display: grid; place-items: center; }
+.brand-mark svg { width: 14px; height: 14px; }
+.side-label { padding: 12px 10px 6px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-btn);
+  color: var(--ink); transition: background-color .3s var(--ease);
+}
+.nav a svg { color: var(--ash); }
+.nav a:hover { background: var(--bone); }
+.nav a[aria-current="page"] { background: var(--highlighter); }
+.nav a[aria-current="page"] svg { color: var(--ink); }
+.nav .soon { margin-left: auto; font-size: var(--text-caption); color: var(--ash); }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px 4px; border-top: 1px solid var(--hairline); }
+.avatar { width: 30px; height: 30px; border-radius: var(--r-tag); background: var(--bone); display: grid; place-items: center; font-size: var(--text-small); }
+.side-foot small { display: block; color: var(--ash); font-size: 12px; line-height: 1.3; }
+.side-foot .icon-btn { margin-left: auto; }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.announce {
+  height: 40px; display: flex; align-items: center; gap: 8px; padding-inline: 24px;
+  background: var(--paper); border-bottom: 1px solid var(--hairline); font-size: var(--text-small); color: var(--ash);
+}
+.announce .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--highlighter); box-shadow: 0 0 0 1px var(--ink) inset; }
+.announce a { margin-left: auto; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--smoke); }
+.announce a:hover { text-decoration-color: var(--ink); }
+.topbar {
+  height: 62px; display: flex; align-items: center; gap: 8px; padding-inline: 24px;
+  background: var(--paper); border-bottom: 1px solid var(--hairline);
+  box-shadow: rgba(255,255,255,.6) 0 0 2px 0 inset;
+}
+.crumb { color: var(--ash); }
+.crumb span { color: var(--ink); }
+.spacer { flex: 1; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+  border-radius: var(--r-btn); border: 1px solid transparent; background: transparent; white-space: nowrap;
+  transition: background-color .3s var(--ease), border-color .3s var(--ease);
+}
+.btn svg.i { width: 16px; height: 16px; }
+.btn-primary { background: var(--highlighter); color: var(--ink); padding: 0 20px; height: 44px; }
+.btn-primary:hover { background: #d7e51a; }
+.btn-outline { border-color: var(--ink); padding: 0 14px; }
+.btn-outline:hover { background: var(--bone); }
+.btn-ghost:hover { background: var(--bone); }
+.btn-sm { height: 34px; padding: 0 12px; font-size: var(--text-small); }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-btn); border: 0; background: transparent; color: var(--ink); }
+.icon-btn:hover { background: var(--bone); }
+
+/* ---------- Content ---------- */
+.content { width: 100%; max-width: 1200px; margin-inline: auto; padding: 48px 32px 96px; display: flex; flex-direction: column; gap: 48px; }
+
+.intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.intro-copy { display: flex; flex-direction: column; gap: 14px; max-width: 46rem; }
+.intro h1 { font-size: 48px; line-height: 1.02; letter-spacing: -0.02em; }
+.intro p { font-size: var(--text-sub); line-height: 1.3; color: var(--ash); max-width: 34ch; }
+.intro-actions { display: flex; gap: 8px; align-items: center; }
+
+/* The one dark band: workspace counters */
+.counters {
+  background: var(--obsidian); color: var(--paper); border-radius: var(--r-card);
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.counter { padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 18px; border-left: 1px solid #2c2b2b; transition: background-color .3s var(--ease); }
+.counter:first-child { border-left: 0; border-radius: var(--r-card) 0 0 var(--r-card); }
+.counter:last-child { border-radius: 0 var(--r-card) var(--r-card) 0; }
+.counter:hover { background: #232222; }
+.counter .micro { color: var(--ash-on-dark); letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; min-height: 32px; align-items: flex-start; }
+.counter strong { font-weight: 400; font-size: var(--text-h-lg); line-height: 1; letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 8px; }
+.counter .live { width: 7px; height: 7px; border-radius: 50%; background: var(--highlighter); align-self: center; animation: pulse 2.4s var(--ease) infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .counter .live { animation: none; } * { transition: none !important; } }
+.counters-note { margin-top: 10px; font-size: 12px; color: var(--ash); }
+
+/* Two columns */
+.split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.card { background: var(--paper); border: 1px solid var(--hairline); border-radius: var(--r-card); }
+.card-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px 24px 16px; }
+.card-head h2 { font-size: var(--text-h-sm); line-height: 1.17; }
+.card-head p { color: var(--ash); margin-top: 4px; }
+.link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--r-btn); white-space: nowrap; }
+.link:hover { background: var(--bone); }
+.link svg.i { width: 15px; height: 15px; }
+
+/* Product rows */
+.products { list-style: none; margin: 0; padding: 0 12px 12px; }
+.products li + li a { border-top: 1px solid var(--hairline); }
+.prow {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) 128px 108px 20px; gap: 18px; align-items: center;
+  padding: 12px; border-radius: var(--r-wash); transition: background-color .3s var(--ease);
+}
+.products li:hover + li a { border-top-color: transparent; }
+.prow:hover { background: var(--bone); border-top-color: transparent !important; }
+.thumb { width: 64px; height: 64px; border-radius: var(--r-wash); background: var(--bone); display: grid; place-items: center; overflow: hidden; color: var(--ash); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; }
+.prow:hover .thumb { background: var(--paper); }
+.pname { font-size: var(--text-body); line-height: 1.3; }
+.pmeta { color: var(--ash); font-size: var(--text-small); margin-top: 2px; }
+.stage { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-small); }
+.pips { display: inline-flex; gap: 3px; }
+.pips i { width: 12px; height: 4px; border-radius: 2px; background: var(--smoke); }
+.pips i.on { background: var(--ink); }
+.updated { color: var(--ash); font-size: var(--text-small); text-align: right; }
+.prow > svg.i { color: var(--ash); width: 16px; height: 16px; }
+
+/* Right column */
+.stack { display: flex; flex-direction: column; gap: 24px; }
+.brandcard { padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+.brandcard-top { display: flex; gap: 14px; align-items: center; }
+.logo { width: 52px; height: 52px; border-radius: var(--r-wash); background: var(--ink); color: var(--paper); display: grid; place-items: center; font-size: var(--text-sub); letter-spacing: -0.02em; }
+.brandcard h2 { font-size: var(--text-sub); line-height: 1.2; }
+.brandcard .positioning { font-size: var(--text-body); line-height: 1.45; }
+.swatches { display: flex; gap: 6px; }
+.swatches i { width: 28px; height: 28px; border-radius: var(--r-tag); border: 1px solid var(--input-line); }
+.brandcard .shared { color: var(--ash); font-size: 12px; }
+
+.activity { list-style: none; margin: 0; padding: 0 24px 12px; }
+.activity li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--hairline); }
+.activity li:first-child { border-top: 0; }
+.activity a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.activity .what { color: var(--ash); font-size: var(--text-small); grid-column: 1; }
+.activity time { color: var(--ash); font-size: var(--text-small); grid-row: 1; grid-column: 2; }
+
+/* Module grid: hairline cells, no cards */
+.areas-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 16px; }
+.areas-head h2 { font-size: var(--text-h); line-height: 1.14; }
+.areas-head p { color: var(--ash); }
+.areas {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--hairline); border-left: 1px solid var(--hairline);
+}
+.area {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: start;
+  padding: 22px 22px 24px; border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+  transition: background-color .3s var(--ease);
+}
+.area:hover { background: var(--paper); }
+.area-icon { width: 36px; height: 36px; border-radius: var(--r-btn); display: grid; place-items: center; background: var(--paper); border: 1px solid var(--hairline); }
+.area:hover .area-icon { background: var(--bone); }
+.area strong { font-weight: 400; font-size: var(--text-body); display: block; line-height: 1.3; }
+.area p { color: var(--ash); margin-top: 4px; }
+.area .tag { display: inline-block; margin-top: 10px; font-size: 12px; padding: 2px 8px; border-radius: var(--r-tag); background: var(--paper); border: 1px solid var(--hairline); color: var(--ash); }
+.area > svg.i { color: var(--ash); width: 16px; height: 16px; margin-top: 10px; }
+
+/* Narrow fallback: the app is desktop-first; this only keeps the preview readable */
+@media (max-width: 1100px) {
+  .counters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .counter { border-left: 0; border-top: 1px solid #2c2b2b; border-radius: 0 !important; }
+  .counter:nth-child(-n+3) { border-top: 0; }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { display: none; }
+  .content { padding: 32px 16px 64px; gap: 32px; }
+  .intro h1 { font-size: var(--text-h-lg); }
+  .counters, .areas { grid-template-columns: minmax(0, 1fr); }
+  .counter { border-top: 1px solid #2c2b2b !important; }
+  .counter:first-child { border-top: 0 !important; }
+  .prow { grid-template-columns: 56px minmax(0, 1fr) 20px; }
+  .prow .stage, .prow .updated { display: none; }
+  .thumb { width: 56px; height: 56px; }
+  .announce, .topbar { padding-inline: 16px; }
+  .announce .long { display: none; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></symbol>
+    <symbol id="i-factory" viewBox="0 0 24 24"><path d="M2 20V9l6 4V9l6 4V4h6v16zM2 20h20M6 16h2M11 16h2M16 16h2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3M9 13l2 2 4-4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7zM2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M1 4h14v12H1zM15 9h4l4 4v3h-8"/><circle cx="6" cy="18.5" r="2"/><circle cx="18" cy="18.5" r="2"/></symbol>
+    <symbol id="i-mega" viewBox="0 0 24 24"><path d="m3 11 15-6v14L3 13zM11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.4 3.5 16 2a4 4 0 0 1-8 0L3.6 3.5a2 2 0 0 0-1.3 2.2l.6 3.5a1 1 0 0 0 1 .8H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.1a1 1 0 0 0 1-.8l.6-3.5a2 2 0 0 0-1.3-2.2z"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></symbol>
+    <symbol id="i-t" viewBox="0 0 24 24"><path d="M4 4h16v5h-5.5v11h-5V9H4z" fill="currentColor" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="preview-note" role="note">
+  <b>Design preview</b> Ramp-style direction for the Techstyles dashboard at 1440px. <span>Sample data, not your workspace.</span>
+</div>
+
+<div class="shell">
+  <aside class="sidebar" aria-label="Modules">
+    <div class="brand">
+      <span class="brand-mark" style="color:var(--highlighter)"><svg class="i"><use href="#i-t"/></svg></span>
+      Techstyles
+    </div>
+    <span class="micro side-label">Workspace</span>
+    <nav class="nav" aria-label="Primary navigation">
+      <a href="#" aria-current="page"><svg class="i"><use href="#i-home"/></svg>Dashboard</a>
+      <a href="#"><svg class="i"><use href="#i-bulb"/></svg>Concept &amp; Audience</a>
+      <a href="#"><svg class="i"><use href="#i-pencil"/></svg>Design &amp; Tech Packs</a>
+      <a href="#"><svg class="i"><use href="#i-factory"/></svg>Manufacturers &amp; Quotes</a>
+      <a href="#"><svg class="i"><use href="#i-check"/></svg>Samples &amp; Approvals</a>
+      <a href="#"><svg class="i"><use href="#i-layers"/></svg>Production</a>
+      <a href="#"><svg class="i"><use href="#i-shield"/></svg>Quality &amp; Inventory</a>
+      <a href="#"><svg class="i"><use href="#i-bag"/></svg>Store &amp; Sales</a>
+      <a href="#"><svg class="i"><use href="#i-truck"/></svg>Shipping &amp; Feedback</a>
+      <a href="#"><svg class="i"><use href="#i-mega"/></svg>Marketing</a>
+    </nav>
+    <div class="side-foot">
+      <span class="avatar">HS</span>
+      <span>Halden Studio<small>Your workspace</small></span>
+      <a class="icon-btn" href="#" aria-label="Settings"><svg class="i" style="width:16px;height:16px"><use href="#i-gear"/></svg></a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="announce">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Independent workspace<span class="long"> · Saved on this computer</span></span>
+      <a href="#">Workspace settings</a>
+    </div>
+    <header class="topbar">
+      <button class="icon-btn" aria-label="Collapse modules"><svg class="i" style="width:16px;height:16px"><use href="#i-panel"/></svg></button>
+      <p class="crumb">Halden Studio / <span>Dashboard</span></p>
+      <span class="spacer"></span>
+      <a class="btn btn-ghost btn-sm" href="#"><svg class="i"><use href="#i-gear"/></svg>Workspace</a>
+      <button class="icon-btn" aria-label="Recent activity"><svg class="i"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <main class="content">
+      <section class="intro">
+        <div class="intro-copy">
+          <h1>From brand idea to finished product</h1>
+          <p>Your brand foundation, product progress and workspaces in one place.</p>
+        </div>
+        <div class="intro-actions">
+          <a class="btn btn-outline" href="#"><svg class="i"><use href="#i-plus"/></svg>New tech pack</a>
+          <a class="btn btn-primary" href="#">Open products<svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+      </section>
+
+      <section aria-label="Workspace counts">
+        <div class="counters">
+          <a class="counter" href="#"><span class="micro">Active products</span><strong class="num">12</strong></a>
+          <a class="counter" href="#"><span class="micro">Collections</span><strong class="num">3</strong></a>
+          <a class="counter" href="#"><span class="micro">In development</span><strong class="num">7<span class="live" title="Changed this week"></span></strong></a>
+          <a class="counter" href="#"><span class="micro">In production</span><strong class="num">2</strong></a>
+          <a class="counter" href="#"><span class="micro">With a manufacturer</span><strong class="num">5</strong></a>
+          <a class="counter" href="#"><span class="micro">Shared tech packs</span><strong class="num">4</strong></a>
+        </div>
+        <p class="counters-note">Based on non-archived products in this workspace.</p>
+      </section>
+
+      <div class="split">
+        <section class="card" aria-labelledby="continue-h">
+          <header class="card-head">
+            <div>
+              <h2 id="continue-h">Continue working</h2>
+              <p>Your most recently updated products.</p>
+            </div>
+            <a class="link" href="#">View all products<svg class="i"><use href="#i-arrow"/></svg></a>
+          </header>
+          <ul class="products">
+            <li><a class="prow" href="#">
+              <span class="thumb"><img src="hoodie-sketch.png" alt=""></span>
+              <span><span class="pname">Heavyweight Hoodie</span><span class="pmeta" style="display:block">AW26 Core · 480 gsm loopback</span></span>
+              <span class="stage"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>Sampling</span>
+              <span class="updated">Today, 09:42</span>
+              <svg class="i"><use href="#i-arrow"/></svg>
+            </a></li>
+            <li><a class="prow" href="#">
+              <span class="thumb"><img src="hoodie-mockup.jpg" alt=""></span>
+              <span><span class="pname">Studio Zip Hoodie</span><span class="pmeta" style="display:block">AW26 Core · Size M base</span></span>
+              <span class="stage"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>Development</span>
+              <span class="updated">Yesterday</span>
+              <svg class="i"><use href="#i-arrow"/></svg>
+            </a></li>
+            <li><a class="prow" href="#">
+              <span class="thumb"><svg class="i" style="width:24px;height:24px"><use href="#i-shirt"/></svg></span>
+              <span><span class="pname">Boxy Pocket Tee</span><span class="pmeta" style="display:block">SS27 Essentials · 220 gsm jersey</span></span>
+              <span class="stage"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>Production</span>
+              <span class="updated">Oct 12</span>
+              <svg class="i"><use href="#i-arrow"/></svg>
+            </a></li>
+            <li><a class="prow" href="#">
+              <span class="thumb"><svg class="i" style="width:24px;height:24px"><use href="#i-shirt"/></svg></span>
+              <span><span class="pname">Wide-Leg Pleated Trouser</span><span class="pmeta" style="display:block">No collection · Size 32 base</span></span>
+              <span class="stage"><span class="pips" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>Idea</span>
+              <span class="updated">Oct 9</span>
+              <svg class="i"><use href="#i-arrow"/></svg>
+            </a></li>
+            <li><a class="prow" href="#">
+              <span class="thumb"><svg class="i" style="width:24px;height:24px"><use href="#i-shirt"/></svg></span>
+              <span><span class="pname">Waxed Cotton Overshirt</span><span class="pmeta" style="display:block">AW26 Core · Size L base</span></span>
+              <span class="stage"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>Development</span>
+              <span class="updated">Oct 7</span>
+              <svg class="i"><use href="#i-arrow"/></svg>
+            </a></li>
+          </ul>
+        </section>
+
+        <div class="stack">
+          <section class="card brandcard" aria-labelledby="brand-h">
+            <div class="brandcard-top">
+              <span class="logo" aria-hidden="true">H</span>
+              <div>
+                <span class="micro">Brand Profile</span>
+                <h2 id="brand-h">Halden Studio</h2>
+              </div>
+            </div>
+            <p class="positioning">Understated clothing for a versatile everyday wardrobe.</p>
+            <div class="swatches" aria-label="Brand colors">
+              <i style="background:#1f2a24" title="#1f2a24"></i>
+              <i style="background:#8a8f7c" title="#8a8f7c"></i>
+              <i style="background:#d9cfbf" title="#d9cfbf"></i>
+              <i style="background:#f3efe8" title="#f3efe8"></i>
+            </div>
+            <p class="shared">Shared with Design &amp; Tech Packs and Marketing</p>
+            <a class="btn btn-outline btn-sm" href="#" style="align-self:flex-start">View profile<svg class="i"><use href="#i-arrow"/></svg></a>
+          </section>
+
+          <section class="card" aria-labelledby="activity-h">
+            <header class="card-head"><h2 id="activity-h">Recent activity</h2></header>
+            <ul class="activity">
+              <li><a href="#">Heavyweight Hoodie</a><time datetime="2026-10-15">Oct 15</time><span class="what">Quote received from Porto Knit</span></li>
+              <li><a href="#">Studio Zip Hoodie</a><time datetime="2026-10-14">Oct 14</time><span class="what">Measurements updated</span></li>
+              <li><a href="#">Boxy Pocket Tee</a><time datetime="2026-10-12">Oct 12</time><span class="what">Moved to Production</span></li>
+              <li><a href="#">Wide-Leg Pleated Trouser</a><time datetime="2026-10-09">Oct 9</time><span class="what">Tech pack created</span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <section aria-labelledby="areas-h">
+        <div class="areas-head">
+          <div>
+            <h2 id="areas-h">Explore your workspace</h2>
+            <p>Choose the next area of your brand to work on.</p>
+          </div>
+        </div>
+        <div class="areas">
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-bulb"/></svg></span><span><strong>Concept &amp; Audience</strong><p>Build your brand foundation</p></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-pencil"/></svg></span><span><strong>Design &amp; Tech Packs</strong><p>Develop your products and collections</p></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-factory"/></svg></span><span><strong>Manufacturers &amp; Quotes</strong><p>Plan your sourcing workflow</p></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-check"/></svg></span><span><strong>Samples &amp; Approvals</strong><p>Plan sampling and reviews</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-layers"/></svg></span><span><strong>Production</strong><p>Plan your production workflow</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-shield"/></svg></span><span><strong>Quality &amp; Inventory</strong><p>Plan quality checks and stock</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-bag"/></svg></span><span><strong>Store &amp; Sales</strong><p>Plan your sales channels</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-truck"/></svg></span><span><strong>Shipping &amp; Feedback</strong><p>Plan delivery and customer feedback</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+          <a class="area" href="#"><span class="area-icon"><svg class="i"><use href="#i-mega"/></svg></span><span><strong>Marketing</strong><p>Access your brand profile and planned tools</p><span class="tag">Tools in development</span></span><svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('a[href="#"]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); }); });
+</script>
