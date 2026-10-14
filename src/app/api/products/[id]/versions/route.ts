@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { api, body, string } from "@/lib/api";
-import { findProduct, snapshot } from "@/lib/store";
+import { findProduct } from "@/lib/store";
+import { saveVersion } from "@/lib/products";
 import { repository } from "@/lib/repository";
 import { currentWorkspaceId } from "@/lib/workspace";
 export function POST(
@@ -12,15 +12,7 @@ export function POST(
     const input = await body(request);
     const name = string(input.name ?? "Saved version", "version name", 200);
     return repository.update(await currentWorkspaceId(), (database) => {
-      const product = findProduct(database, id);
-      product.versions.unshift({
-        id: randomUUID(),
-        name,
-        createdAt: new Date().toISOString(),
-        snapshot: snapshot(product),
-      });
-      product.versions = product.versions.slice(0, 50);
-      return product;
+      return saveVersion(findProduct(database, id), name);
     });
   });
 }

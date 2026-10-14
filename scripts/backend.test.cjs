@@ -3,23 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const ts = require('typescript');
+require('./support/load-ts.cjs');
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'techstyles-test-'));
 process.env.TECHSTYLES_DATA_DIR = path.join(temporary, 'data');
-for (const name of ['store','workspace','file-storage','local-file-storage','json-repository','repository','api','library','uploads','share','generate','brand','brand-types']) {
-  const source = fs.readFileSync(path.join(__dirname, '../src/lib', `${name}.ts`), 'utf8');
-  fs.writeFileSync(path.join(temporary, `${name}.js`), ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
-}
-const store = require(path.join(temporary, 'store.js'));
-const {repository} = require(path.join(temporary, 'repository.js'));
-const validation = require(path.join(temporary, 'api.js'));
-const uploads = require(path.join(temporary, 'uploads.js'));
+const store = require('../src/lib/store.ts');
+const {repository} = require('../src/lib/repository.ts');
+const validation = require('../src/lib/api.ts');
+const uploads = require('../src/lib/uploads.ts');
 function route(relative) {
-  const source = fs.readFileSync(path.join(__dirname, '../src/app/api', relative, 'route.ts'), 'utf8').replace(/(['"])@\/lib\//g, "$1./");
-  const destination = path.join(temporary, `${relative.replaceAll('/','-')}.js`);
-  fs.writeFileSync(destination, ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
-  return require(destination);
+  return require(path.join(__dirname, '../src/app/api', relative, 'route.ts'));
 }
 function jsonRequest(payload) { return new Request('http://localhost/api', {method:'POST',body:JSON.stringify(payload)}); }
 after(() => fs.rmSync(temporary, {recursive:true,force:true}));
@@ -102,14 +95,14 @@ test('new production fields validate and shared payload redacts excluded section
   assert.throws(() => validation.productPatch({samples:[{id:'s',size:'M',color:'Black',quantity:-1,status:'Requested'}]}));
   assert.throws(() => validation.productPatch({attachments:[{id:'a',name:'Bad',url:'/sites/techstyles/../../secret'}]}));
   const product = {...store.emptyProduct(),...patch,comments:[{id:'c',section:'overview',author:'Me',text:'Private',createdAt:'now'}],labels:'Private label',sketch:'/sites/techstyles/image.png'};
-  const shared = require(path.join(temporary,'share.js')).sharedProduct(product);
+  const shared = require('../src/lib/share.ts').sharedProduct(product);
   assert.deepEqual(shared.attachments,[]); assert.deepEqual(shared.samples,[]); assert.deepEqual(shared.comments,[]);
   assert.equal(shared.labels,''); assert.equal(shared.sketch,'');
   assert.equal('shareToken' in shared,false);
 });
 
 test('AI requires a server key and generates/edits through mocked transport only', async () => {
-  const generate = require(path.join(temporary,'generate.js')).generateImage;
+  const generate = require('../src/lib/generate.ts').generateImage;
   const previous = process.env.OPENAI_API_KEY;
   try {
     delete process.env.OPENAI_API_KEY;
@@ -126,7 +119,7 @@ test('AI requires a server key and generates/edits through mocked transport only
       return Response.json({data:[{b64_json:png.toString('base64')}]});
     });
     await assert.rejects(generate({prompt:'Hoodie',kind:'mockup',image:'https://external.example/test.png'},async()=>{throw new Error('Must not call');}));
-    const {emptyBrandProfile} = require(path.join(temporary,'brand-types.js'));
+    const {emptyBrandProfile} = require('../src/lib/brand-types.ts');
     await repository.update('default', db=>{db.brandProfile={...emptyBrandProfile(),name:'Shared Studio',tone:'Direct and practical',revision:1};});
     await generate({prompt:'Hoodie',kind:'sketch',useBrandProfile:true},async(url,options)=>{
       assert.match(JSON.parse(options.body).prompt,/Shared Studio/);
@@ -148,7 +141,7 @@ test('workspaces are isolated and legacy single-workspace files are migrated', a
 });
 
 test('uploads are scoped per workspace and legacy flat files stay with the default workspace', async () => {
-  const {fileStorage} = require(path.join(temporary, 'file-storage.js'));
+  const {fileStorage} = require('../src/lib/file-storage.ts');
   const name = '11111111-1111-1111-1111-111111111111.png';
   await fileStorage.save('brand-a', name, Buffer.from('a'));
   assert.equal((await fileStorage.read('brand-a', name)).toString(), 'a');

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -40,178 +40,61 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import type { Product } from "@/lib/types";
+import type { Product, Manufacturer, QuoteRequest } from "@/lib/types";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
 import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
+import { ManufacturersPage } from "./manufacturers";
+import { ManufacturersOverview } from "./manufacturers-overview";
+import { QuoteRequestsPage } from "./quote-requests";
+import { QuoteComparisonPage } from "./quote-comparison";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-export const assets = "/sites/techstyles/";
-export async function api<T>(
-  url: string,
-  method = "GET",
-  body?: unknown,
-): Promise<T> {
-  const response = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data as T;
-}
-export function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const f = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", f);
-    return () => document.removeEventListener("keydown", f);
-  }, [onClose]);
-  return (
-    <div
-      className="modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button className="icon-button" aria-label="Close" onClick={onClose}>
-            <X size={19} />
-          </button>
-        </div>
-        {children}
-      </section>
-    </div>
-  );
-}
-export function Brand() {
-  return (
-    <Link href="/" className="brand">
-      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">
-        {[
-          [6, 6],
-          [19, 6],
-          [32, 6],
-          [19, 19],
-          [19, 32],
-        ].map(([x, y]) => (
-          <rect key={`${x}-${y}`} x={x} y={y} width="10" height="10" rx="2.4" />
-        ))}
-      </svg>
-      techstyles
-    </Link>
-  );
-}
-const nav = [
-  ["dashboard", "Dashboard", LayoutDashboard],
-  ["products", "Products", Shirt],
-  ["projects", "Projects", FolderKanban],
-  ["sketches", "Sketch Library", Pencil],
-  ["materials", "Materials", Layers],
-  ["artworks", "Artworks", Paintbrush],
-  ["colors", "Colorways", Palette],
-  ["size-charts", "Size Charts", Ruler],
-  ["attachments", "Attachments Library", Paperclip],
-] as const;
-const modules = [
-  {
-    id: "home",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    pages: ["Overview"],
-  },
-  {
-    id: "concept",
-    label: "Concept & Audience",
-    icon: Lightbulb,
-    pages: [
-      "Overview",
-      "Brand Profile",
-      "Audience & Market",
-      "Moodboards",
-      "Brand Book",
-    ],
-  },
-  { id: "design", label: "Design & Tech Packs", icon: Pencil, pages: [] },
-  {
-    id: "manufacturers",
-    label: "Manufacturers & Quotes",
-    icon: Factory,
-    pages: ["Overview", "Manufacturers", "Quote Requests", "Quote Comparison"],
-  },
-  {
-    id: "samples",
-    label: "Samples & Approvals",
-    icon: ClipboardCheck,
-    pages: ["Overview", "Sample Requests", "Sample Reviews", "Approvals"],
-  },
-  {
-    id: "production",
-    label: "Production",
-    icon: Layers,
-    pages: ["Overview", "Production Orders", "Timeline", "Milestones"],
-  },
-  {
-    id: "quality",
-    label: "Quality & Inventory",
-    icon: ShieldCheck,
-    pages: ["Overview", "Quality Checks", "Inventory", "Stock Movements"],
-  },
-  {
-    id: "store",
-    label: "Store & Sales",
-    icon: ShoppingBag,
-    pages: [
-      "Overview",
-      "Product Listings",
-      "Orders",
-      "Sales Analytics",
-      "Brand Website",
-    ],
-  },
-  {
-    id: "shipping",
-    label: "Shipping & Feedback",
-    icon: Truck,
-    pages: ["Overview", "Shipments", "Returns", "Customer Feedback"],
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: Megaphone,
-    pages: [
-      "Overview",
-      "Brand Profile",
-      "Campaigns",
-      "Content Calendar",
-      "Assets",
-    ],
-  },
-];
-function pageSlug(label: string) {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+import {
+  request,
+  assetsPath,
+  manufacturersApi,
+  quoteRequestsApi,
+} from "@/lib/client-api";
+import { Modal, Brand } from "./ui";
+import { ProductForm } from "./product-form";
+import {
+  navRoutes,
+  moduleRoutes,
+  pageSlug,
+  resolveView,
+} from "./workspace-routes";
+const navIcons = {
+  dashboard: LayoutDashboard,
+  products: Shirt,
+  projects: FolderKanban,
+  sketches: Pencil,
+  materials: Layers,
+  artworks: Paintbrush,
+  colors: Palette,
+  "size-charts": Ruler,
+  attachments: Paperclip,
+};
+const moduleIcons = {
+  home: LayoutDashboard,
+  concept: Lightbulb,
+  design: Pencil,
+  manufacturers: Factory,
+  samples: ClipboardCheck,
+  production: Layers,
+  quality: ShieldCheck,
+  store: ShoppingBag,
+  shipping: Truck,
+  marketing: Megaphone,
+};
+const nav = navRoutes.map(
+  ([key, label]) => [key, label, navIcons[key]] as const,
+);
+const modules = moduleRoutes.map((module) => ({
+  ...module,
+  icon: moduleIcons[module.id as keyof typeof moduleIcons],
+}));
 const subtitles: Record<string, string> = {
   dashboard: "Product development overview",
   products: "Manage styles across all seasons and stages",
@@ -224,152 +107,6 @@ const subtitles: Record<string, string> = {
   attachments: "Reference files for your products",
   settings: "Workspace preferences and integrations",
 };
-export function ProductForm({
-  product,
-  onClose,
-  onSave,
-}: {
-  product?: Product;
-  onClose: () => void;
-  onSave: (p: Product) => void;
-}) {
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const data = Object.fromEntries(new FormData(e.currentTarget));
-    if (!String(data.code || "").trim())
-      data.code = `${String(data.category).slice(0, 3).toUpperCase()}-${String(data.name).slice(0, 3).toUpperCase()}-${crypto.randomUUID().slice(0, 3).toUpperCase()}`;
-    try {
-      const p = await api<Product>(
-        product ? `/api/products/${product.id}` : "/api/products",
-        product ? "PATCH" : "POST",
-        data,
-      );
-      onSave(p);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <Modal
-      title={product ? "Edit Product" : "Add New Product"}
-      onClose={onClose}
-    >
-      <p className="muted">
-        Core product details — you&apos;ll add the full tech pack next.
-      </p>
-      <form onSubmit={submit}>
-        <div className="form-grid">
-          <label className="full">
-            Product Name *
-            <input
-              name="name"
-              required
-              defaultValue={product?.name}
-              placeholder="e.g. Relaxed Fleece Hoodie"
-              autoFocus
-            />
-          </label>
-          <label>
-            Product Code
-            <input
-              name="code"
-              defaultValue={product?.code}
-              placeholder="Leave blank to auto-generate"
-            />
-          </label>
-          <label>
-            Category *
-            <select
-              name="category"
-              required
-              defaultValue={product?.category || ""}
-            >
-              <option value="" disabled>
-                Choose a category
-              </option>
-              {[
-                "Hoodies",
-                "T-Shirts",
-                "Shirts",
-                "Jackets",
-                "Trousers",
-                "Sweatshirts",
-                "Shorts",
-                "Dresses",
-                "Knitwear",
-                "Accessories",
-              ].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Stage
-            <select name="stage" defaultValue={product?.stage || "Idea"}>
-              {[
-                "Idea",
-                "Development",
-                "Sampling",
-                "Production",
-                "Completed",
-              ].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Base size
-            <select name="baseSize" defaultValue={product?.baseSize || "M"}>
-              {["XS", "S", "M", "L", "XL", "XXL"].map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Project
-            <input
-              name="project"
-              defaultValue={product?.project}
-              placeholder="No project"
-            />
-          </label>
-          <label>
-            Supplier
-            <input name="supplier" defaultValue={product?.supplier} />
-          </label>
-          <label className="full">
-            Description
-            <textarea
-              name="description"
-              defaultValue={product?.description}
-              placeholder="Describe the fit, fabric and key details…"
-            />
-          </label>
-        </div>
-        {error && <p className="error">{error}</p>}
-        <div className="modal-footer">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn primary" disabled={busy}>
-            {busy
-              ? "Saving…"
-              : product
-                ? "Save Changes"
-                : "Continue to Add Details"}{" "}
-            <ArrowUpRight size={16} />
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
 function useNavigationPreference(key: string) {
   const [value, setValue] = useState(() => {
     try {
@@ -389,15 +126,10 @@ function useNavigationPreference(key: string) {
 }
 export function Workspace({ path }: { path: string[] }) {
   const router = useRouter();
-  const section = path[0] || "dashboard";
+  const { section, moduleId, modulePage, title, itemId, view } =
+    resolveView(path);
   const pathKey = path.join("/");
-  const activeModule =
-    modules.find(
-      (m) => m.id === (section === "modules" ? path[1] : "design"),
-    ) || modules.find((module) => module.id === "design")!;
-  const modulePage = activeModule.pages.find(
-    (page) => pageSlug(page) === (path[2] || "overview"),
-  );
+  const activeModule = modules.find((module) => module.id === moduleId)!;
   const isDesign = activeModule.id === "design";
   const isWorkspaceDashboard = activeModule.id === "home";
   const [primaryCollapsed, setPrimaryCollapsed] = useNavigationPreference(
@@ -418,6 +150,8 @@ export function Workspace({ path }: { path: string[] }) {
     }
   }
   const [products, setProducts] = useState<Product[]>([]);
+  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebar, setSidebar] = useState(
@@ -438,10 +172,16 @@ export function Workspace({ path }: { path: string[] }) {
   useEffect(() => {
     if (pathKey.startsWith("share/")) return;
     let live = true;
-    api<Product[]>("/api/products")
-      .then((p) => {
+    Promise.all([
+      request<Product[]>("/api/products"),
+      manufacturersApi.list(),
+      quoteRequestsApi.list(),
+    ])
+      .then(([p, manufacturers, requests]) => {
         if (live) {
           setProducts(p);
+          setManufacturers(manufacturers);
+          setQuoteRequests(requests);
           setLoading(false);
         }
       })
@@ -455,12 +195,6 @@ export function Workspace({ path }: { path: string[] }) {
       live = false;
     };
   }, [pathKey]);
-  const title =
-    section === "modules"
-      ? activeModule.id === "home"
-        ? "Dashboard"
-        : modulePage || "Page not found"
-      : nav.find((n) => n[0] === section)?.[1] || "Settings";
   function saved(p: Product) {
     setProducts((old) =>
       old.some((x) => x.id === p.id)
@@ -470,6 +204,31 @@ export function Workspace({ path }: { path: string[] }) {
     setCreate(false);
     router.push(`/products/${p.id}`);
   }
+  function saveManufacturer(manufacturer: Manufacturer) {
+    setManufacturers((old) =>
+      old.some((item) => item.id === manufacturer.id)
+        ? old.map((item) => (item.id === manufacturer.id ? manufacturer : item))
+        : [manufacturer, ...old],
+    );
+  }
+  function saveQuoteRequest(request: QuoteRequest) {
+    setQuoteRequests((old) => [
+      request,
+      ...old
+        .filter((item) => item.id !== request.id)
+        .map((item) =>
+          request.status === "chosen" &&
+          item.productId === request.productId &&
+          item.status === "chosen"
+            ? {
+                ...item,
+                status: "quoted" as const,
+                updatedAt: request.updatedAt,
+              }
+            : item,
+        ),
+    ]);
+  }
   useEffect(() => {
     if (!sidebar) return;
     const dismiss = (event: KeyboardEvent) => {
@@ -478,28 +237,215 @@ export function Workspace({ path }: { path: string[] }) {
     document.addEventListener("keydown", dismiss);
     return () => document.removeEventListener("keydown", dismiss);
   }, [sidebar]);
-  const product = products.find((p) => p.id === path[1]);
-  if (section === "share" && path[1] === "brand-book")
-    return <SharedBrandBook token={path[2] || ""} />;
-  if (section === "share") return <SharedProduct token={path[1] || ""} />;
-  if (
-    section === "modules" &&
-    path[1] === "concept" &&
-    path[2] === "brand-book" &&
-    path[3] === "print"
-  )
-    return <BrandBookPrint />;
-  if (section === "products" && path[2] === "canvas" && product)
-    return (
-      <ProductCanvas
-        product={product}
-        onChange={(p) =>
-          setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
-        }
-      />
-    );
-  if (section === "products" && path[2] === "print" && product)
-    return <SharedProduct product={product} />;
+  const product = products.find((p) => p.id === itemId);
+  switch (view.kind) {
+    case "shared-brand-book":
+      return <SharedBrandBook token={view.token} />;
+    case "shared-product":
+      return <SharedProduct token={view.token} />;
+    case "brand-book-print":
+      return <BrandBookPrint />;
+    case "product-canvas":
+      if (product)
+        return (
+          <ProductCanvas
+            product={product}
+            onChange={(p) =>
+              setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
+            }
+          />
+        );
+      break;
+    case "product-print":
+      if (product) return <SharedProduct product={product} />;
+      break;
+  }
+  function renderMainContent() {
+    // Module workspaces render before the shell's loading fallback.
+    switch (view.kind) {
+      case "module-home":
+        return (
+          <WorkspaceDashboard
+            products={products}
+            loading={loading}
+            failed={!!error}
+          />
+        );
+      case "brand-profile":
+        return <BrandProfilePage />;
+      case "brand-book":
+        return <BrandBookPage />;
+      case "concept-overview":
+        return <ConceptOverview />;
+      case "module-page":
+        return (
+          <section className="module-workspace">
+            {activeModule.id === "marketing" && <BrandProfileSummary />}
+            <span className="module-eyebrow">{activeModule.label}</span>
+            <h2>
+              {modulePage === "Overview" ? activeModule.label : modulePage}
+            </h2>
+            <p className="muted">
+              {modulePage === "Overview"
+                ? "Choose an area below to open its workspace."
+                : "This workspace is ready for the next stage of your brand. Tools for this area have not been added yet."}
+            </p>
+            {modulePage === "Overview" ? (
+              <div className="module-page-grid">
+                {activeModule.pages.slice(1).map((page) => (
+                  <Link
+                    className="module-page-card"
+                    key={page}
+                    href={
+                      page === "Brand Profile"
+                        ? "/modules/concept/brand-profile"
+                        : `/modules/${activeModule.id}/${pageSlug(page)}`
+                    }
+                  >
+                    <LayoutDashboard size={21} />
+                    <h3>{page}</h3>
+                    <span>
+                      Open workspace <ArrowUpRight size={16} />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="module-empty">
+                <activeModule.icon size={36} />
+                <h3>No {modulePage!.toLowerCase()} yet</h3>
+                <p>
+                  Manage your designs and tech packs while this module is being
+                  prepared.
+                </p>
+                <Link className="btn" href="/">
+                  Open Design &amp; Tech Packs
+                </Link>
+              </div>
+            )}
+          </section>
+        );
+    }
+    if (loading) return <div className="empty">Loading your workspace…</div>;
+    if (
+      error &&
+      ["manufacturers-overview", "quote-requests", "quote-comparison"].includes(
+        view.kind,
+      )
+    )
+      return (
+        <div className="empty" role="alert">
+          Sourcing data could not be loaded. Reload the page to try again.
+        </div>
+      );
+    switch (view.kind) {
+      case "manufacturers-overview":
+        return (
+          <ManufacturersOverview
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+          />
+        );
+      case "quote-requests":
+        return (
+          <QuoteRequestsPage
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+          />
+        );
+      case "quote-comparison":
+        return (
+          <QuoteComparisonPage
+            key={view.productId || "select-product"}
+            productId={view.productId}
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+            onSave={saveQuoteRequest}
+            onChoose={(product) =>
+              setProducts((old) =>
+                old.map((item) =>
+                  item.id === product.id
+                    ? { ...item, manufacturerId: product.manufacturerId }
+                    : item,
+                ),
+              )
+            }
+            onProductSave={(product) =>
+              setProducts((old) =>
+                old.map((item) => (item.id === product.id ? product : item)),
+              )
+            }
+          />
+        );
+      case "manufacturers":
+        if (error)
+          return (
+            <div className="empty">Manufacturers could not be loaded.</div>
+          );
+        return (
+          <ManufacturersPage
+            manufacturers={manufacturers}
+            products={products}
+            quoteRequests={quoteRequests}
+            onSave={saveManufacturer}
+            onDelete={(id) =>
+              setManufacturers((old) => old.filter((item) => item.id !== id))
+            }
+          />
+        );
+      case "product":
+      case "product-canvas":
+      case "product-print":
+        if (itemId)
+          return (
+            <div className="empty">
+              <h2>Product not found</h2>
+              <Link className="btn" href="/products">
+                Back to Products
+              </Link>
+            </div>
+          );
+        // An empty product id still falls through to the library.
+        return (
+          <ProductLibrary
+            products={products}
+            manufacturers={manufacturers}
+            onCreate={() => setCreate(true)}
+          />
+        );
+      case "dashboard":
+        return (
+          <>
+            <BrandProfileSummary />
+            <Dashboard products={products} />
+          </>
+        );
+      case "product-library":
+        return (
+          <ProductLibrary
+            products={products}
+            manufacturers={manufacturers}
+            onCreate={() => setCreate(true)}
+          />
+        );
+      case "settings":
+        return <SettingsPage notify={notify} />;
+      case "library":
+        return (
+          <LibraryPage key={view.collection} collection={view.collection} />
+        );
+      case "not-found":
+        return (
+          <div className="empty">
+            <h2>Page not found</h2>
+            <Link href="/">Go to Dashboard</Link>
+          </div>
+        );
+    }
+  }
   return (
     <div
       className={`app-shell ${primaryCollapsed ? "primary-collapsed" : ""} ${secondaryHidden || isWorkspaceDashboard ? "secondary-hidden" : ""} ${focusMode ? "focus-mode" : ""}`}
@@ -637,7 +583,7 @@ export function Workspace({ path }: { path: string[] }) {
                         <div className="subnav">
                           <Link
                             href="/products"
-                            className={!path[1] ? "active" : ""}
+                            className={!itemId ? "active" : ""}
                             onClick={() => setSidebar(false)}
                           >
                             <List size={14} />
@@ -785,9 +731,22 @@ export function Workspace({ path }: { path: string[] }) {
             Workspace settings
           </Link>
         </div>
-        {product && section === "products" ? (
+        {product &&
+        (view.kind === "product" ||
+          view.kind === "product-canvas" ||
+          view.kind === "product-print" ||
+          view.kind === "product-library") ? (
           <ProductEditor
             product={product}
+            manufacturers={manufacturers}
+            onManufacturerSave={saveManufacturer}
+            quoteRequests={quoteRequests.filter(
+              (item) => item.productId === product.id,
+            )}
+            onQuoteRequestSave={saveQuoteRequest}
+            onQuoteRequestDelete={(id) =>
+              setQuoteRequests((old) => old.filter((item) => item.id !== id))
+            }
             onChange={(p) =>
               setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
             }
@@ -834,107 +793,18 @@ export function Workspace({ path }: { path: string[] }) {
             </header>
             <main className="app-content">
               {error && <p className="error">{error}</p>}
-              {section === "modules" && activeModule.id === "home" ? (
-                <WorkspaceDashboard
-                  products={products}
-                  loading={loading}
-                  failed={!!error}
-                />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Brand Profile" ? (
-                <BrandProfilePage />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Brand Book" ? (
-                <BrandBookPage />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Overview" ? (
-                <ConceptOverview />
-              ) : section === "modules" && modulePage ? (
-                <section className="module-workspace">
-                  {activeModule.id === "marketing" && <BrandProfileSummary />}
-                  <span className="module-eyebrow">{activeModule.label}</span>
-                  <h2>
-                    {modulePage === "Overview"
-                      ? activeModule.label
-                      : modulePage}
-                  </h2>
-                  <p className="muted">
-                    {modulePage === "Overview"
-                      ? "Choose an area below to open its workspace."
-                      : "This workspace is ready for the next stage of your brand. Tools for this area have not been added yet."}
-                  </p>
-                  {modulePage === "Overview" ? (
-                    <div className="module-page-grid">
-                      {activeModule.pages.slice(1).map((page) => (
-                        <Link
-                          className="module-page-card"
-                          key={page}
-                          href={
-                            page === "Brand Profile"
-                              ? "/modules/concept/brand-profile"
-                              : `/modules/${activeModule.id}/${pageSlug(page)}`
-                          }
-                        >
-                          <LayoutDashboard size={21} />
-                          <h3>{page}</h3>
-                          <span>
-                            Open workspace <ArrowUpRight size={16} />
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="module-empty">
-                      <activeModule.icon size={36} />
-                      <h3>No {modulePage.toLowerCase()} yet</h3>
-                      <p>
-                        Manage your designs and tech packs while this module is
-                        being prepared.
-                      </p>
-                      <Link className="btn" href="/">
-                        Open Design &amp; Tech Packs
-                      </Link>
-                    </div>
-                  )}
-                </section>
-              ) : loading ? (
-                <div className="empty">Loading your workspace…</div>
-              ) : section === "products" && path[1] ? (
-                <div className="empty">
-                  <h2>Product not found</h2>
-                  <Link className="btn" href="/products">
-                    Back to Products
-                  </Link>
-                </div>
-              ) : section === "dashboard" ? (
-                <>
-                  <BrandProfileSummary />
-                  <Dashboard products={products} />
-                </>
-              ) : section === "products" ? (
-                <ProductLibrary
-                  products={products}
-                  onCreate={() => setCreate(true)}
-                />
-              ) : section === "settings" ? (
-                <SettingsPage notify={notify} />
-              ) : nav.some((n) => n[0] === section) ? (
-                <LibraryPage key={section} collection={section} />
-              ) : (
-                <div className="empty">
-                  <h2>Page not found</h2>
-                  <Link href="/">Go to Dashboard</Link>
-                </div>
-              )}
+              {renderMainContent()}
             </main>
           </>
         )}
       </div>
       {create && (
-        <ProductForm onClose={() => setCreate(false)} onSave={saved} />
+        <ProductForm
+          manufacturers={manufacturers}
+          onManufacturerSave={saveManufacturer}
+          onClose={() => setCreate(false)}
+          onSave={saved}
+        />
       )}
       {searchOpen && (
         <Modal
@@ -1049,7 +919,9 @@ function Dashboard({ products }: { products: Product[] }) {
               key={p.id}
             >
               <img
-                src={p.cover || p.sketch || assets + "hero-sketch-hoodie.png"}
+                src={
+                  p.cover || p.sketch || assetsPath + "hero-sketch-hoodie.png"
+                }
                 alt=""
               />
               <div>
@@ -1102,16 +974,18 @@ function Dashboard({ products }: { products: Product[] }) {
 }
 function ProductLibrary({
   products,
+  manufacturers,
   onCreate,
 }: {
   products: Product[];
+  manufacturers: Manufacturer[];
   onCreate: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [stage, setStage] = useState("");
   const [project, setProject] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const [manufacturerId, setManufacturerId] = useState("");
   const [sort, setSort] = useState("updated");
   const [grid, setGrid] = useState(true);
   const [archived, setArchived] = useState(false);
@@ -1122,7 +996,7 @@ function ProductLibrary({
         (!category || p.category === category) &&
         (!stage || p.stage === stage) &&
         (!project || p.project === project) &&
-        (!supplier || p.supplier === supplier) &&
+        (!manufacturerId || p.manufacturerId === manufacturerId) &&
         (p.name + " " + p.code).toLowerCase().includes(query.toLowerCase()),
     )
     .sort((a, b) =>
@@ -1150,12 +1024,6 @@ function ProductLibrary({
             products.map((p) => p.category),
           ],
           [project, setProject, "All Projects", products.map((p) => p.project)],
-          [
-            supplier,
-            setSupplier,
-            "All Suppliers",
-            products.map((p) => p.supplier),
-          ],
           [stage, setStage, "All Stages", products.map((p) => p.stage)],
         ].map(([v, set, label, options]) => (
           <select
@@ -1170,6 +1038,18 @@ function ProductLibrary({
             ))}
           </select>
         ))}
+        <select
+          aria-label="Filter manufacturer"
+          value={manufacturerId}
+          onChange={(e) => setManufacturerId(e.target.value)}
+        >
+          <option value="">All Manufacturers</option>
+          {manufacturers.map((manufacturer) => (
+            <option key={manufacturer.id} value={manufacturer.id}>
+              {manufacturer.name}
+            </option>
+          ))}
+        </select>
         <select
           aria-label="Sort products"
           value={sort}
@@ -1329,14 +1209,25 @@ function SettingsPage({ notify }: { notify: (s: string) => void }) {
         className="btn"
         onClick={async () => {
           try {
-            const data = await api("/api/products");
-            const libraries = await api("/api/libraries");
-            const brand = await api<{ profile: unknown }>("/api/brand-profile");
+            const [data, libraries, brand, manufacturers, quoteRequests] =
+              await Promise.all([
+                request("/api/products"),
+                request("/api/libraries"),
+                request<{ profile: unknown }>("/api/brand-profile"),
+                manufacturersApi.list(),
+                quoteRequestsApi.list(),
+              ]);
             const url = URL.createObjectURL(
               new Blob(
                 [
                   JSON.stringify(
-                    { products: data, libraries, brandProfile: brand.profile },
+                    {
+                      products: data,
+                      libraries,
+                      brandProfile: brand.profile,
+                      manufacturers,
+                      quoteRequests,
+                    },
                     null,
                     2,
                   ),

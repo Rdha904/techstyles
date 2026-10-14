@@ -1,19 +1,14 @@
 const {test,after}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const ts=require('typescript');
+const fs=require('node:fs');const os=require('node:os');const path=require('node:path');require('./support/load-ts.cjs');
 const temporary=fs.mkdtempSync(path.join(os.tmpdir(),'techstyles-brand-book-test-'));
 process.env.TECHSTYLES_DATA_DIR=path.join(temporary,'data');
-const compile=(source,destination)=>fs.writeFileSync(destination,ts.transpileModule(source.replace(/(['"])@\/lib\//g,'$1./'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
-for(const name of ['store','workspace','file-storage','local-file-storage','json-repository','repository','api','uploads','brand-types','brand'])
- compile(fs.readFileSync(path.join(__dirname,'../src/lib',`${name}.ts`),'utf8'),path.join(temporary,`${name}.js`));
 function route(relative){
- const destination=path.join(temporary,`route-${relative.replace(/[^a-z]/gi,'-')}.js`);
- compile(fs.readFileSync(path.join(__dirname,'../src/app/api',relative,'route.ts'),'utf8'),destination);
- return require(destination);
+ return require(path.join(__dirname,'../src/app/api',relative,'route.ts'));
 }
-const {repository}=require(path.join(temporary,'repository.js'));
-const types=require(path.join(temporary,'brand-types.js'));
-const brand=require(path.join(temporary,'brand.js'));
+const {repository}=require('../src/lib/repository.ts');
+const types=require('../src/lib/brand-types.ts');
+const brand=require('../src/lib/brand.ts');
 const book=route('brand-book');const share=route('brand-book/share');const shared=route('share/brand-book/[token]');
 after(()=>fs.rmSync(temporary,{recursive:true,force:true}));
 const put=(data)=>book.PUT(new Request('http://localhost/api/brand-book',{method:'PUT',body:JSON.stringify(data)}));

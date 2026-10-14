@@ -1,3 +1,29 @@
+export const productSections = [
+  "overview",
+  "sketch",
+  "colorways",
+  "bom",
+  "artworks",
+  "instructions",
+  "sizes",
+  "attachments",
+  "samplings",
+  "packaging",
+  "versions",
+] as const;
+export type ProductSection = (typeof productSections)[number];
+
+export const libraryCollections = [
+  "projects",
+  "sketches",
+  "materials",
+  "artworks",
+  "colors",
+  "size-charts",
+  "attachments",
+] as const;
+export type LibraryCollection = (typeof libraryCollections)[number];
+
 export interface ProductColor {
   id: string;
   name: string;
@@ -52,7 +78,6 @@ export interface ProductSnapshot {
   stage: string;
   baseSize: string;
   project: string;
-  supplier: string;
   description: string;
   cover: string;
   sketch: string;
@@ -67,7 +92,7 @@ export interface ProductSnapshot {
   attachments: ProductAsset[];
   artworks: ProductAsset[];
   samples: ProductSample[];
-  excludedSections: string[];
+  excludedSections: ProductSection[];
   archived: boolean;
   measurementUnit: "cm" | "in";
 }
@@ -83,6 +108,8 @@ export interface Product extends ProductSnapshot {
   updatedAt: string;
   versions: ProductVersion[];
   shareToken: string | null;
+  manufacturerId: string | null;
+  techPackUpdatedAt: string;
 }
 export interface LibraryItem {
   id: string;
@@ -92,4 +119,44 @@ export interface LibraryItem {
   color: string;
   data: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface Manufacturer {
+  id: string;
+  name: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  location: { country: string; city: string };
+  categories: string[];
+  typicalMoq: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Quote {
+  unitPrice: number;
+  currency: string;
+  moq: number | null;
+  productionLeadTimeDays: number | null;
+  sampleCost: number | null;
+  sampleLeadTimeDays: number | null;
+  receivedAt: string;
+  notes: string;
+  attachment: { name: string; url: string } | null;
+}
+export type QuoteRequestStatus =
+  "draft" | "sent" | "quoted" | "chosen" | "declined";
+export type QuoteRequestAction =
+  "send" | "decline" | "reopen" | "choose" | "unchoose";
+export interface QuoteRequest {
+  id: string;
+  productId: string;
+  manufacturerId: string;
+  status: QuoteRequestStatus;
+  sentAt: string | null;
+  quote: Quote | null;
+  createdAt: string;
+  updatedAt: string;
 }

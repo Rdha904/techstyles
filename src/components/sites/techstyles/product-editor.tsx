@@ -49,34 +49,35 @@ import {
 } from "lucide-react";
 import type {
   Product,
+  Manufacturer,
+  QuoteRequest,
   ProductSnapshot,
+  ProductSection,
   LibraryItem,
   Annotation,
 } from "@/lib/types";
+import { productSections } from "@/lib/types";
 import { BrandProfileSummary } from "./brand-profile";
-import { api, assets, Modal, ProductForm, Brand } from "./workspace";
-const sections = [
-  ["overview", "Overview"],
-  ["sketch", "Sketch / Design"],
-  ["colorways", "Colorways"],
-  ["bom", "BOM / Materials"],
-  ["artworks", "Artworks"],
-  ["instructions", "Instructions"],
-  ["sizes", "Sizes / Measurements"],
-  ["attachments", "Attachments"],
-  ["samplings", "Samplings"],
-  ["packaging", "Packaging / Labels"],
-  ["versions", "Version History"],
-] as const;
+import { request, uploadFile, assetsPath } from "@/lib/client-api";
+import { Modal, Brand } from "./ui";
+import { SourcingPanel } from "./sourcing-panel";
+import { ProductForm } from "./product-form";
+import { useProductDraft, saveInBackground } from "./use-product-draft";
+const sectionLabels: Record<ProductSection, string> = {
+  overview: "Overview",
+  sketch: "Sketch / Design",
+  colorways: "Colorways",
+  bom: "BOM / Materials",
+  artworks: "Artworks",
+  instructions: "Instructions",
+  sizes: "Sizes / Measurements",
+  attachments: "Attachments",
+  samplings: "Samplings",
+  packaging: "Packaging / Labels",
+  versions: "Version History",
+};
+const sections = productSections.map((id) => [id, sectionLabels[id]] as const);
 const uid = () => crypto.randomUUID();
-export async function upload(file: File) {
-  const form = new FormData();
-  form.append("file", file);
-  const res = await fetch("/api/uploads", { method: "POST", body: form });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Upload failed");
-  return data.url as string;
-}
 function UploadButton({
   children,
   onUpload,
@@ -103,7 +104,7 @@ function UploadButton({
             setBusy(true);
             setError("");
             try {
-              onUpload(await upload(file), file.name);
+              onUpload(await uploadFile(file), file.name);
             } catch (e) {
               setError((e as Error).message);
             } finally {
@@ -163,9 +164,11 @@ function CommentBox({
                 },
               ],
             });
-            setText("");
           } catch {
+            // The comment stays in the draft; its error is shown by the editor.
+            return;
           } finally {
+            setText("");
             setBusy(false);
           }
         }}
@@ -222,20 +225,34 @@ function Section({
   );
 }
 export function ProductEditor({
-  product: p,
+  product,
+  manufacturers,
+  onManufacturerSave,
+  quoteRequests = [],
+  onQuoteRequestSave = () => {},
+  onQuoteRequestDelete = () => {},
   onChange,
   onToggleSidebar,
 }: {
   product: Product;
+  manufacturers: Manufacturer[];
+  onManufacturerSave: (manufacturer: Manufacturer) => void;
+  quoteRequests?: QuoteRequest[];
+  onQuoteRequestSave?: (request: QuoteRequest) => void;
+  onQuoteRequestDelete?: (id: string) => void;
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
 }) {
-  const latest = useRef(p);
-  const queue = useRef<Promise<void>>(Promise.resolve());
-  const revision = useRef(0);
+  const {
+    draft,
+    product: p,
+    status,
+    error: draftError,
+    unsaved,
+  } = useProductDraft(product, onChange);
+  const saving = status === "saving";
   const [modal, setModal] = useState("");
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [toast, setToast] = useState("");
   const [tab, setTab] = useState("Sketch");
   const [viewColor, setViewColor] = useState(p.colors[0]?.id || "");
@@ -250,87 +267,19 @@ export function ProductEditor({
   const [shareUrl, setShareUrl] = useState("");
   const [library, setLibrary] = useState<LibraryItem[]>([]);
   const [label, setLabel] = useState("");
-  useEffect(() => {
-    latest.current = p;
-  }, [p]);
-  function safeSave(data: Partial<Product>) {
-    void save(data).catch(() => undefined);
-  }
   function notify(t: string) {
     setToast(t);
     setTimeout(() => setToast(""), 3000);
   }
-  async function save(data: Partial<Product>) {
-    setSaving(true);
-    setError("");
-    const merged: Partial<Product> = { ...data };
-    for (const key of [
-      "materials",
-      "measurements",
-      "comments",
-      "colors",
-      "artworks",
-      "attachments",
-      "samples",
-      "annotations",
-    ] as const) {
-      const incoming = data[key];
-      if (!incoming) continue;
-      const before = p[key] as { id: string }[];
-      const current = latest.current[key] as { id: string }[];
-      const rows = (incoming as { id: string }[]).map((row) => {
-        const original = before.find((x) => x.id === row.id);
-        const fresh = current.find((x) => x.id === row.id);
-        if (!original || !fresh) return row;
-        const changed = Object.fromEntries(
-          Object.entries(row).filter(
-            ([k, v]) =>
-              JSON.stringify(v) !==
-              JSON.stringify(
-                (original as unknown as Record<string, unknown>)[k],
-              ),
-          ),
-        );
-        return { ...fresh, ...changed };
-      });
-      const added = current.filter(
-        (x) =>
-          !before.some((b) => b.id === x.id) &&
-          !rows.some((r) => r.id === x.id),
-      );
-      Object.assign(merged, { [key]: [...rows, ...added] });
-    }
-    latest.current = { ...latest.current, ...merged };
-    onChange(latest.current);
-    const version = ++revision.current;
-    const operation = queue.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          const result = await api<Product>(
-            `/api/products/${p.id}`,
-            "PATCH",
-            merged,
-          );
-          if (version === revision.current) {
-            latest.current = result;
-            onChange(result);
-          }
-        } catch (e) {
-          setError((e as Error).message);
-          throw e;
-        } finally {
-          if (version === revision.current) setSaving(false);
-        }
-      });
-    queue.current = operation;
-    return operation;
+  function save(data: Partial<Product>) {
+    setActionError("");
+    return draft.save(data, p);
   }
   async function openLibrary(collection: string) {
-    setError("");
+    setActionError("");
     try {
       setLibrary(
-        (await api<LibraryItem[]>("/api/libraries")).filter(
+        (await request<LibraryItem[]>("/api/libraries")).filter(
           (x) =>
             x.collection === collection &&
             (collection !== "sketches" ||
@@ -340,20 +289,20 @@ export function ProductEditor({
       );
       setModal(`library:${collection}`);
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
   async function share() {
     try {
-      const data = await api<{ token: string; url: string }>(
+      const data = await request<{ token: string; url: string }>(
         `/api/products/${p.id}/share`,
-        "POST",
+        { method: "POST" },
       );
       setShareUrl(new URL(data.url, location.origin).href);
-      onChange({ ...p, shareToken: data.token });
+      draft.replace({ ...p, shareToken: data.token });
       setModal("share");
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
   function sectionProps(id: string) {
@@ -387,8 +336,16 @@ export function ProductEditor({
         <strong>{p.name}</strong>
         <span className="spacer" />
         <small className="saved-label">
-          <Check size={12} /> {saving ? "Saving…" : "Saved"}
+          <Check size={12} />{" "}
+          {status === "saving"
+            ? "Saving…"
+            : status === "error"
+              ? "Not saved"
+              : "Saved"}
         </small>
+        <a className="btn" href="#sourcing">
+          Sourcing
+        </a>
         <Link className="btn" href={`/products/${p.id}/print`}>
           <Download size={15} />
           Download PDF
@@ -407,9 +364,18 @@ export function ProductEditor({
         </button>
       </header>
       <main className="app-content">
-        {error && (
+        {(unsaved || draftError || actionError) && (
           <div role="alert" className="error">
-            {error}
+            {draftError || actionError}
+            {unsaved && (
+              <button
+                className="btn"
+                disabled={saving}
+                onClick={() => saveInBackground(draft.retry)}
+              >
+                Retry save
+              </button>
+            )}
           </div>
         )}
         <div className="pack-layout">
@@ -427,7 +393,9 @@ export function ProductEditor({
                 </div>
               )}
               <div style={{ position: "absolute", bottom: 26, left: 8 }}>
-                <UploadButton onUpload={(url) => safeSave({ cover: url })}>
+                <UploadButton
+                  onUpload={(url) => saveInBackground(save, { cover: url })}
+                >
                   Cover
                 </UploadButton>
               </div>
@@ -453,7 +421,7 @@ export function ProductEditor({
                     className="icon-button"
                     aria-label={`${p.excludedSections.includes(id) ? "Include" : "Hide"} ${title} in exports`}
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         excludedSections: p.excludedSections.includes(id)
                           ? p.excludedSections.filter((x) => x !== id)
                           : [...p.excludedSections, id],
@@ -501,14 +469,22 @@ export function ProductEditor({
                 </button>
               }
             >
-              <Overview product={p} />
+              <Overview
+                product={p}
+                manufacturerName={
+                  manufacturers.find((item) => item.id === p.manufacturerId)
+                    ?.name || "—"
+                }
+              />
               <div className="toolbar">
                 <small>OWNERS</small>
                 <span className="badge blue">Local Studio</span>
                 <span className="spacer" />
                 <button
                   className="icon-button"
-                  onClick={() => safeSave({ archived: !p.archived })}
+                  onClick={() =>
+                    saveInBackground(save, { archived: !p.archived })
+                  }
                 >
                   <Archive size={14} />
                   &nbsp; {p.archived ? "Unarchive" : "Archive"}
@@ -525,7 +501,9 @@ export function ProductEditor({
                     <Pencil size={14} />
                     Edit on canvas
                   </Link>
-                  <UploadButton onUpload={(url) => safeSave({ sketch: url })}>
+                  <UploadButton
+                    onUpload={(url) => saveInBackground(save, { sketch: url })}
+                  >
                     Change sketch
                   </UploadButton>
                   <button
@@ -660,7 +638,7 @@ export function ProductEditor({
                       className="icon-button"
                       aria-label={`Remove ${c.name}`}
                       onClick={() =>
-                        safeSave({
+                        saveInBackground(save, {
                           colors: p.colors.filter((x) => x.id !== c.id),
                         })
                       }
@@ -692,7 +670,7 @@ export function ProductEditor({
                   <button
                     className="btn"
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         materials: [
                           ...p.materials,
                           {
@@ -748,7 +726,7 @@ export function ProductEditor({
                               defaultValue={m[k]}
                               onBlur={(e) => {
                                 if (e.target.value !== m[k])
-                                  safeSave({
+                                  saveInBackground(save, {
                                     materials: p.materials.map((x) =>
                                       x.id === m.id
                                         ? { ...x, [k]: e.target.value }
@@ -764,7 +742,7 @@ export function ProductEditor({
                             className="icon-button"
                             aria-label={`Remove material ${m.name}`}
                             onClick={() =>
-                              safeSave({
+                              saveInBackground(save, {
                                 materials: p.materials.filter(
                                   (x) => x.id !== m.id,
                                 ),
@@ -807,7 +785,7 @@ export function ProductEditor({
                   </button>
                   <UploadButton
                     onUpload={(url, name) =>
-                      safeSave({
+                      saveInBackground(save, {
                         artworks: [...p.artworks, { id: uid(), name, url }],
                       })
                     }
@@ -820,7 +798,9 @@ export function ProductEditor({
               <AssetCards
                 items={p.artworks}
                 remove={(id) =>
-                  safeSave({ artworks: p.artworks.filter((x) => x.id !== id) })
+                  saveInBackground(save, {
+                    artworks: p.artworks.filter((x) => x.id !== id),
+                  })
                 }
               />
               {!p.artworks.length && (
@@ -866,7 +846,7 @@ export function ProductEditor({
                   <button
                     className="btn"
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: [
                           ...p.measurements,
                           {
@@ -895,7 +875,7 @@ export function ProductEditor({
                 <UploadButton
                   accept="image/png,image/jpeg,image/webp,application/pdf"
                   onUpload={(url, name) =>
-                    safeSave({
+                    saveInBackground(save, {
                       attachments: [...p.attachments, { id: uid(), name, url }],
                     })
                   }
@@ -907,7 +887,7 @@ export function ProductEditor({
               <AssetCards
                 items={p.attachments}
                 remove={(id) =>
-                  safeSave({
+                  saveInBackground(save, {
                     attachments: p.attachments.filter((x) => x.id !== id),
                   })
                 }
@@ -926,7 +906,7 @@ export function ProductEditor({
                 <button
                   className="btn"
                   onClick={() =>
-                    safeSave({
+                    saveInBackground(save, {
                       samples: [
                         ...p.samples,
                         {
@@ -964,11 +944,12 @@ export function ProductEditor({
                             <td key={k}>
                               <input
                                 aria-label={`Sample ${k}`}
+                                key={`${s.id}-${k}-${s[k]}`}
                                 defaultValue={s[k]}
                                 type={k === "quantity" ? "number" : "text"}
                                 min={0}
                                 onBlur={(e) =>
-                                  safeSave({
+                                  saveInBackground(save, {
                                     samples: p.samples.map((x) =>
                                       x.id === s.id
                                         ? {
@@ -991,7 +972,7 @@ export function ProductEditor({
                             className="icon-button"
                             aria-label="Remove sample"
                             onClick={() =>
-                              safeSave({
+                              saveInBackground(save, {
                                 samples: p.samples.filter((x) => x.id !== s.id),
                               })
                             }
@@ -1046,7 +1027,7 @@ export function ProductEditor({
                     <div className="sketch-view" key={src}>
                       <img
                         style={{ height: 180 }}
-                        src={assets + src}
+                        src={assetsPath + src}
                         alt={
                           ["Hangtag", "Main label", "Care label", "Poly bag"][i]
                         }
@@ -1102,15 +1083,15 @@ export function ProductEditor({
                     className="btn"
                     onClick={async () => {
                       try {
-                        onChange(
-                          await api<Product>(
+                        draft.replace(
+                          await request<Product>(
                             `/api/products/${p.id}/versions/${v.id}/restore`,
-                            "POST",
+                            { method: "POST" },
                           ),
                         );
                         notify("Version restored; previous state backed up");
                       } catch (e) {
-                        setError((e as Error).message);
+                        setActionError((e as Error).message);
                       }
                     }}
                   >
@@ -1121,13 +1102,28 @@ export function ProductEditor({
             </Section>
           </div>
         </div>
+        <SourcingPanel
+          key={p.id}
+          product={p}
+          manufacturers={manufacturers}
+          requests={quoteRequests}
+          onManufacturerSave={onManufacturerSave}
+          onSave={onQuoteRequestSave}
+          onDelete={onQuoteRequestDelete}
+          onChoose={(manufacturerId) =>
+            draft.replace({ ...draft.state.product, manufacturerId })
+          }
+          onMoveToSampling={() => save({ stage: "Sampling" })}
+        />
       </main>
       {modal === "edit" && (
         <ProductForm
           product={p}
+          manufacturers={manufacturers}
+          onManufacturerSave={onManufacturerSave}
           onClose={() => setModal("")}
           onSave={(x) => {
-            onChange(x);
+            draft.replace(x);
             setModal("");
           }}
         />
@@ -1193,17 +1189,16 @@ export function ProductEditor({
               e.preventDefault();
               try {
                 if (modal === "version")
-                  onChange(
-                    await api<Product>(
-                      `/api/products/${p.id}/versions`,
-                      "POST",
-                      { name: label },
-                    ),
+                  draft.replace(
+                    await request<Product>(`/api/products/${p.id}/versions`, {
+                      method: "POST",
+                      json: { name: label },
+                    }),
                   );
                 else await save({ [modal]: label });
                 setModal("");
               } catch (e) {
-                setError((e as Error).message);
+                if (modal === "version") setActionError((e as Error).message);
               }
             }}
           >
@@ -1276,8 +1271,10 @@ export function ProductEditor({
             <button
               className="btn"
               onClick={async () => {
-                await api(`/api/products/${p.id}/share`, "DELETE");
-                onChange({ ...p, shareToken: null });
+                await request(`/api/products/${p.id}/share`, {
+                  method: "DELETE",
+                });
+                draft.replace({ ...p, shareToken: null });
                 setModal("");
                 notify("Share link revoked");
               }}
@@ -1380,7 +1377,7 @@ export function ProductEditor({
                       "\n",
                     );
                     if (!rows.some((x) => x.includes(":"))) {
-                      setError(
+                      setActionError(
                         "This size chart has no measurements. Add them in the Size Charts library.",
                       );
                       setModal("");
@@ -1426,7 +1423,13 @@ export function ProductEditor({
     </>
   );
 }
-function Overview({ product: p }: { product: ProductSnapshot }) {
+function Overview({
+  product: p,
+  manufacturerName,
+}: {
+  product: ProductSnapshot;
+  manufacturerName?: string;
+}) {
   return (
     <div className="overview-info">
       <small>CORE PRODUCT INFORMATION</small>
@@ -1442,7 +1445,9 @@ function Overview({ product: p }: { product: ProductSnapshot }) {
           ["BASE SIZE", p.baseSize],
           ["PROJECT", p.project],
           ["STATUS", p.stage],
-          ["SUPPLIER", p.supplier],
+          ...(manufacturerName !== undefined
+            ? [["MANUFACTURER", manufacturerName]]
+            : []),
         ].map(([label, value]) => (
           <div key={label}>
             <small>{label}</small>
@@ -1462,9 +1467,6 @@ function Measurements({
   product: Product;
   save?: (data: Partial<Product>) => Promise<void>;
 }) {
-  function safeSave(data: Partial<Product>) {
-    if (save) void save(data).catch(() => undefined);
-  }
   const sizes = [
     ...new Set(p.measurements.flatMap((m) => Object.keys(m.values))),
   ];
@@ -1489,9 +1491,10 @@ function Measurements({
                 {save ? (
                   <input
                     aria-label="Measurement name"
+                    key={`${m.id}-name-${m.name}`}
                     defaultValue={m.name}
                     onBlur={(e) =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.map((x) =>
                           x.id === m.id ? { ...x, name: e.target.value } : x,
                         ),
@@ -1506,9 +1509,10 @@ function Measurements({
                 {save ? (
                   <input
                     aria-label={`${m.name} tolerance`}
+                    key={`${m.id}-tolerance-${m.tolerance}`}
                     defaultValue={m.tolerance}
                     onBlur={(e) =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.map((x) =>
                           x.id === m.id
                             ? { ...x, tolerance: e.target.value }
@@ -1530,7 +1534,7 @@ function Measurements({
                       defaultValue={m.values[s]}
                       onBlur={(e) => {
                         if (e.target.value !== m.values[s])
-                          safeSave({
+                          saveInBackground(save, {
                             measurements: p.measurements.map((x) =>
                               x.id === m.id
                                 ? {
@@ -1556,7 +1560,7 @@ function Measurements({
                     className="icon-button"
                     aria-label={`Remove measurement ${m.name}`}
                     onClick={() =>
-                      safeSave({
+                      saveInBackground(save, {
                         measurements: p.measurements.filter(
                           (x) => x.id !== m.id,
                         ),
@@ -1660,13 +1664,16 @@ function AIModal({
           setBusy(true);
           setError("");
           try {
-            const data = await api<{ url: string }>("/api/generate", "POST", {
-              kind,
-              prompt,
-              useBrandProfile,
-              ...(kind === "mockup" && product.sketch
-                ? { image: product.sketch }
-                : {}),
+            const data = await request<{ url: string }>("/api/generate", {
+              method: "POST",
+              json: {
+                kind,
+                prompt,
+                useBrandProfile,
+                ...(kind === "mockup" && product.sketch
+                  ? { image: product.sketch }
+                  : {}),
+              },
             });
             await onGenerated(data.url, kind);
           } catch (e) {
@@ -1722,7 +1729,7 @@ export function SharedProduct({
   const [error, setError] = useState("");
   useEffect(() => {
     if (token)
-      api<Product>(`/api/share/${encodeURIComponent(token)}`)
+      request<Product>(`/api/share/${encodeURIComponent(token)}`)
         .then(setP)
         .catch((e) => setError(e.message));
   }, [token]);
@@ -1734,7 +1741,7 @@ export function SharedProduct({
       </div>
     );
   if (!p) return <div className="empty">Loading tech pack…</div>;
-  const show = (id: string) => !p.excludedSections.includes(id);
+  const show = (id: ProductSection) => !p.excludedSections.includes(id);
   return (
     <main className="print-pack">
       <header className="print-header">
@@ -2030,18 +2037,21 @@ export function ProductCanvas({
           "image/png",
         ),
       );
-      const sketch = await upload(
+      const sketch = await uploadFile(
         new File([blob], "canvas.png", { type: "image/png" }),
       );
-      const product = await api<Product>(`/api/products/${p.id}`, "PATCH", {
-        ...(colorwayId
-          ? {
-              colors: p.colors.map((c) =>
-                c.id === colorwayId ? { ...c, image: sketch } : c,
-              ),
-            }
-          : { sketch }),
-        annotations,
+      const product = await request<Product>(`/api/products/${p.id}`, {
+        method: "PATCH",
+        json: {
+          ...(colorwayId
+            ? {
+                colors: p.colors.map((c) =>
+                  c.id === colorwayId ? { ...c, image: sketch } : c,
+                ),
+              }
+            : { sketch }),
+          annotations,
+        },
       });
       onChange(product);
       setSaved(true);

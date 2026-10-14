@@ -77,6 +77,12 @@ export function emptyBrandProfile(): BrandProfile {
 }
 
 export const brandBookImageLimit = 7;
+export const brandLimits = {
+  colors: 20,
+  fonts: 12,
+  referenceImages: 20,
+  evidence: 200,
+} as const;
 /** Presentation settings only; all brand content comes from the Brand Profile. */
 export interface BrandBook {
   coverUrl: string;

@@ -40,6 +40,7 @@ const areas = [
     href: "/modules/manufacturers/overview",
     icon: Factory,
     text: "Plan your sourcing workflow",
+    ready: true,
   },
   {
     name: "Samples & Approvals",
@@ -108,8 +109,8 @@ export function WorkspaceDashboard({
       href: "/projects",
     },
     {
-      name: "Products with a supplier",
-      value: active.filter((product) => product.supplier.trim()).length,
+      name: "Products with a manufacturer",
+      value: active.filter((product) => product.manufacturerId !== null).length,
       icon: Factory,
       href: "/products",
     },

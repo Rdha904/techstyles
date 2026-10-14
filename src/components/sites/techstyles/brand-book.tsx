@@ -13,6 +13,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { request, uploadFile } from "@/lib/client-api";
 import {
   brandBookImageLimit,
   type BrandBook,
@@ -26,13 +27,6 @@ const bookPath = "/modules/concept/brand-book";
 type BookProfile = PublishedBrandBook["profile"];
 type BookImages = PublishedBrandBook["book"];
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || "The request could not be completed.");
-  return data;
-}
 function useBrandBook() {
   const [profile, setProfile] = useState<BrandProfile | null>(null);
   const [book, setBook] = useState<BrandBook | null>(null);
@@ -133,18 +127,7 @@ export function BrandBookPage() {
     try {
       const urls: string[] = [];
       for (const file of files) {
-        if (!/\.(png|jpe?g|webp)$/i.test(file.name))
-          throw new Error("Choose PNG, JPEG or WebP images.");
-        const body = new FormData();
-        body.append("file", file);
-        urls.push(
-          (
-            await request<{ url: string }>("/api/uploads", {
-              method: "POST",
-              body,
-            })
-          ).url,
-        );
+        urls.push(await uploadFile(file, { imagesOnly: true }));
       }
       setUploaded((current) => [...current, ...urls]);
     } catch (e) {
@@ -161,8 +144,7 @@ export function BrandBookPage() {
         "/api/brand-book",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
+          json: draft,
         },
       );
       setBook(saved);
@@ -421,12 +403,14 @@ export function SharedBrandBook({ token }: { token: string }) {
 
 function Chapter({
   title,
+  intro,
   filled,
   editable,
   missing,
   children,
 }: {
   title: string;
+  intro?: ReactNode;
   filled: boolean;
   editable?: boolean;
   missing?: ReactNode;
@@ -435,19 +419,25 @@ function Chapter({
   if (!filled && !editable) return null;
   return (
     <section className={`bb-chapter ${filled ? "" : "missing"}`}>
-      <h2>{title}</h2>
-      {filled ? (
-        children
-      ) : (
-        <p className="bb-missing">
-          {missing || (
-            <>
-              Not defined yet.{" "}
-              <Link href={profilePath}>Add it in your Brand Profile</Link>
-            </>
-          )}
-        </p>
-      )}
+      <div className="bb-chapter-head">
+        <span className="bb-chapter-num" aria-hidden="true" />
+        <h2>{title}</h2>
+        {intro && <p className="bb-chapter-intro">{intro}</p>}
+      </div>
+      <div className="bb-chapter-body">
+        {filled ? (
+          children
+        ) : (
+          <p className="bb-missing">
+            {missing || (
+              <>
+                Not defined yet.{" "}
+                <Link href={profilePath}>Add it in your Brand Profile</Link>
+              </>
+            )}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -481,8 +471,8 @@ function BrandBookDocument({
               alt={`${profile.name} logo`}
             />
           )}
-          <span>BRAND BOOK</span>
           <h1>{profile.name}</h1>
+          <span>Brand Book</span>
           {updated && (
             <small>
               Updated{" "}
@@ -498,6 +488,7 @@ function BrandBookDocument({
 
       <Chapter
         title="About the brand"
+        intro="Who the brand is and where it stands."
         filled={!!(profile.description || profile.positioning)}
         editable={editable}
       >
@@ -513,13 +504,15 @@ function BrandBookDocument({
       </Chapter>
       <Chapter
         title="Brand values"
+        intro="The principles the brand is built on."
         filled={!!profile.values}
         editable={editable}
       >
-        <p>{profile.values}</p>
+        <p className="bb-quote">{profile.values}</p>
       </Chapter>
       <Chapter
         title="Target audience"
+        intro="The people the brand designs for."
         filled={!!profile.audience}
         editable={editable}
       >
@@ -527,12 +520,18 @@ function BrandBookDocument({
       </Chapter>
       <Chapter
         title="Tone of voice"
+        intro="How the brand sounds in words."
         filled={!!profile.tone}
         editable={editable}
       >
-        <p>{profile.tone}</p>
+        <p className="bb-quote">{profile.tone}</p>
       </Chapter>
-      <Chapter title="Logo" filled={!!profile.logo} editable={editable}>
+      <Chapter
+        title="Logo"
+        intro="The primary mark, and the room to give it."
+        filled={!!profile.logo}
+        editable={editable}
+      >
         {profile.logo && (
           <div className="bb-logo-grid">
             <figure>
@@ -558,6 +557,7 @@ function BrandBookDocument({
       </Chapter>
       <Chapter
         title="Color palette"
+        intro="The colors that carry the brand's personality."
         filled={profile.colors.length > 0}
         editable={editable}
       >
@@ -567,9 +567,7 @@ function BrandBookDocument({
               <div
                 className={`bb-swatch ${isDark(hex) ? "dark" : "light"}`}
                 style={{ background: hex }}
-              >
-                {hex}
-              </div>
+              />
               <figcaption>
                 <strong>{hex}</strong>
                 <span>RGB {rgb(hex).join(", ")}</span>
@@ -580,22 +578,25 @@ function BrandBookDocument({
       </Chapter>
       <Chapter
         title="Typography"
+        intro="The typefaces that set the brand's voice."
         filled={profile.fonts.length > 0}
         editable={editable}
       >
         <div className="bb-fonts">
-          {profile.fonts.map((font) => (
+          {profile.fonts.map((font, i) => (
             <div
               className="bb-font"
               key={font}
               style={{ fontFamily: `"${font}", Figtree, Arial, sans-serif` }}
             >
-              <span className="bb-font-sample">Aa</span>
-              <div>
-                <strong>{font}</strong>
-                <p>ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
-                <p>abcdefghijklmnopqrstuvwxyz 0123456789</p>
-              </div>
+              <span className="bb-font-eyebrow">
+                {i === 0 ? "Primary typeface" : "Secondary typeface"}
+              </span>
+              <strong className="bb-font-name">{font}</strong>
+              <p className="bb-font-alpha">ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+              <p className="bb-font-alpha">
+                abcdefghijklmnopqrstuvwxyz 0123456789
+              </p>
             </div>
           ))}
         </div>
@@ -606,6 +607,7 @@ function BrandBookDocument({
       </Chapter>
       <Chapter
         title="Imagery"
+        intro="The visual world the brand lives in."
         filled={book.imageUrls.length > 0}
         editable={editable}
         missing="No images selected yet. Use Edit images to choose up to seven."

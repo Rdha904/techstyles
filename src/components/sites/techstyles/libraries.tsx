@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Plus,
@@ -19,17 +18,10 @@ import {
   Upload,
   ArrowUpRight,
 } from "lucide-react";
+import { request, uploadFile } from "@/lib/client-api";
+import type { LibraryCollection, LibraryItem } from "@/lib/types";
 import "./libraries.css";
 
-type LibraryItem = {
-  id: string;
-  collection: string;
-  name: string;
-  description: string;
-  color: string;
-  createdAt: string;
-  data?: Record<string, unknown>;
-};
 type Draft = {
   name: string;
   description: string;
@@ -37,7 +29,7 @@ type Draft = {
   data: Record<string, unknown>;
 };
 const definitions: Record<
-  string,
+  LibraryCollection,
   { title: string; singular: string; description: string; icon: typeof Folder }
 > = {
   projects: {
@@ -95,7 +87,8 @@ const blankDraft = (): Draft => ({
 });
 
 export function LibraryPage({ collection }: { collection: string }) {
-  const definition = definitions[collection] ?? definitions.projects;
+  const definition =
+    definitions[collection as LibraryCollection] ?? definitions.projects;
   const Icon = definition.icon;
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,11 +108,8 @@ export function LibraryPage({ collection }: { collection: string }) {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/libraries")
-      .then(async (response) => {
-        if (!response.ok)
-          throw new Error("Could not load your library. Please try again.");
-        const data: LibraryItem[] = await response.json();
+    request<LibraryItem[]>("/api/libraries")
+      .then((data) => {
         if (active) setItems(data);
       })
       .catch((failure: Error) => {
@@ -178,17 +168,13 @@ export function LibraryPage({ collection }: { collection: string }) {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(
+      const saved = await request<LibraryItem>(
         editing === "new" ? "/api/libraries" : `/api/libraries/${editing?.id}`,
         {
           method: editing === "new" ? "POST" : "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...draft, collection }),
+          json: { ...draft, collection },
         },
       );
-      if (!response.ok)
-        throw new Error("Your changes could not be saved. Please try again.");
-      const saved: LibraryItem = await response.json();
       setItems((previous) =>
         editing === "new"
           ? [...previous, saved]
@@ -208,10 +194,9 @@ export function LibraryPage({ collection }: { collection: string }) {
   async function remove(item: LibraryItem) {
     if (!window.confirm(`Delete “${item.name}” from your library?`)) return;
     try {
-      const response = await fetch(`/api/libraries/${item.id}`, {
+      await request(`/api/libraries/${item.id}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Could not delete this item.");
       setItems((previous) => previous.filter((entry) => entry.id !== item.id));
       setNotice(`${item.name} deleted.`);
     } catch (failure) {
@@ -228,21 +213,11 @@ export function LibraryPage({ collection }: { collection: string }) {
     setBusy(true);
     setError("");
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const response = await fetch("/api/uploads", {
-        method: "POST",
-        body: form,
-      });
-      if (!response.ok)
-        throw new Error(
-          "Upload failed. Use a PNG, JPG, WebP or PDF file under 10 MB.",
-        );
-      const result: { url: string } = await response.json();
+      const url = await uploadFile(file);
       setDraft((previous) => ({
         ...previous,
         name: previous.name || file.name.replace(/\.[^.]+$/, ""),
-        data: { ...previous.data, url: result.url, fileName: file.name },
+        data: { ...previous.data, url, fileName: file.name },
       }));
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Upload failed.");

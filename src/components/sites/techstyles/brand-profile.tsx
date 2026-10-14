@@ -14,11 +14,12 @@ import {
   Palette,
   Type,
   ArrowUpRight,
-  FileText,
   RefreshCw,
 } from "lucide-react";
+import { request, uploadFile } from "@/lib/client-api";
 import {
   brandTextFields,
+  brandLimits,
   brandLabels,
   emptyBrandProfile,
   type BrandProfile,
@@ -33,13 +34,15 @@ import {
 } from "@/lib/brand-templates";
 import "./brand-profile.css";
 const profilePath = "/modules/concept/brand-profile";
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.error || "The request could not be completed.");
-  return data;
-}
+const detailHelp: Record<BrandTextField, string> = {
+  name: "Your brand name.",
+  website: "Your primary website address.",
+  description: "What your brand makes and what it stands for.",
+  values: "The principles your brand is built on.",
+  positioning: "How you sit against the alternatives in your market.",
+  audience: "Who you design and create for.",
+  tone: "How your brand sounds in words.",
+};
 export function BrandProfileSummary({
   compact = false,
 }: {
@@ -129,6 +132,8 @@ export function BrandProfilePage() {
   const [confirmed, setConfirmed] = useState(false);
   const [newColor, setNewColor] = useState("#4169CA");
   const [newFont, setNewFont] = useState("");
+  const [editField, setEditField] = useState<BrandTextField | null>(null);
+  const [editValue, setEditValue] = useState("");
   const nameInput = useRef<HTMLInputElement>(null);
   const dirty = JSON.stringify(profile) !== JSON.stringify(saved);
   const missingFields: BrandField[] = [
@@ -156,6 +161,15 @@ export function BrandProfilePage() {
         block: "center",
       });
     });
+  }
+  function openFieldEditor(field: BrandTextField) {
+    setEditField(field);
+    setEditValue(profile[field]);
+  }
+  function applyFieldEditor() {
+    if (!editField) return;
+    update(editField, editValue);
+    setEditField(null);
   }
   async function loadSaved() {
     try {
@@ -235,20 +249,19 @@ export function BrandProfilePage() {
     setReview(null);
     setSelected([]);
     try {
-      let init: RequestInit;
+      let init: Parameters<typeof request>[1];
       if (files) {
         const body = new FormData();
         Array.from(files).forEach((file) => body.append("files", file));
-        init = { method: "POST", body };
+        init = { method: "POST", form: body };
       } else
         init = {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          json: {
             url: /^https?:\/\//i.test(website.trim())
               ? website.trim()
               : `https://${website.trim()}`,
-          }),
+          },
         };
       const result = await request<BrandImport>(
         "/api/brand-profile/import",
@@ -295,13 +308,13 @@ export function BrandProfilePage() {
       if (field === "colors" || field === "fonts")
         next[field] = [...new Set([...next[field], value])].slice(
           0,
-          field === "colors" ? 20 : 12,
+          brandLimits[field],
         );
       else if (field === "logo") next.logo = { url: value, name: "Brand logo" };
       else if (field === "referenceImages") {
         if (
           !next.referenceImages.some((a) => a.url === value) &&
-          next.referenceImages.length < 20
+          next.referenceImages.length < brandLimits.referenceImages
         )
           next.referenceImages.push({ url: value, name: source.slice(0, 250) });
       } else next[field] = value;
@@ -315,8 +328,8 @@ export function BrandProfilePage() {
       );
       next.evidence.push({ field, value, source, excerpt });
     }
-    update("evidence", next.evidence.slice(-200));
-    setProfile({ ...next, evidence: next.evidence.slice(-200) });
+    update("evidence", next.evidence.slice(-brandLimits.evidence));
+    setProfile({ ...next, evidence: next.evidence.slice(-brandLimits.evidence) });
     setReview(null);
     setSelected([]);
     setStep("editor");
@@ -343,14 +356,7 @@ export function BrandProfilePage() {
     try {
       const assets = [];
       for (const file of files) {
-        if (!/\.(png|jpe?g|webp)$/i.test(file.name))
-          throw new Error("Choose PNG, JPEG or WebP images.");
-        const body = new FormData();
-        body.append("file", file);
-        const { url } = await request<{ url: string }>("/api/uploads", {
-          method: "POST",
-          body,
-        });
+        const url = await uploadFile(file, { imagesOnly: true });
         assets.push({ url, name: file.name });
       }
       if (role === "logo") update("logo", assets[0]);
@@ -369,8 +375,7 @@ export function BrandProfilePage() {
         "/api/brand-profile",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...profile, reviewed: confirmed }),
+          json: { ...profile, reviewed: confirmed },
         },
       );
       setProfile(result.profile);
@@ -831,64 +836,320 @@ export function BrandProfilePage() {
                   className="brand-editor-grid"
                   disabled={!!busy || step === "scratch"}
                 >
-                  <div>
-                    <section className="brand-card brand-details">
-                      <div className="brand-section-title">
-                        <div>
-                          <h3>Brand identity</h3>
-                          <p>Define who you are and who you create for.</p>
+                  {profileTab === "overview" ? (
+                    <>
+                      <section className="brand-card brand-cell-hero">
+                        <label className="brand-field brand-hero-field">
+                          <span>{brandLabels.name} *</span>
+                          <input
+                            id="brand-field-name"
+                            aria-label={brandLabels.name}
+                            ref={nameInput}
+                            className="brand-hero-name"
+                            value={profile.name}
+                            maxLength={200}
+                            placeholder="Your brand name"
+                            onChange={(e) => update("name", e.target.value)}
+                          />
+                        </label>
+                        {profile.website && (
+                          <p className="brand-hero-url">
+                            <Globe size={15} />
+                            <span>{profile.website}</span>
+                          </p>
+                        )}
+                        <small>
+                          {evidence("name", profile.name).length
+                            ? `Imported from ${evidence("name", profile.name)[0].source}`
+                            : profile.name
+                              ? "Manually entered or edited"
+                              : "Required — add your brand name"}
+                        </small>
+                      </section>
+                      <section className="brand-card brand-cell-logo">
+                        <div className="brand-section-title">
+                          <h3>{brandLabels.logo}</h3>
+                          <ImageIcon size={20} />
                         </div>
-                        <FileText size={21} />
-                      </div>
-                      {brandTextFields.map((field) => (
-                        <label
-                          className={`brand-field brand-cell-${field}`}
-                          key={field}
-                          hidden={
-                            profileTab === "overview"
-                              ? [
-                                  "website",
-                                  "description",
-                                  "positioning",
-                                  "audience",
-                                ].includes(field)
-                              : ![
-                                  "website",
-                                  "description",
-                                  "positioning",
-                                  "audience",
-                                ].includes(field)
-                          }
-                        >
-                          <span>
-                            {brandLabels[field]}
-                            {field === "name" ? " *" : ""}
-                          </span>
-                          {field === "name" || field === "website" ? (
-                            <input
-                              id={`brand-field-${field}`}
-                              aria-label={brandLabels[field]}
-                              ref={field === "name" ? nameInput : undefined}
-                              value={profile[field]}
-                              maxLength={field === "name" ? 200 : 2000}
-                              placeholder={
-                                field === "name"
-                                  ? "Your brand name"
-                                  : "https://yourbrand.com"
-                              }
-                              onChange={(e) => update(field, e.target.value)}
-                            />
+                        <div className="brand-logo-preview">
+                          {profile.logo ? (
+                            <img src={profile.logo.url} alt="Brand logo" />
                           ) : (
+                            <>
+                              <ImageIcon size={30} />
+                              <span>No logo added</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="brand-inline">
+                          <label className="btn brand-upload">
+                            <Upload size={15} />
+                            {profile.logo ? "Replace logo" : "Upload logo"}
+                            <input
+                              id="brand-field-logo"
+                              aria-label="Upload logo"
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp"
+                              disabled={!!busy}
+                              onChange={(e) => void uploadAsset(e, "logo")}
+                            />
+                          </label>
+                          {profile.logo && (
+                            <button
+                              className="icon-button"
+                              aria-label="Remove logo"
+                              onClick={() => update("logo", null)}
+                            >
+                              <X size={17} />
+                            </button>
+                          )}
+                        </div>
+                      </section>
+                      <section className="brand-card brand-cell-fonts">
+                        <div className="brand-section-title">
+                          <h3>{brandLabels.fonts}</h3>
+                          <Type size={20} />
+                        </div>
+                        <div className="brand-font-specimens">
+                          {profile.fonts.map((font) => (
+                            <div className="brand-font-card" key={font}>
+                              <span
+                                className="brand-font-aa"
+                                style={{
+                                  fontFamily: `'${font}', Figtree, sans-serif`,
+                                }}
+                              >
+                                Aa
+                              </span>
+                              <strong>{font}</strong>
+                              <button
+                                className="icon-button"
+                                aria-label={`Remove font ${font}`}
+                                onClick={() =>
+                                  update(
+                                    "fonts",
+                                    profile.fonts.filter((f) => f !== font),
+                                  )
+                                }
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                          {!profile.fonts.length && (
+                            <p className="brand-empty">No font names confirmed.</p>
+                          )}
+                        </div>
+                        <form
+                          className="brand-inline"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (newFont.trim()) {
+                              update("fonts", [
+                                ...new Set([...profile.fonts, newFont.trim()]),
+                              ]);
+                              setNewFont("");
+                            }
+                          }}
+                        >
+                          <input
+                            id="brand-field-fonts"
+                            aria-label="Font family name"
+                            placeholder="e.g. Figtree"
+                            value={newFont}
+                            maxLength={120}
+                            onChange={(e) => setNewFont(e.target.value)}
+                          />
+                          <button
+                            className="icon-button"
+                            aria-label="Add font"
+                            disabled={profile.fonts.length >= 12}
+                          >
+                            <Plus size={17} />
+                          </button>
+                        </form>
+                        <small>
+                          Font names are recorded as guidelines. Font files are
+                          not downloaded or licensed.
+                        </small>
+                      </section>
+                      <section className="brand-card brand-cell-colors">
+                        <div className="brand-section-title">
+                          <h3>{brandLabels.colors}</h3>
+                          <Palette size={20} />
+                        </div>
+                        <div className="brand-color-grid">
+                          {profile.colors.map((hex) => (
+                            <div className="brand-color-chip" key={hex}>
+                              <i style={{ background: hex }} />
+                              <code>{hex}</code>
+                              <button
+                                className="icon-button brand-color-remove"
+                                aria-label={`Remove color ${hex}`}
+                                onClick={() =>
+                                  update(
+                                    "colors",
+                                    profile.colors.filter((c) => c !== hex),
+                                  )
+                                }
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          ))}
+                          {!profile.colors.length && (
+                            <p className="brand-empty">
+                              No brand colors confirmed.
+                            </p>
+                          )}
+                        </div>
+                        <form
+                          className="brand-inline"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const value = newColor.toUpperCase();
+                            if (!/^#[0-9A-F]{6}$/.test(value)) {
+                              setError("Enter a six-digit hex color.");
+                              return;
+                            }
+                            update("colors", [
+                              ...new Set([...profile.colors, value]),
+                            ]);
+                          }}
+                        >
+                          <input
+                            type="color"
+                            aria-label="Choose brand color"
+                            value={
+                              /^#[\da-f]{6}$/i.test(newColor)
+                                ? newColor
+                                : "#000000"
+                            }
+                            onChange={(e) => setNewColor(e.target.value)}
+                          />
+                          <input
+                            id="brand-field-colors"
+                            aria-label="Brand color hex"
+                            value={newColor}
+                            maxLength={7}
+                            onChange={(e) => setNewColor(e.target.value)}
+                          />
+                          <button
+                            className="icon-button"
+                            aria-label="Add brand color"
+                            disabled={profile.colors.length >= 20}
+                          >
+                            <Plus size={17} />
+                          </button>
+                        </form>
+                      </section>
+                      {(["values", "tone"] as const).map((field) => (
+                        <section
+                          className={`brand-card brand-cell-${field}`}
+                          key={field}
+                        >
+                          <label className="brand-field">
+                            <span>{brandLabels[field]}</span>
                             <textarea
                               id={`brand-field-${field}`}
                               aria-label={brandLabels[field]}
                               value={profile[field]}
                               maxLength={6000}
-                              rows={field === "description" ? 4 : 3}
+                              rows={field === "values" ? 4 : 3}
                               placeholder="Not provided — add verified details"
                               onChange={(e) => update(field, e.target.value)}
                             />
-                          )}
+                            <small>
+                              {evidence(field, profile[field]).length
+                                ? `Imported from ${evidence(field, profile[field])[0].source}`
+                                : profile[field]
+                                  ? "Manually entered or edited"
+                                  : "Not provided"}
+                            </small>
+                          </label>
+                        </section>
+                      ))}
+                      <section className="brand-card brand-cell-references">
+                        <div className="brand-section-title">
+                          <div>
+                            <h3>{brandLabels.referenceImages}</h3>
+                            <p>Mood, photography and visual direction.</p>
+                          </div>
+                          <ImageIcon size={20} />
+                        </div>
+                        <div className="brand-reference-grid">
+                          {profile.referenceImages.map((asset, i) => (
+                            <figure key={`${asset.url}-${i}`}>
+                              <img src={asset.url} alt={asset.name} />
+                              <figcaption>{asset.name}</figcaption>
+                              <button
+                                className="icon-button"
+                                aria-label={`Remove reference image ${i + 1}`}
+                                onClick={() =>
+                                  update(
+                                    "referenceImages",
+                                    profile.referenceImages.filter(
+                                      (_, index) => index !== i,
+                                    ),
+                                  )
+                                }
+                              >
+                                <X size={15} />
+                              </button>
+                            </figure>
+                          ))}
+                        </div>
+                        {!profile.referenceImages.length && (
+                          <p className="brand-empty">No reference images added.</p>
+                        )}
+                        <label className="btn brand-upload">
+                          <Plus size={15} /> Add images
+                          <input
+                            id="brand-field-referenceImages"
+                            aria-label="Upload reference images"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            multiple
+                            disabled={!!busy}
+                            onChange={(e) => void uploadAsset(e, "referenceImages")}
+                          />
+                        </label>
+                      </section>
+                    </>
+                  ) : (
+                    <>
+                      {(
+                        [
+                          "website",
+                          "description",
+                          "positioning",
+                          "audience",
+                        ] as const
+                      ).map((field) => (
+                        <section
+                          className="brand-card brand-detail-card"
+                          key={field}
+                        >
+                          <div className="brand-detail-head">
+                            <div>
+                              <h3>{brandLabels[field]}</h3>
+                              <p className="brand-detail-value">
+                                {profile[field] || (
+                                  <span className="brand-detail-empty">
+                                    Not provided yet
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <button
+                              id={`brand-field-${field}`}
+                              className="brand-edit-pencil"
+                              aria-label={`Edit ${brandLabels[field]}`}
+                              onClick={() => openFieldEditor(field)}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          </div>
                           <small>
                             {evidence(field, profile[field]).length
                               ? `Imported from ${evidence(field, profile[field])[0].source}`
@@ -896,262 +1157,30 @@ export function BrandProfilePage() {
                                 ? "Manually entered or edited"
                                 : "Not provided"}
                           </small>
-                        </label>
+                        </section>
                       ))}
-                    </section>
-                    <section
-                      className="brand-card brand-cell-references"
-                      hidden={profileTab !== "overview"}
-                    >
-                      <div className="brand-section-title">
-                        <div>
-                          <h3>Reference images</h3>
-                          <p>Mood, photography and visual direction.</p>
-                        </div>
-                        <ImageIcon size={21} />
-                      </div>
-                      <div className="brand-reference-grid">
-                        {profile.referenceImages.map((asset, i) => (
-                          <figure key={`${asset.url}-${i}`}>
-                            <img src={asset.url} alt={asset.name} />
-                            <figcaption>{asset.name}</figcaption>
-                            <button
-                              className="icon-button"
-                              aria-label={`Remove reference image ${i + 1}`}
-                              onClick={() =>
-                                update(
-                                  "referenceImages",
-                                  profile.referenceImages.filter(
-                                    (_, index) => index !== i,
-                                  ),
-                                )
-                              }
-                            >
-                              <X size={15} />
-                            </button>
-                          </figure>
-                        ))}
-                      </div>
-                      {!profile.referenceImages.length && (
-                        <p className="brand-empty">
-                          No reference images added.
+                      <section className="brand-card brand-shared brand-cell-shared">
+                        <h3>One profile, shared everywhere</h3>
+                        <p>
+                          Only your saved, reviewed profile is available to other
+                          modules.
                         </p>
-                      )}
-                      <label className="btn brand-upload">
-                        <Plus size={15} /> Add images
-                        <input
-                          id="brand-field-referenceImages"
-                          aria-label="Upload reference images"
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          multiple
-                          disabled={!!busy}
-                          onChange={(e) =>
-                            void uploadAsset(e, "referenceImages")
-                          }
-                        />
-                      </label>
-                    </section>
-                  </div>
-                  <div>
-                    <section
-                      className="brand-card brand-cell-logo"
-                      hidden={profileTab !== "overview"}
-                    >
-                      <h3>Logo</h3>
-                      <div className="brand-logo-preview">
-                        {profile.logo ? (
-                          <img src={profile.logo.url} alt="Brand logo" />
-                        ) : (
-                          <>
-                            <ImageIcon size={32} />
-                            <span>No logo added</span>
-                          </>
+                        <Link href="/">
+                          Design &amp; Tech Packs <ArrowUpRight size={14} />
+                        </Link>
+                        <Link href="/modules/marketing/overview">
+                          Marketing <ArrowUpRight size={14} />
+                        </Link>
+                        {saved.updatedAt && (
+                          <small>
+                            Last saved{" "}
+                            {new Date(saved.updatedAt).toLocaleString("en-US")} ·
+                            Version {saved.revision}
+                          </small>
                         )}
-                      </div>
-                      <div className="brand-inline">
-                        <label className="btn brand-upload">
-                          <Upload size={15} />
-                          {profile.logo ? "Replace logo" : "Upload logo"}
-                          <input
-                            id="brand-field-logo"
-                            aria-label="Upload logo"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            disabled={!!busy}
-                            onChange={(e) => void uploadAsset(e, "logo")}
-                          />
-                        </label>
-                        {profile.logo && (
-                          <button
-                            className="icon-button"
-                            aria-label="Remove logo"
-                            onClick={() => update("logo", null)}
-                          >
-                            <X size={17} />
-                          </button>
-                        )}
-                      </div>
-                    </section>
-                    <section
-                      className="brand-card brand-cell-colors"
-                      hidden={profileTab !== "overview"}
-                    >
-                      <div className="brand-section-title">
-                        <h3>Brand colors</h3>
-                        <Palette size={21} />
-                      </div>
-                      <div className="brand-color-list">
-                        {profile.colors.map((hex) => (
-                          <div key={hex}>
-                            <i style={{ background: hex }} />
-                            <code>{hex}</code>
-                            <button
-                              className="icon-button"
-                              aria-label={`Remove color ${hex}`}
-                              onClick={() =>
-                                update(
-                                  "colors",
-                                  profile.colors.filter((c) => c !== hex),
-                                )
-                              }
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      {!profile.colors.length && (
-                        <p className="brand-empty">
-                          No brand colors confirmed.
-                        </p>
-                      )}
-                      <form
-                        className="brand-inline"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const value = newColor.toUpperCase();
-                          if (!/^#[0-9A-F]{6}$/.test(value)) {
-                            setError("Enter a six-digit hex color.");
-                            return;
-                          }
-                          update("colors", [
-                            ...new Set([...profile.colors, value]),
-                          ]);
-                        }}
-                      >
-                        <input
-                          type="color"
-                          aria-label="Choose brand color"
-                          value={
-                            /^#[\da-f]{6}$/i.test(newColor)
-                              ? newColor
-                              : "#000000"
-                          }
-                          onChange={(e) => setNewColor(e.target.value)}
-                        />
-                        <input
-                          id="brand-field-colors"
-                          aria-label="Brand color hex"
-                          value={newColor}
-                          maxLength={7}
-                          onChange={(e) => setNewColor(e.target.value)}
-                        />
-                        <button
-                          className="icon-button"
-                          aria-label="Add brand color"
-                          disabled={profile.colors.length >= 20}
-                        >
-                          <Plus size={17} />
-                        </button>
-                      </form>
-                    </section>
-                    <section
-                      className="brand-card brand-cell-fonts"
-                      hidden={profileTab !== "overview"}
-                    >
-                      <div className="brand-section-title">
-                        <h3>Typography</h3>
-                        <Type size={21} />
-                      </div>
-                      {profile.fonts.map((font) => (
-                        <div className="brand-font" key={font}>
-                          <span>Aa</span>
-                          <strong>{font}</strong>
-                          <button
-                            className="icon-button"
-                            aria-label={`Remove font ${font}`}
-                            onClick={() =>
-                              update(
-                                "fonts",
-                                profile.fonts.filter((f) => f !== font),
-                              )
-                            }
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      {!profile.fonts.length && (
-                        <p className="brand-empty">No font names confirmed.</p>
-                      )}
-                      <form
-                        className="brand-inline"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (newFont.trim()) {
-                            update("fonts", [
-                              ...new Set([...profile.fonts, newFont.trim()]),
-                            ]);
-                            setNewFont("");
-                          }
-                        }}
-                      >
-                        <input
-                          id="brand-field-fonts"
-                          aria-label="Font family name"
-                          placeholder="e.g. Figtree"
-                          value={newFont}
-                          maxLength={120}
-                          onChange={(e) => setNewFont(e.target.value)}
-                        />
-                        <button
-                          className="icon-button"
-                          aria-label="Add font"
-                          disabled={profile.fonts.length >= 12}
-                        >
-                          <Plus size={17} />
-                        </button>
-                      </form>
-                      <small>
-                        Font names are recorded as guidelines. Font files are
-                        not downloaded or licensed.
-                      </small>
-                    </section>
-                    <section
-                      className="brand-card brand-shared"
-                      hidden={profileTab !== "details"}
-                    >
-                      <h3>One profile, shared everywhere</h3>
-                      <p>
-                        Only your saved, reviewed profile is available to other
-                        modules.
-                      </p>
-                      <Link href="/">
-                        Design &amp; Tech Packs <ArrowUpRight size={14} />
-                      </Link>
-                      <Link href="/modules/marketing/overview">
-                        Marketing <ArrowUpRight size={14} />
-                      </Link>
-                      {saved.updatedAt && (
-                        <small>
-                          Last saved{" "}
-                          {new Date(saved.updatedAt).toLocaleString("en-US")} ·
-                          Version {saved.revision}
-                        </small>
-                      )}
-                    </section>
-                  </div>
+                      </section>
+                    </>
+                  )}
                 </fieldset>
               </div>
               <footer className="brand-save-bar">
@@ -1393,6 +1422,70 @@ export function BrandProfilePage() {
               </aside>
             )}
           </div>
+          {editField && (
+            <div
+              className="brand-modal-backdrop"
+              role="presentation"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setEditField(null);
+              }}
+            >
+              <div
+                className="brand-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Edit ${brandLabels[editField]}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setEditField(null);
+                }}
+              >
+                <header className="brand-modal-head">
+                  <div>
+                    <h3>{brandLabels[editField]}</h3>
+                    <p>{detailHelp[editField]}</p>
+                  </div>
+                  <button
+                    className="icon-button"
+                    aria-label="Close editor"
+                    onClick={() => setEditField(null)}
+                  >
+                    <X size={18} />
+                  </button>
+                </header>
+                {editField === "website" ? (
+                  <input
+                    autoFocus
+                    aria-label={brandLabels[editField]}
+                    inputMode="url"
+                    placeholder="https://yourbrand.com"
+                    maxLength={2000}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                ) : (
+                  <textarea
+                    autoFocus
+                    aria-label={brandLabels[editField]}
+                    rows={6}
+                    maxLength={6000}
+                    placeholder={`Add your ${brandLabels[
+                      editField
+                    ].toLowerCase()}…`}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                )}
+                <footer className="brand-modal-actions">
+                  <button className="btn" onClick={() => setEditField(null)}>
+                    Cancel
+                  </button>
+                  <button className="btn primary" onClick={applyFieldEditor}>
+                    Apply to draft
+                  </button>
+                </footer>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

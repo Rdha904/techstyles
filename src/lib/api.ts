@@ -1,5 +1,5 @@
 import { ApiError } from "./store";
-import type { ProductSnapshot } from "./types";
+import { productSections, type Product } from "./types";
 
 export async function api(action: () => unknown | Promise<unknown>) {
   try {
@@ -43,7 +43,6 @@ const stringFields = [
   "stage",
   "baseSize",
   "project",
-  "supplier",
   "description",
   "cover",
   "sketch",
@@ -67,10 +66,14 @@ export function localAssetUrl(value: string) {
     !value.split("/").includes("..")
   );
 }
-export function productPatch(
-  input: Record<string, unknown>,
-): Partial<ProductSnapshot> {
+export function productPatch(input: Record<string, unknown>): Partial<Product> {
   const patch: Record<string, unknown> = {};
+  if (input.manufacturerId !== undefined) {
+    patch.manufacturerId =
+      input.manufacturerId === null
+        ? null
+        : string(input.manufacturerId, "manufacturer ID", 200);
+  }
   if (input.measurementUnit !== undefined) {
     if (input.measurementUnit !== "cm" && input.measurementUnit !== "in")
       throw new ApiError("Invalid measurement unit");
@@ -87,9 +90,15 @@ export function productPatch(
       input.excludedSections.length > 50
     )
       throw new ApiError("Invalid excluded sections");
-    patch.excludedSections = input.excludedSections.map((value) =>
-      string(value, "section", 100),
-    );
+    patch.excludedSections = [
+      ...new Set(
+        input.excludedSections.map((value) => {
+          const section = productSections.find((id) => id === value);
+          if (!section) throw new ApiError("Invalid excluded section");
+          return section;
+        }),
+      ),
+    ];
   }
   for (const key of stringFields)
     if (input[key] !== undefined) {
@@ -166,5 +175,5 @@ export function productPatch(
         return clean;
       });
     }
-  return patch as Partial<ProductSnapshot>;
+  return patch as Partial<Product>;
 }
