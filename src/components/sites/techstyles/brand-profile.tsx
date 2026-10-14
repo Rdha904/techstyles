@@ -70,6 +70,45 @@ export function BrandProfileSummary({
       live = false;
     };
   }, []);
+  if (!compact) {
+    return (
+      <section className="brand-summary" aria-label="Shared brand profile">
+        <div className="brand-summary-row">
+          <span className="brand-summary-logo" aria-hidden="true">
+            {profile?.logo ? (
+              <img src={profile.logo.url} alt="" />
+            ) : (
+              <Palette size={25} />
+            )}
+          </span>
+          <div>
+            <h3>{profile?.name || "Brand Profile"}</h3>
+            <small>Shared with Design &amp; Tech Packs and Marketing</small>
+          </div>
+        </div>
+        <p className="brand-summary-positioning">
+          {status ||
+            profile?.positioning ||
+            profile?.description ||
+            "Your shared brand identity"}
+        </p>
+        {!!profile?.colors.length && (
+          <div className="brand-summary-swatches" aria-label="Brand colors">
+            {profile.colors.map((hex) => (
+              <span className="brand-summary-swatch" key={hex}>
+                <i style={{ background: hex }} />
+                <span>{hex}</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <Link className="btn" href={profilePath}>
+          {profile ? "View profile" : "Create profile"}
+          <ArrowUpRight size={14} />
+        </Link>
+      </section>
+    );
+  }
   return (
     <section
       className={`brand-summary ${compact ? "compact" : ""}`}

@@ -114,7 +114,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 | Task | Status | Commit |
 |---|---|---|
 | 1. Foundation | done | 4cf4d7b |
-| 2. Shell | queued | |
+| 2. Shell | done | bd161e2 |
 | 3. Dashboard | queued | |
 | 4. Products library and editor | queued | |
 | 5. Sourcing | queued | |
@@ -126,3 +126,6 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 (Design decisions made during implementation that you may want to overrule.)
 
 - **Toggle buttons are dark, not indigo.** The list/grid toggles, the Archived filter and choosing a quote used the main-button style to show "on". They now use a dark selected state, so indigo stays reserved for the one main action. A chosen quote shows as a pressed dark button.
+- **Module sidebar is 244px wide** (was 225px), so every module name fits on one line at 14px.
+- **The header's "Workspace" button is gone.** The banner's "Workspace settings" link already goes to Settings. The products button now reads "New tech pack".
+- **Pages with their own heading** (libraries, Settings, sourcing pages, Brand Book) show only a small context title in the header instead of repeating the headline.

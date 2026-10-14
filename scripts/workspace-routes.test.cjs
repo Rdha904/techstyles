@@ -352,6 +352,9 @@ test("Design & Tech Packs secondary navigation starts with Products and has no d
 
 test("pages with their own heading keep the h1; other workspace pages use the shell h1", () => {
   const pageHeadings = [
+    "",
+    "dashboard",
+    "modules/home/overview",
     "settings",
     "projects",
     "sketches",
@@ -367,7 +370,6 @@ test("pages with their own heading keep the h1; other workspace pages use the sh
     "modules/concept/brand-book",
   ];
   const shellHeadings = [
-    "",
     "products",
     "products/p1",
     "products/p1/canvas",
@@ -380,7 +382,7 @@ test("pages with their own heading keep the h1; other workspace pages use the sh
     "modules/manufacturers/quote-requests/other",
     "modules/manufacturers/quote-comparison/p1/other",
     ...moduleRoutes
-      .filter(({ id }) => !["concept", "manufacturers"].includes(id))
+      .filter(({ id }) => !["home", "concept", "manufacturers"].includes(id))
       .flatMap(({ id, pages }) =>
         pages.map((page) => `modules/${id}/${pageSlug(page)}`),
       ),

@@ -1,5 +1,13 @@
 import type { Product } from "./types";
 
+export function dashboardHeroImages(products: readonly Product[]): string[] {
+  return products
+    .filter((product) => !product.archived && (product.cover || product.sketch))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, 6)
+    .map((product) => product.cover || product.sketch);
+}
+
 export function dashboardSummary(products: readonly Product[]) {
   const active = products.filter((product) => !product.archived);
   return {

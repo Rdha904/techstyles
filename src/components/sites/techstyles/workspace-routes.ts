@@ -104,6 +104,7 @@ export type WorkspaceView =
 
 export function viewOwnsPageHeading(view: WorkspaceView): boolean {
   return [
+    "module-home",
     "settings",
     "library",
     "manufacturers",

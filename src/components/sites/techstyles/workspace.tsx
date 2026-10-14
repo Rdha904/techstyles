@@ -269,6 +269,7 @@ export function Workspace({ path }: { path: string[] }) {
             products={products}
             loading={loading}
             failed={!!error}
+            onCreate={() => setCreate(true)}
           />
         );
       case "brand-profile":

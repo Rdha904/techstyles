@@ -12,9 +12,9 @@
     "fontWeight": 2
   },
   "src/components/sites/techstyles/brand-profile.css": {
-    "hex": 95,
+    "hex": 91,
     "rgb": 0,
-    "borderRadius": 31,
+    "borderRadius": 29,
     "fontWeight": 5
   },
   "src/components/sites/techstyles/concept-overview.css": {
@@ -54,9 +54,9 @@
     "fontWeight": 0
   },
   "src/components/sites/techstyles/workspace-dashboard.css": {
-    "hex": 11,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 4,
+    "borderRadius": 0,
     "fontWeight": 0
   }
 }
