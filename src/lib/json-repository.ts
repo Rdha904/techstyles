@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { LibraryItem, Product } from "./types";
 import { dataDirectory, emptyProduct, type WorkspaceData } from "./store";
+import { migrateManufacturers } from "./manufacturers";
 import { DEFAULT_WORKSPACE_ID } from "./workspace";
 import type { WorkspaceRepository } from "./repository";
 
@@ -140,10 +141,11 @@ function seed(): WorkspaceData {
       createdAt: hoodie.createdAt,
     },
   );
-  return { products: [hoodie], libraries };
+  return { products: [hoodie], libraries, manufacturers: [] };
 }
 
 function normalize(data: WorkspaceData) {
+  const changed = migrateManufacturers(data);
   for (const product of data.products) {
     const defaults = {
       measurementUnit: "cm" as const,
@@ -157,21 +159,27 @@ function normalize(data: WorkspaceData) {
     for (const version of product.versions)
       version.snapshot = { ...defaults, ...version.snapshot };
   }
-  return data;
+  return changed;
 }
 async function readFileDatabase(): Promise<DatabaseFile> {
   try {
     const raw = JSON.parse(await readFile(databasePath, "utf8"));
     if (raw.version === 2) {
       const file = raw as DatabaseFile;
-      for (const data of Object.values(file.workspaces)) normalize(data);
+      let changed = false;
+      for (const data of Object.values(file.workspaces))
+        if (normalize(data)) changed = true;
+      if (changed) await persist(file);
       return file;
     }
     // Migrate the version 1 single-workspace file.
-    return {
+    normalize(raw as WorkspaceData);
+    const file: DatabaseFile = {
       version: 2,
-      workspaces: { [DEFAULT_WORKSPACE_ID]: normalize(raw as WorkspaceData) },
+      workspaces: { [DEFAULT_WORKSPACE_ID]: raw as WorkspaceData },
     };
+    await persist(file);
+    return file;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT")
       return { version: 2, workspaces: {} };
@@ -188,7 +196,7 @@ function workspaceOf(file: DatabaseFile, workspaceId: string) {
   return (file.workspaces[workspaceId] ??=
     workspaceId === DEFAULT_WORKSPACE_ID
       ? seed()
-      : { brandProfile: null, products: [], libraries: [] });
+      : { brandProfile: null, products: [], libraries: [], manufacturers: [] });
 }
 function settled() {
   return (globalStore.techstylesWrites || Promise.resolve()).catch(
@@ -196,11 +204,16 @@ function settled() {
   );
 }
 
+function readDatabase() {
+  const pending = settled().then(readFileDatabase);
+  globalStore.techstylesWrites = pending;
+  return pending;
+}
+
 /** Single-process JSON file storage. Writes are serialized and committed by atomic rename. */
 export class JsonWorkspaceRepository implements WorkspaceRepository {
   async read(workspaceId: string) {
-    await settled();
-    return workspaceOf(await readFileDatabase(), workspaceId);
+    return workspaceOf(await readDatabase(), workspaceId);
   }
   update<T>(
     workspaceId: string,
@@ -216,8 +229,7 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
     return pending;
   }
   async findProductByShareToken(token: string): Promise<Product | null> {
-    await settled();
-    const file = await readFileDatabase();
+    const file = await readDatabase();
     for (const data of Object.values(file.workspaces)) {
       const product = data.products.find((item) => item.shareToken === token);
       if (product) return product;
@@ -225,8 +237,7 @@ export class JsonWorkspaceRepository implements WorkspaceRepository {
     return null;
   }
   async findBrandBookByShareToken(token: string) {
-    await settled();
-    const file = await readFileDatabase();
+    const file = await readDatabase();
     for (const data of Object.values(file.workspaces))
       if (data.brandBook?.shareToken === token && data.brandProfile)
         return { profile: data.brandProfile, book: data.brandBook };

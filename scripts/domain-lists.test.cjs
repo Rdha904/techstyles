@@ -21,7 +21,7 @@ function populatedProduct() {
   return {
     ...emptyProduct(),
     project: 'Collection',
-    supplier: 'Supplier',
+    manufacturerId: 'manufacturer-id',
     description: 'Description',
     cover: '/api/uploads/cover.png',
     sketch: '/api/uploads/sketch.png',
@@ -43,7 +43,7 @@ function populatedProduct() {
 
 // Expected wire changes, independent of the production redaction implementation.
 const redactedFields = {
-  overview: { category: '', stage: '', baseSize: '', project: '', supplier: '', description: '', cover: '' },
+  overview: { category: '', stage: '', baseSize: '', project: '', description: '', cover: '' },
   sketch: { sketch: '', mockup: '', annotations: [], cover: '' },
   colorways: { colors: [] },
   bom: { materials: [] },

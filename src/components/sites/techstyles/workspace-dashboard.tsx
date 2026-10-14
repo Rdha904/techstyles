@@ -108,8 +108,8 @@ export function WorkspaceDashboard({
       href: "/projects",
     },
     {
-      name: "Products with a supplier",
-      value: active.filter((product) => product.supplier.trim()).length,
+      name: "Products with a manufacturer",
+      value: active.filter((product) => product.manufacturerId !== null).length,
       icon: Factory,
       href: "/products",
     },

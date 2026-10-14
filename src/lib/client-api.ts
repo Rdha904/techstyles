@@ -1,3 +1,5 @@
+import type { Manufacturer } from "./types";
+
 export async function request<T>(
   url: string,
   options?: {
@@ -54,3 +56,20 @@ export async function uploadFile(
 }
 
 export const assetsPath = "/sites/techstyles/";
+
+export const manufacturersApi = {
+  list: () => request<Manufacturer[]>("/api/manufacturers"),
+  get: (id: string) =>
+    request<Manufacturer>(`/api/manufacturers/${encodeURIComponent(id)}`),
+  create: (data: Partial<Manufacturer>) =>
+    request<Manufacturer>("/api/manufacturers", { method: "POST", json: data }),
+  update: (id: string, data: Partial<Manufacturer>) =>
+    request<Manufacturer>(`/api/manufacturers/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      json: data,
+    }),
+  delete: (id: string) =>
+    request<{ ok: true }>(`/api/manufacturers/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+};

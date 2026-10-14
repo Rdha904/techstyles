@@ -1,6 +1,11 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import type { Product, ProductSnapshot, LibraryItem } from "./types";
+import type {
+  Product,
+  ProductSnapshot,
+  LibraryItem,
+  Manufacturer,
+} from "./types";
 import type { BrandBook, BrandProfile } from "./brand-types";
 
 /** Everything that belongs to one workspace (one brand / customer). */
@@ -8,6 +13,7 @@ export interface WorkspaceData {
   brandProfile?: BrandProfile | null;
   brandBook?: BrandBook | null;
   products: Product[];
+  manufacturers: Manufacturer[];
   libraries: LibraryItem[];
 }
 export const dataDirectory =
@@ -31,7 +37,7 @@ export function emptyProduct(): Product {
     baseSize: "M",
     measurementUnit: "cm",
     project: "",
-    supplier: "",
+    manufacturerId: null,
     description: "",
     cover: "",
     sketch: "",
@@ -66,12 +72,16 @@ export function snapshot(product: Product): ProductSnapshot {
     updatedAt: _updated,
     versions: _versions,
     shareToken: _token,
+    manufacturerId: _manufacturer,
+    supplier: _supplier,
     ...content
-  } = product;
+  } = product as Product & { supplier?: unknown };
   void _id;
   void _created;
   void _updated;
   void _versions;
   void _token;
+  void _manufacturer;
+  void _supplier;
   return structuredClone(content);
 }

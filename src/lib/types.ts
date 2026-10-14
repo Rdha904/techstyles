@@ -78,7 +78,6 @@ export interface ProductSnapshot {
   stage: string;
   baseSize: string;
   project: string;
-  supplier: string;
   description: string;
   cover: string;
   sketch: string;
@@ -109,6 +108,7 @@ export interface Product extends ProductSnapshot {
   updatedAt: string;
   versions: ProductVersion[];
   shareToken: string | null;
+  manufacturerId: string | null;
 }
 export interface LibraryItem {
   id: string;
@@ -118,4 +118,18 @@ export interface LibraryItem {
   color: string;
   data: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface Manufacturer {
+  id: string;
+  name: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  location: { country: string; city: string };
+  categories: string[];
+  typicalMoq: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
 }

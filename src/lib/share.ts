@@ -12,7 +12,6 @@ const redactions: Record<ProductSection, (content: ProductSnapshot) => void> = {
       stage: "",
       baseSize: "",
       project: "",
-      supplier: "",
       description: "",
       cover: "",
     });

@@ -33,7 +33,7 @@ export function restoreVersion(
     snapshot: snapshot(product),
   };
   // Preserve the route's separate clock reads when no timestamp is supplied.
-  Object.assign(product, structuredClone(version.snapshot), {
+  Object.assign(product, snapshot({ ...product, ...version.snapshot }), {
     updatedAt: now ?? new Date().toISOString(),
   });
   product.versions.unshift(previous);

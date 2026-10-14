@@ -40,14 +40,14 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import type { Product } from "@/lib/types";
+import type { Product, Manufacturer } from "@/lib/types";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
 import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-import { request, assetsPath } from "@/lib/client-api";
+import { request, assetsPath, manufacturersApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
 import {
@@ -141,6 +141,7 @@ export function Workspace({ path }: { path: string[] }) {
     }
   }
   const [products, setProducts] = useState<Product[]>([]);
+  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebar, setSidebar] = useState(
@@ -161,10 +162,11 @@ export function Workspace({ path }: { path: string[] }) {
   useEffect(() => {
     if (pathKey.startsWith("share/")) return;
     let live = true;
-    request<Product[]>("/api/products")
-      .then((p) => {
+    Promise.all([request<Product[]>("/api/products"), manufacturersApi.list()])
+      .then(([p, manufacturers]) => {
         if (live) {
           setProducts(p);
+          setManufacturers(manufacturers);
           setLoading(false);
         }
       })
@@ -302,6 +304,7 @@ export function Workspace({ path }: { path: string[] }) {
         return (
           <ProductLibrary
             products={products}
+            manufacturers={manufacturers}
             onCreate={() => setCreate(true)}
           />
         );
@@ -316,6 +319,7 @@ export function Workspace({ path }: { path: string[] }) {
         return (
           <ProductLibrary
             products={products}
+            manufacturers={manufacturers}
             onCreate={() => setCreate(true)}
           />
         );
@@ -626,6 +630,7 @@ export function Workspace({ path }: { path: string[] }) {
           view.kind === "product-library") ? (
           <ProductEditor
             product={product}
+            manufacturers={manufacturers}
             onChange={(p) =>
               setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
             }
@@ -678,7 +683,11 @@ export function Workspace({ path }: { path: string[] }) {
         )}
       </div>
       {create && (
-        <ProductForm onClose={() => setCreate(false)} onSave={saved} />
+        <ProductForm
+          manufacturers={manufacturers}
+          onClose={() => setCreate(false)}
+          onSave={saved}
+        />
       )}
       {searchOpen && (
         <Modal
@@ -848,16 +857,18 @@ function Dashboard({ products }: { products: Product[] }) {
 }
 function ProductLibrary({
   products,
+  manufacturers,
   onCreate,
 }: {
   products: Product[];
+  manufacturers: Manufacturer[];
   onCreate: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [stage, setStage] = useState("");
   const [project, setProject] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const [manufacturerId, setManufacturerId] = useState("");
   const [sort, setSort] = useState("updated");
   const [grid, setGrid] = useState(true);
   const [archived, setArchived] = useState(false);
@@ -868,7 +879,7 @@ function ProductLibrary({
         (!category || p.category === category) &&
         (!stage || p.stage === stage) &&
         (!project || p.project === project) &&
-        (!supplier || p.supplier === supplier) &&
+        (!manufacturerId || p.manufacturerId === manufacturerId) &&
         (p.name + " " + p.code).toLowerCase().includes(query.toLowerCase()),
     )
     .sort((a, b) =>
@@ -896,12 +907,6 @@ function ProductLibrary({
             products.map((p) => p.category),
           ],
           [project, setProject, "All Projects", products.map((p) => p.project)],
-          [
-            supplier,
-            setSupplier,
-            "All Suppliers",
-            products.map((p) => p.supplier),
-          ],
           [stage, setStage, "All Stages", products.map((p) => p.stage)],
         ].map(([v, set, label, options]) => (
           <select
@@ -916,6 +921,18 @@ function ProductLibrary({
             ))}
           </select>
         ))}
+        <select
+          aria-label="Filter manufacturer"
+          value={manufacturerId}
+          onChange={(e) => setManufacturerId(e.target.value)}
+        >
+          <option value="">All Manufacturers</option>
+          {manufacturers.map((manufacturer) => (
+            <option key={manufacturer.id} value={manufacturer.id}>
+              {manufacturer.name}
+            </option>
+          ))}
+        </select>
         <select
           aria-label="Sort products"
           value={sort}

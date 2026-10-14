@@ -1,16 +1,18 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
-import type { Product } from "@/lib/types";
+import type { Product, Manufacturer } from "@/lib/types";
 import { request } from "@/lib/client-api";
 import { Modal } from "./ui";
 
 export function ProductForm({
   product,
+  manufacturers,
   onClose,
   onSave,
 }: {
   product?: Product;
+  manufacturers: Manufacturer[];
   onClose: () => void;
   onSave: (p: Product) => void;
 }) {
@@ -26,7 +28,10 @@ export function ProductForm({
     try {
       const p = await request<Product>(
         product ? `/api/products/${product.id}` : "/api/products",
-        { method: product ? "PATCH" : "POST", json: data },
+        {
+          method: product ? "PATCH" : "POST",
+          json: { ...data, manufacturerId: data.manufacturerId || null },
+        },
       );
       onSave(p);
     } catch (e) {
@@ -120,8 +125,18 @@ export function ProductForm({
             />
           </label>
           <label>
-            Supplier
-            <input name="supplier" defaultValue={product?.supplier} />
+            Manufacturer
+            <select
+              name="manufacturerId"
+              defaultValue={product?.manufacturerId || ""}
+            >
+              <option value="">None</option>
+              {manufacturers.map((manufacturer) => (
+                <option key={manufacturer.id} value={manufacturer.id}>
+                  {manufacturer.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="full">
             Description

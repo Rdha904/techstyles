@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import type {
   Product,
+  Manufacturer,
   ProductSnapshot,
   ProductSection,
   LibraryItem,
@@ -223,10 +224,12 @@ function Section({
 }
 export function ProductEditor({
   product,
+  manufacturers,
   onChange,
   onToggleSidebar,
 }: {
   product: Product;
+  manufacturers: Manufacturer[];
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
 }) {
@@ -453,7 +456,13 @@ export function ProductEditor({
                 </button>
               }
             >
-              <Overview product={p} />
+              <Overview
+                product={p}
+                manufacturerName={
+                  manufacturers.find((item) => item.id === p.manufacturerId)
+                    ?.name || "—"
+                }
+              />
               <div className="toolbar">
                 <small>OWNERS</small>
                 <span className="badge blue">Local Studio</span>
@@ -1084,6 +1093,7 @@ export function ProductEditor({
       {modal === "edit" && (
         <ProductForm
           product={p}
+          manufacturers={manufacturers}
           onClose={() => setModal("")}
           onSave={(x) => {
             draft.replace(x);
@@ -1386,7 +1396,13 @@ export function ProductEditor({
     </>
   );
 }
-function Overview({ product: p }: { product: ProductSnapshot }) {
+function Overview({
+  product: p,
+  manufacturerName,
+}: {
+  product: ProductSnapshot;
+  manufacturerName?: string;
+}) {
   return (
     <div className="overview-info">
       <small>CORE PRODUCT INFORMATION</small>
@@ -1402,7 +1418,9 @@ function Overview({ product: p }: { product: ProductSnapshot }) {
           ["BASE SIZE", p.baseSize],
           ["PROJECT", p.project],
           ["STATUS", p.stage],
-          ["SUPPLIER", p.supplier],
+          ...(manufacturerName !== undefined
+            ? [["MANUFACTURER", manufacturerName]]
+            : []),
         ].map(([label, value]) => (
           <div key={label}>
             <small>{label}</small>
