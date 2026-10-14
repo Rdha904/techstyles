@@ -1,0 +1,265 @@
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+require("./support/load-ts.cjs");
+const {
+  resolveView,
+  navRoutes,
+  moduleRoutes,
+  pageSlug,
+} = require("../src/components/sites/techstyles/workspace-routes.ts");
+
+// Expectations captured from the original Workspace branch order and title logic.
+const cases = [
+  [[], "dashboard", "Dashboard"],
+  [["dashboard"], "dashboard", "Dashboard"],
+  [["products"], "product-library", "Products"],
+  [
+    ["products", "p1"],
+    "product",
+    "Products",
+    "design",
+    undefined,
+    { productId: "p1" },
+  ],
+  [
+    ["products", "p1", "canvas"],
+    "product-canvas",
+    "Products",
+    "design",
+    undefined,
+    { productId: "p1" },
+  ],
+  [
+    ["products", "p1", "print"],
+    "product-print",
+    "Products",
+    "design",
+    undefined,
+    { productId: "p1" },
+  ],
+  [
+    ["share", "tok"],
+    "shared-product",
+    "Settings",
+    "design",
+    undefined,
+    { token: "tok" },
+  ],
+  [
+    ["share", "brand-book", "tok"],
+    "shared-brand-book",
+    "Settings",
+    "design",
+    undefined,
+    { token: "tok" },
+  ],
+  [["share"], "shared-product", "Settings", "design", undefined, { token: "" }],
+  [["modules", "home"], "module-home", "Dashboard", "home", "Overview"],
+  [
+    ["modules", "home", "overview"],
+    "module-home",
+    "Dashboard",
+    "home",
+    "Overview",
+  ],
+  [
+    ["modules", "concept"],
+    "concept-overview",
+    "Overview",
+    "concept",
+    "Overview",
+  ],
+  [
+    ["modules", "concept", "overview"],
+    "concept-overview",
+    "Overview",
+    "concept",
+    "Overview",
+  ],
+  [
+    ["modules", "concept", "brand-profile"],
+    "brand-profile",
+    "Brand Profile",
+    "concept",
+    "Brand Profile",
+  ],
+  [
+    ["modules", "concept", "brand-book"],
+    "brand-book",
+    "Brand Book",
+    "concept",
+    "Brand Book",
+  ],
+  [
+    ["modules", "concept", "brand-book", "print"],
+    "brand-book-print",
+    "Brand Book",
+    "concept",
+    "Brand Book",
+  ],
+  [
+    ["modules", "concept", "moodboards"],
+    "module-page",
+    "Moodboards",
+    "concept",
+    "Moodboards",
+  ],
+  [
+    ["modules", "marketing"],
+    "module-page",
+    "Overview",
+    "marketing",
+    "Overview",
+  ],
+  [
+    ["modules", "marketing", "brand-profile"],
+    "module-page",
+    "Brand Profile",
+    "marketing",
+    "Brand Profile",
+  ],
+  [
+    ["modules", "manufacturers", "quote-requests"],
+    "module-page",
+    "Quote Requests",
+    "manufacturers",
+    "Quote Requests",
+  ],
+  [["modules", "unknown"], "not-found", "Page not found"],
+  [
+    ["modules", "concept", "unknown-page"],
+    "not-found",
+    "Page not found",
+    "concept",
+  ],
+  [
+    ["projects"],
+    "library",
+    "Projects",
+    "design",
+    undefined,
+    { collection: "projects" },
+  ],
+  [
+    ["materials"],
+    "library",
+    "Materials",
+    "design",
+    undefined,
+    { collection: "materials" },
+  ],
+  [
+    ["size-charts"],
+    "library",
+    "Size Charts",
+    "design",
+    undefined,
+    { collection: "size-charts" },
+  ],
+  [
+    ["attachments"],
+    "library",
+    "Attachments Library",
+    "design",
+    undefined,
+    { collection: "attachments" },
+  ],
+  [["settings"], "settings", "Settings"],
+  [["nonsense"], "not-found", "Settings"],
+  [["nonsense", "deeper"], "not-found", "Settings"],
+  [["modules", "home", "unknown-page"], "module-home", "Dashboard", "home"],
+  [["modules"], "not-found", "Page not found"],
+  [["modules", "design"], "not-found", "Page not found"],
+  [
+    ["share", "brand-book"],
+    "shared-brand-book",
+    "Settings",
+    "design",
+    undefined,
+    { token: "" },
+  ],
+  [
+    ["products", "p1", "unknown-page"],
+    "product",
+    "Products",
+    "design",
+    undefined,
+    { productId: "p1" },
+  ],
+  [
+    ["products", "", "canvas"],
+    "product-canvas",
+    "Products",
+    "design",
+    undefined,
+    { productId: "" },
+  ],
+  [
+    ["products", "", "print"],
+    "product-print",
+    "Products",
+    "design",
+    undefined,
+    { productId: "" },
+  ],
+  [
+    ["modules", "concept", "", "print"],
+    "concept-overview",
+    "Overview",
+    "concept",
+    "Overview",
+  ],
+  [
+    ["modules", "concept", "brand-book", "other"],
+    "brand-book",
+    "Brand Book",
+    "concept",
+    "Brand Book",
+  ],
+  [
+    ["share", "brand-book", "tok", "deeper"],
+    "shared-brand-book",
+    "Settings",
+    "design",
+    undefined,
+    { token: "tok" },
+  ],
+  [[""], "dashboard", "Dashboard"],
+];
+
+for (const [
+  path,
+  kind,
+  title,
+  moduleId = "design",
+  modulePage,
+  params = {},
+] of cases) {
+  test(`resolveView preserves ${JSON.stringify(path)}`, () => {
+    const before = [...path];
+    assert.deepEqual(resolveView(path), {
+      section: path[0] || "dashboard",
+      moduleId,
+      modulePage,
+      title,
+      itemId: path[1],
+      view: { kind, ...params },
+    });
+    assert.deepEqual(path, before);
+  });
+}
+
+test("every nav key and module page slug resolves to a known view", () => {
+  for (const [key] of navRoutes) {
+    assert.notEqual(resolveView([key]).view.kind, "not-found", key);
+  }
+  for (const module of moduleRoutes) {
+    for (const page of module.pages) {
+      const path = ["modules", module.id, pageSlug(page)];
+      const result = resolveView(path);
+      assert.notEqual(result.view.kind, "not-found", path.join("/"));
+      assert.equal(result.moduleId, module.id);
+      assert.equal(result.modulePage, page);
+    }
+  }
+});

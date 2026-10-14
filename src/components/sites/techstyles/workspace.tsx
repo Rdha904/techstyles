@@ -50,98 +50,42 @@ import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 import { request, assetsPath } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
-const nav = [
-  ["dashboard", "Dashboard", LayoutDashboard],
-  ["products", "Products", Shirt],
-  ["projects", "Projects", FolderKanban],
-  ["sketches", "Sketch Library", Pencil],
-  ["materials", "Materials", Layers],
-  ["artworks", "Artworks", Paintbrush],
-  ["colors", "Colorways", Palette],
-  ["size-charts", "Size Charts", Ruler],
-  ["attachments", "Attachments Library", Paperclip],
-] as const;
-const modules = [
-  {
-    id: "home",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    pages: ["Overview"],
-  },
-  {
-    id: "concept",
-    label: "Concept & Audience",
-    icon: Lightbulb,
-    pages: [
-      "Overview",
-      "Brand Profile",
-      "Audience & Market",
-      "Moodboards",
-      "Brand Book",
-    ],
-  },
-  { id: "design", label: "Design & Tech Packs", icon: Pencil, pages: [] },
-  {
-    id: "manufacturers",
-    label: "Manufacturers & Quotes",
-    icon: Factory,
-    pages: ["Overview", "Manufacturers", "Quote Requests", "Quote Comparison"],
-  },
-  {
-    id: "samples",
-    label: "Samples & Approvals",
-    icon: ClipboardCheck,
-    pages: ["Overview", "Sample Requests", "Sample Reviews", "Approvals"],
-  },
-  {
-    id: "production",
-    label: "Production",
-    icon: Layers,
-    pages: ["Overview", "Production Orders", "Timeline", "Milestones"],
-  },
-  {
-    id: "quality",
-    label: "Quality & Inventory",
-    icon: ShieldCheck,
-    pages: ["Overview", "Quality Checks", "Inventory", "Stock Movements"],
-  },
-  {
-    id: "store",
-    label: "Store & Sales",
-    icon: ShoppingBag,
-    pages: [
-      "Overview",
-      "Product Listings",
-      "Orders",
-      "Sales Analytics",
-      "Brand Website",
-    ],
-  },
-  {
-    id: "shipping",
-    label: "Shipping & Feedback",
-    icon: Truck,
-    pages: ["Overview", "Shipments", "Returns", "Customer Feedback"],
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    icon: Megaphone,
-    pages: [
-      "Overview",
-      "Brand Profile",
-      "Campaigns",
-      "Content Calendar",
-      "Assets",
-    ],
-  },
-];
-function pageSlug(label: string) {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+import {
+  navRoutes,
+  moduleRoutes,
+  pageSlug,
+  resolveView,
+} from "./workspace-routes";
+const navIcons = {
+  dashboard: LayoutDashboard,
+  products: Shirt,
+  projects: FolderKanban,
+  sketches: Pencil,
+  materials: Layers,
+  artworks: Paintbrush,
+  colors: Palette,
+  "size-charts": Ruler,
+  attachments: Paperclip,
+};
+const moduleIcons = {
+  home: LayoutDashboard,
+  concept: Lightbulb,
+  design: Pencil,
+  manufacturers: Factory,
+  samples: ClipboardCheck,
+  production: Layers,
+  quality: ShieldCheck,
+  store: ShoppingBag,
+  shipping: Truck,
+  marketing: Megaphone,
+};
+const nav = navRoutes.map(
+  ([key, label]) => [key, label, navIcons[key]] as const,
+);
+const modules = moduleRoutes.map((module) => ({
+  ...module,
+  icon: moduleIcons[module.id as keyof typeof moduleIcons],
+}));
 const subtitles: Record<string, string> = {
   dashboard: "Product development overview",
   products: "Manage styles across all seasons and stages",
@@ -173,15 +117,10 @@ function useNavigationPreference(key: string) {
 }
 export function Workspace({ path }: { path: string[] }) {
   const router = useRouter();
-  const section = path[0] || "dashboard";
+  const { section, moduleId, modulePage, title, itemId, view } =
+    resolveView(path);
   const pathKey = path.join("/");
-  const activeModule =
-    modules.find(
-      (m) => m.id === (section === "modules" ? path[1] : "design"),
-    ) || modules.find((module) => module.id === "design")!;
-  const modulePage = activeModule.pages.find(
-    (page) => pageSlug(page) === (path[2] || "overview"),
-  );
+  const activeModule = modules.find((module) => module.id === moduleId)!;
   const isDesign = activeModule.id === "design";
   const isWorkspaceDashboard = activeModule.id === "home";
   const [primaryCollapsed, setPrimaryCollapsed] = useNavigationPreference(
@@ -239,12 +178,6 @@ export function Workspace({ path }: { path: string[] }) {
       live = false;
     };
   }, [pathKey]);
-  const title =
-    section === "modules"
-      ? activeModule.id === "home"
-        ? "Dashboard"
-        : modulePage || "Page not found"
-      : nav.find((n) => n[0] === section)?.[1] || "Settings";
   function saved(p: Product) {
     setProducts((old) =>
       old.some((x) => x.id === p.id)
@@ -262,28 +195,145 @@ export function Workspace({ path }: { path: string[] }) {
     document.addEventListener("keydown", dismiss);
     return () => document.removeEventListener("keydown", dismiss);
   }, [sidebar]);
-  const product = products.find((p) => p.id === path[1]);
-  if (section === "share" && path[1] === "brand-book")
-    return <SharedBrandBook token={path[2] || ""} />;
-  if (section === "share") return <SharedProduct token={path[1] || ""} />;
-  if (
-    section === "modules" &&
-    path[1] === "concept" &&
-    path[2] === "brand-book" &&
-    path[3] === "print"
-  )
-    return <BrandBookPrint />;
-  if (section === "products" && path[2] === "canvas" && product)
-    return (
-      <ProductCanvas
-        product={product}
-        onChange={(p) =>
-          setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
-        }
-      />
-    );
-  if (section === "products" && path[2] === "print" && product)
-    return <SharedProduct product={product} />;
+  const product = products.find((p) => p.id === itemId);
+  switch (view.kind) {
+    case "shared-brand-book":
+      return <SharedBrandBook token={view.token} />;
+    case "shared-product":
+      return <SharedProduct token={view.token} />;
+    case "brand-book-print":
+      return <BrandBookPrint />;
+    case "product-canvas":
+      if (product)
+        return (
+          <ProductCanvas
+            product={product}
+            onChange={(p) =>
+              setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
+            }
+          />
+        );
+      break;
+    case "product-print":
+      if (product) return <SharedProduct product={product} />;
+      break;
+  }
+  function renderMainContent() {
+    // Module workspaces render before the shell's loading fallback.
+    switch (view.kind) {
+      case "module-home":
+        return (
+          <WorkspaceDashboard
+            products={products}
+            loading={loading}
+            failed={!!error}
+          />
+        );
+      case "brand-profile":
+        return <BrandProfilePage />;
+      case "brand-book":
+        return <BrandBookPage />;
+      case "concept-overview":
+        return <ConceptOverview />;
+      case "module-page":
+        return (
+          <section className="module-workspace">
+            {activeModule.id === "marketing" && <BrandProfileSummary />}
+            <span className="module-eyebrow">{activeModule.label}</span>
+            <h2>
+              {modulePage === "Overview" ? activeModule.label : modulePage}
+            </h2>
+            <p className="muted">
+              {modulePage === "Overview"
+                ? "Choose an area below to open its workspace."
+                : "This workspace is ready for the next stage of your brand. Tools for this area have not been added yet."}
+            </p>
+            {modulePage === "Overview" ? (
+              <div className="module-page-grid">
+                {activeModule.pages.slice(1).map((page) => (
+                  <Link
+                    className="module-page-card"
+                    key={page}
+                    href={
+                      page === "Brand Profile"
+                        ? "/modules/concept/brand-profile"
+                        : `/modules/${activeModule.id}/${pageSlug(page)}`
+                    }
+                  >
+                    <LayoutDashboard size={21} />
+                    <h3>{page}</h3>
+                    <span>
+                      Open workspace <ArrowUpRight size={16} />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="module-empty">
+                <activeModule.icon size={36} />
+                <h3>No {modulePage!.toLowerCase()} yet</h3>
+                <p>
+                  Manage your designs and tech packs while this module is being
+                  prepared.
+                </p>
+                <Link className="btn" href="/">
+                  Open Design &amp; Tech Packs
+                </Link>
+              </div>
+            )}
+          </section>
+        );
+    }
+    if (loading) return <div className="empty">Loading your workspace…</div>;
+    switch (view.kind) {
+      case "product":
+      case "product-canvas":
+      case "product-print":
+        if (itemId)
+          return (
+            <div className="empty">
+              <h2>Product not found</h2>
+              <Link className="btn" href="/products">
+                Back to Products
+              </Link>
+            </div>
+          );
+        // An empty product id still falls through to the library.
+        return (
+          <ProductLibrary
+            products={products}
+            onCreate={() => setCreate(true)}
+          />
+        );
+      case "dashboard":
+        return (
+          <>
+            <BrandProfileSummary />
+            <Dashboard products={products} />
+          </>
+        );
+      case "product-library":
+        return (
+          <ProductLibrary
+            products={products}
+            onCreate={() => setCreate(true)}
+          />
+        );
+      case "settings":
+        return <SettingsPage notify={notify} />;
+      case "library":
+        return (
+          <LibraryPage key={view.collection} collection={view.collection} />
+        );
+      case "not-found":
+        return (
+          <div className="empty">
+            <h2>Page not found</h2>
+            <Link href="/">Go to Dashboard</Link>
+          </div>
+        );
+    }
+  }
   return (
     <div
       className={`app-shell ${primaryCollapsed ? "primary-collapsed" : ""} ${secondaryHidden || isWorkspaceDashboard ? "secondary-hidden" : ""} ${focusMode ? "focus-mode" : ""}`}
@@ -421,7 +471,7 @@ export function Workspace({ path }: { path: string[] }) {
                         <div className="subnav">
                           <Link
                             href="/products"
-                            className={!path[1] ? "active" : ""}
+                            className={!itemId ? "active" : ""}
                             onClick={() => setSidebar(false)}
                           >
                             <List size={14} />
@@ -569,7 +619,11 @@ export function Workspace({ path }: { path: string[] }) {
             Workspace settings
           </Link>
         </div>
-        {product && section === "products" ? (
+        {product &&
+        (view.kind === "product" ||
+          view.kind === "product-canvas" ||
+          view.kind === "product-print" ||
+          view.kind === "product-library") ? (
           <ProductEditor
             product={product}
             onChange={(p) =>
@@ -618,101 +672,7 @@ export function Workspace({ path }: { path: string[] }) {
             </header>
             <main className="app-content">
               {error && <p className="error">{error}</p>}
-              {section === "modules" && activeModule.id === "home" ? (
-                <WorkspaceDashboard
-                  products={products}
-                  loading={loading}
-                  failed={!!error}
-                />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Brand Profile" ? (
-                <BrandProfilePage />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Brand Book" ? (
-                <BrandBookPage />
-              ) : section === "modules" &&
-                activeModule.id === "concept" &&
-                modulePage === "Overview" ? (
-                <ConceptOverview />
-              ) : section === "modules" && modulePage ? (
-                <section className="module-workspace">
-                  {activeModule.id === "marketing" && <BrandProfileSummary />}
-                  <span className="module-eyebrow">{activeModule.label}</span>
-                  <h2>
-                    {modulePage === "Overview"
-                      ? activeModule.label
-                      : modulePage}
-                  </h2>
-                  <p className="muted">
-                    {modulePage === "Overview"
-                      ? "Choose an area below to open its workspace."
-                      : "This workspace is ready for the next stage of your brand. Tools for this area have not been added yet."}
-                  </p>
-                  {modulePage === "Overview" ? (
-                    <div className="module-page-grid">
-                      {activeModule.pages.slice(1).map((page) => (
-                        <Link
-                          className="module-page-card"
-                          key={page}
-                          href={
-                            page === "Brand Profile"
-                              ? "/modules/concept/brand-profile"
-                              : `/modules/${activeModule.id}/${pageSlug(page)}`
-                          }
-                        >
-                          <LayoutDashboard size={21} />
-                          <h3>{page}</h3>
-                          <span>
-                            Open workspace <ArrowUpRight size={16} />
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="module-empty">
-                      <activeModule.icon size={36} />
-                      <h3>No {modulePage.toLowerCase()} yet</h3>
-                      <p>
-                        Manage your designs and tech packs while this module is
-                        being prepared.
-                      </p>
-                      <Link className="btn" href="/">
-                        Open Design &amp; Tech Packs
-                      </Link>
-                    </div>
-                  )}
-                </section>
-              ) : loading ? (
-                <div className="empty">Loading your workspace…</div>
-              ) : section === "products" && path[1] ? (
-                <div className="empty">
-                  <h2>Product not found</h2>
-                  <Link className="btn" href="/products">
-                    Back to Products
-                  </Link>
-                </div>
-              ) : section === "dashboard" ? (
-                <>
-                  <BrandProfileSummary />
-                  <Dashboard products={products} />
-                </>
-              ) : section === "products" ? (
-                <ProductLibrary
-                  products={products}
-                  onCreate={() => setCreate(true)}
-                />
-              ) : section === "settings" ? (
-                <SettingsPage notify={notify} />
-              ) : nav.some((n) => n[0] === section) ? (
-                <LibraryPage key={section} collection={section} />
-              ) : (
-                <div className="empty">
-                  <h2>Page not found</h2>
-                  <Link href="/">Go to Dashboard</Link>
-                </div>
-              )}
+              {renderMainContent()}
             </main>
           </>
         )}
