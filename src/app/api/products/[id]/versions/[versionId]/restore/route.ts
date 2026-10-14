@@ -1,6 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { api } from "@/lib/api";
-import { ApiError, findProduct, snapshot } from "@/lib/store";
+import { findProduct } from "@/lib/store";
+import { restoreVersion } from "@/lib/products";
 import { repository } from "@/lib/repository";
 import { currentWorkspaceId } from "@/lib/workspace";
 export function POST(
@@ -10,21 +10,7 @@ export function POST(
   return api(async () => {
     const { id, versionId } = await context.params;
     return repository.update(await currentWorkspaceId(), (database) => {
-      const product = findProduct(database, id);
-      const version = product.versions.find((item) => item.id === versionId);
-      if (!version) throw new ApiError("Version not found", 404);
-      const previous = {
-        id: randomUUID(),
-        name: "Before restore",
-        createdAt: new Date().toISOString(),
-        snapshot: snapshot(product),
-      };
-      Object.assign(product, structuredClone(version.snapshot), {
-        updatedAt: new Date().toISOString(),
-      });
-      product.versions.unshift(previous);
-      product.versions = product.versions.slice(0, 50);
-      return product;
+      return restoreVersion(findProduct(database, id), versionId);
     });
   });
 }

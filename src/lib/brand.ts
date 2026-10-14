@@ -1,6 +1,9 @@
+import { randomBytes } from "node:crypto";
 import { object, string, localAssetUrl } from "./api";
 import { ApiError } from "./store";
+import type { WorkspaceData } from "./store";
 import {
+  emptyBrandBook,
   brandBookImageLimit,
   brandLimits,
   brandTextFields,
@@ -11,6 +14,25 @@ import {
   type BrandProfile,
   type PublishedBrandBook,
 } from "./brand-types";
+
+export function publishBrandBook(data: WorkspaceData): {
+  token: string;
+  url: string;
+} {
+  if (!data.brandProfile)
+    throw new ApiError("Save a brand profile before publishing.");
+  const book = (data.brandBook ||= emptyBrandBook());
+  book.shareToken ||= randomBytes(24).toString("hex");
+  return {
+    token: book.shareToken,
+    url: `/share/brand-book/${book.shareToken}`,
+  };
+}
+
+export function unpublishBrandBook(data: WorkspaceData): void {
+  if (data.brandBook) data.brandBook.shareToken = null;
+}
+
 export function validateBrand(input: Record<string, unknown>): BrandProfile {
   const result = {} as BrandProfile;
   for (const field of brandTextFields)
