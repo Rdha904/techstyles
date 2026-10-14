@@ -58,8 +58,8 @@ Delegated to Codex one at a time; each is reviewed and its gates re-run before t
 
 1. **Foundation** — Manufacturer model and API (including blocked delete), `manufacturerId` outside the tech pack snapshot, one-time migration, clean share/print/restore, basic Manufacturer select in the product form, dashboard stat rename. Status: done, commit `d7f2b47`.
 2. **Directory and picker** — Manufacturers page (list/cards, search, country/category filters, edit, delete showing what uses it) and inline create in the product form's picker. Status: done, commit `52f41ac`.
-3. **Quote Requests and Sourcing panel** — criteria 4–6. Quote Requests are stored per workspace, not on the product. A product-level `techPackUpdatedAt` drives "changed since sent"; it ignores comments, archiving and stage (stage is workflow status, not specification). Product deletion via the API cascades to its Quote Requests; a manufacturer used by a Quote Request can't be deleted. Status: done.
-4. **Module pages and cleanup** — criteria 8–9. The app has no product delete button (products are archived), so the "delete confirmation shows the count" part of criterion 9 doesn't apply; the API cascade from task 3 covers the data side.
+3. **Quote Requests and Sourcing panel** — criteria 4–6. Quote Requests are stored per workspace, not on the product. A product-level `techPackUpdatedAt` drives "changed since sent"; it ignores comments, archiving and stage (stage is workflow status, not specification). Product deletion via the API cascades to its Quote Requests; a manufacturer used by a Quote Request can't be deleted. Status: done, commit `30bf148`.
+4. **Module pages and cleanup** — criteria 8–9. The app has no product delete button (products are archived), so the "delete confirmation shows the count" part of criterion 9 doesn't apply; the API cascade from task 3 covers the data side. Status: done.
 
 ## Deferred
 

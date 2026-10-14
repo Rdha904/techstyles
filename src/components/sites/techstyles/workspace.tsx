@@ -47,6 +47,9 @@ import { ConceptOverview } from "./concept-overview";
 import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
 import { ManufacturersPage } from "./manufacturers";
+import { ManufacturersOverview } from "./manufacturers-overview";
+import { QuoteRequestsPage } from "./quote-requests";
+import { QuoteComparisonPage } from "./quote-comparison";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 import {
   request,
@@ -324,7 +327,59 @@ export function Workspace({ path }: { path: string[] }) {
         );
     }
     if (loading) return <div className="empty">Loading your workspace…</div>;
+    if (
+      error &&
+      ["manufacturers-overview", "quote-requests", "quote-comparison"].includes(
+        view.kind,
+      )
+    )
+      return (
+        <div className="empty" role="alert">
+          Sourcing data could not be loaded. Reload the page to try again.
+        </div>
+      );
     switch (view.kind) {
+      case "manufacturers-overview":
+        return (
+          <ManufacturersOverview
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+          />
+        );
+      case "quote-requests":
+        return (
+          <QuoteRequestsPage
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+          />
+        );
+      case "quote-comparison":
+        return (
+          <QuoteComparisonPage
+            key={view.productId || "select-product"}
+            productId={view.productId}
+            products={products}
+            manufacturers={manufacturers}
+            quoteRequests={quoteRequests}
+            onSave={saveQuoteRequest}
+            onChoose={(product) =>
+              setProducts((old) =>
+                old.map((item) =>
+                  item.id === product.id
+                    ? { ...item, manufacturerId: product.manufacturerId }
+                    : item,
+                ),
+              )
+            }
+            onProductSave={(product) =>
+              setProducts((old) =>
+                old.map((item) => (item.id === product.id ? product : item)),
+              )
+            }
+          />
+        );
       case "manufacturers":
         if (error)
           return (
@@ -1154,16 +1209,25 @@ function SettingsPage({ notify }: { notify: (s: string) => void }) {
         className="btn"
         onClick={async () => {
           try {
-            const data = await request("/api/products");
-            const libraries = await request("/api/libraries");
-            const brand = await request<{ profile: unknown }>(
-              "/api/brand-profile",
-            );
+            const [data, libraries, brand, manufacturers, quoteRequests] =
+              await Promise.all([
+                request("/api/products"),
+                request("/api/libraries"),
+                request<{ profile: unknown }>("/api/brand-profile"),
+                manufacturersApi.list(),
+                quoteRequestsApi.list(),
+              ]);
             const url = URL.createObjectURL(
               new Blob(
                 [
                   JSON.stringify(
-                    { products: data, libraries, brandProfile: brand.profile },
+                    {
+                      products: data,
+                      libraries,
+                      brandProfile: brand.profile,
+                      manufacturers,
+                      quoteRequests,
+                    },
                     null,
                     2,
                   ),

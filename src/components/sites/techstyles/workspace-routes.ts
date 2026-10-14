@@ -93,6 +93,9 @@ export type WorkspaceView =
   | { kind: "brand-profile" }
   | { kind: "brand-book" }
   | { kind: "manufacturers" }
+  | { kind: "manufacturers-overview" }
+  | { kind: "quote-requests" }
+  | { kind: "quote-comparison"; productId?: string }
   | { kind: "concept-overview" }
   | { kind: "module-page" }
   | { kind: "dashboard" }
@@ -140,12 +143,19 @@ export function resolveView(path: string[]) {
         if (modulePage === "Brand Book") return { kind: "brand-book" };
         if (modulePage === "Overview") return { kind: "concept-overview" };
       }
-      if (
-        activeModule.id === "manufacturers" &&
-        modulePage === "Manufacturers" &&
-        path.length === 3
-      )
-        return { kind: "manufacturers" };
+      if (activeModule.id === "manufacturers") {
+        if (modulePage === "Overview" && path.length <= 3)
+          return { kind: "manufacturers-overview" };
+        if (modulePage === "Manufacturers" && path.length === 3)
+          return { kind: "manufacturers" };
+        if (modulePage === "Quote Requests" && path.length === 3)
+          return { kind: "quote-requests" };
+        if (modulePage === "Quote Comparison") {
+          if (path.length === 3) return { kind: "quote-comparison" };
+          if (path.length === 4 && path[3])
+            return { kind: "quote-comparison", productId: path[3] };
+        }
+      }
       if (modulePage) return { kind: "module-page" };
     }
     if (section === "products" && path[1])

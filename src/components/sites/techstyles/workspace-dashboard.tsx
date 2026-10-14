@@ -40,6 +40,7 @@ const areas = [
     href: "/modules/manufacturers/overview",
     icon: Factory,
     text: "Plan your sourcing workflow",
+    ready: true,
   },
   {
     name: "Samples & Approvals",

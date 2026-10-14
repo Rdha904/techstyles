@@ -270,8 +270,10 @@ export function ManufacturersPage({
                 <div>
                   <dt>Contact</dt>
                   <dd>
-                    {manufacturer.contactName || "—"}
-                    <span>{manufacturer.email || "—"}</span>
+                    {manufacturer.contactName || manufacturer.email || "—"}
+                    {manufacturer.contactName && manufacturer.email && (
+                      <span>{manufacturer.email}</span>
+                    )}
                   </dd>
                 </div>
                 <div>
@@ -329,8 +331,10 @@ export function ManufacturersPage({
                   </td>
                   <td>{manufacturer.categories.join(", ") || "—"}</td>
                   <td>
-                    {manufacturer.contactName || "—"}
-                    <span>{manufacturer.email || "—"}</span>
+                    {manufacturer.contactName || manufacturer.email || "—"}
+                    {manufacturer.contactName && manufacturer.email && (
+                      <span>{manufacturer.email}</span>
+                    )}
                   </td>
                   <td>{manufacturer.typicalMoq || "—"}</td>
                   <td>
