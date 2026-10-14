@@ -1,6 +1,6 @@
 # Dashboard & desktop UI cleanup — scope
 
-Status: scoped 2026-10-14, ready for implementation.
+Status: implemented 2026-10-14 (tasks 1–3 done).
 Vocabulary: see `GLOSSARY.md` (Workspace, Brand Profile).
 
 ## Why
@@ -47,7 +47,7 @@ Delegated to Codex one at a time. Each is reviewed and its gates rerun before th
 
 1. **One dashboard at `/`.** Criteria 1–3, plus `dashboardSummary` and its tests. Status: done, commit `1469b03`. Redirects are temporary (307) so the old URLs stay reusable.
 2. **Workspace name and support link.** Criteria 4–5, plus `workspaceIdentity` and its tests. Status: done, commit `2f8eb2f`.
-3. **Desktop polish.** Criterion 6. Audit every page at 1440px and fix duplicate `<h1>`s (the shell header title and a page heading), sideways overflow and plural wording. Status: not started.
+3. **Desktop polish.** Criterion 6. Audit every page at 1440px and fix duplicate `<h1>`s (the shell header title and a page heading), sideways overflow and plural wording. Status: done, commit `ac2edb8`. A 1440px audit of 50 pages found duplicate h1s on 16 and a 13px materials-table overflow; no plural issues remained.
 
 ## Deferred
 
