@@ -154,7 +154,15 @@ export function QuoteRequestsPage({
                   "Production lead time",
                   "Tech pack",
                 ].map((label) => (
-                  <th scope="col" key={label}>
+                  <th
+                    scope="col"
+                    key={label}
+                    className={
+                      label === "Unit price" || label === "Production lead time"
+                        ? "quote-numeric"
+                        : undefined
+                    }
+                  >
                     {label}
                   </th>
                 ))}
@@ -167,6 +175,7 @@ export function QuoteRequestsPage({
                   <tr key={request.id}>
                     <td>
                       <Link
+                        className="quote-product-name"
                         href={`/products/${encodeURIComponent(product.id)}#sourcing`}
                       >
                         {product.name}
@@ -193,12 +202,12 @@ export function QuoteRequestsPage({
                         ? new Date(request.sentAt).toLocaleDateString()
                         : "—"}
                     </td>
-                    <td>
+                    <td className="quote-numeric">
                       {request.quote?.unitPrice != null
                         ? `${request.quote.unitPrice} ${request.quote.currency}`
                         : "—"}
                     </td>
-                    <td>
+                    <td className="quote-numeric">
                       {request.quote?.productionLeadTimeDays != null
                         ? `${request.quote.productionLeadTimeDays} days`
                         : "—"}

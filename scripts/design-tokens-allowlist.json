@@ -30,16 +30,16 @@
     "fontWeight": 9
   },
   "src/components/sites/techstyles/manufacturer-quotes.css": {
-    "hex": 36,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 9,
-    "fontWeight": 3
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/manufacturers.css": {
-    "hex": 35,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 10,
-    "fontWeight": 3
+    "borderRadius": 0,
+    "fontWeight": 0
   },
   "src/components/sites/techstyles/product-form.css": {
     "hex": 2,
@@ -48,9 +48,9 @@
     "fontWeight": 0
   },
   "src/components/sites/techstyles/sourcing-panel.css": {
-    "hex": 16,
+    "hex": 0,
     "rgb": 0,
-    "borderRadius": 4,
+    "borderRadius": 0,
     "fontWeight": 0
   },
   "src/components/sites/techstyles/workspace-dashboard.css": {

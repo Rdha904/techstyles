@@ -116,7 +116,7 @@ export function SourcingPanel({
   return (
     <section
       id="sourcing"
-      className="sourcing-panel no-print"
+      className="panel sourcing-panel no-print"
       aria-labelledby="sourcing-title"
     >
       <header className="sourcing-heading">
@@ -161,7 +161,7 @@ export function SourcingPanel({
             })
           }
         >
-          Add Quote Request
+          Add quote request
         </button>
       </div>
       {suggestSampling &&
@@ -169,7 +169,7 @@ export function SourcingPanel({
           <div className="sourcing-suggestion">
             <span>Manufacturer chosen. Move to Sampling?</span>
             <button
-              className="btn primary"
+              className="btn"
               disabled={disabled}
               onClick={() =>
                 run(async () => {
@@ -277,12 +277,7 @@ export function SourcingPanel({
               {quoteRequestActions[request.status].map((value) => (
                 <button
                   key={value}
-                  className={`btn${value === "unchoose" ? " selected" : ""}`}
-                  aria-pressed={
-                    value === "choose" || value === "unchoose"
-                      ? request.status === "chosen"
-                      : undefined
-                  }
+                  className="btn"
                   disabled={disabled}
                   onClick={() => action(request, value)}
                 >

@@ -160,6 +160,7 @@ export function ManufacturersPage({
         <div className="manufacturers-notice" role="status">
           {notice}
           <button
+            className="icon-button"
             aria-label="Dismiss notification"
             onClick={() => setNotice("")}
           >
@@ -199,6 +200,7 @@ export function ManufacturersPage({
         </select>
         <div className="manufacturers-view">
           <button
+            className={`btn${!grid ? " selected" : ""}`}
             aria-label="List view"
             aria-pressed={!grid}
             onClick={() => setGrid(false)}
@@ -206,6 +208,7 @@ export function ManufacturersPage({
             <List size={17} />
           </button>
           <button
+            className={`btn${grid ? " selected" : ""}`}
             aria-label="Grid view"
             aria-pressed={grid}
             onClick={() => setGrid(true)}
@@ -239,7 +242,7 @@ export function ManufacturersPage({
               Clear filters
             </button>
           ) : (
-            <button className="btn primary" onClick={() => edit("new")}>
+            <button className="btn" onClick={() => edit("new")}>
               <Plus size={16} /> Add manufacturer
             </button>
           )}
@@ -270,15 +273,23 @@ export function ManufacturersPage({
                 <div>
                   <dt>Contact</dt>
                   <dd>
-                    {manufacturer.contactName || manufacturer.email || "—"}
+                    {manufacturer.contactName || (
+                      <span className="manufacturer-email">
+                        {manufacturer.email || "—"}
+                      </span>
+                    )}
                     {manufacturer.contactName && manufacturer.email && (
-                      <span>{manufacturer.email}</span>
+                      <span className="manufacturer-email">
+                        {manufacturer.email}
+                      </span>
                     )}
                   </dd>
                 </div>
                 <div>
                   <dt>Typical MOQ</dt>
-                  <dd>{manufacturer.typicalMoq || "—"}</dd>
+                  <dd className="manufacturer-moq">
+                    {manufacturer.typicalMoq || "—"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Products</dt>
@@ -307,7 +318,15 @@ export function ManufacturersPage({
                   "Products",
                   "Actions",
                 ].map((label) => (
-                  <th key={label} scope="col">
+                  <th
+                    key={label}
+                    scope="col"
+                    className={
+                      label === "Typical MOQ" || label === "Products"
+                        ? "manufacturer-numeric"
+                        : undefined
+                    }
+                  >
                     {label}
                   </th>
                 ))}
@@ -331,13 +350,21 @@ export function ManufacturersPage({
                   </td>
                   <td>{manufacturer.categories.join(", ") || "—"}</td>
                   <td>
-                    {manufacturer.contactName || manufacturer.email || "—"}
+                    {manufacturer.contactName || (
+                      <span className="manufacturer-email">
+                        {manufacturer.email || "—"}
+                      </span>
+                    )}
                     {manufacturer.contactName && manufacturer.email && (
-                      <span>{manufacturer.email}</span>
+                      <span className="manufacturer-email">
+                        {manufacturer.email}
+                      </span>
                     )}
                   </td>
-                  <td>{manufacturer.typicalMoq || "—"}</td>
-                  <td>
+                  <td className="manufacturer-moq">
+                    {manufacturer.typicalMoq || "—"}
+                  </td>
+                  <td className="manufacturer-numeric">
                     {
                       productsUsingManufacturer(products, manufacturer.id)
                         .length

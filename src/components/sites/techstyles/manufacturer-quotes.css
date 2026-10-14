@@ -1,44 +1,25 @@
 .manufacturer-quotes-page {
-  color: #242529;
+  color: var(--ink);
   min-width: 0;
 }
 .manufacturer-quotes-heading {
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 .manufacturer-quotes-heading h1,
 .manufacturer-quotes-heading h2 {
-  margin: 10px 0;
-  font-size: 28px;
-  letter-spacing: -0.65px;
+  margin: 0 0 10px;
+  font-size: var(--t-work-title);
+  font-weight: var(--w-work-title);
 }
 .manufacturer-quotes-heading p {
   margin: 0;
-  color: var(--muted);
-  font-size: 14px;
+  color: var(--graphite);
+  font-size: var(--t-work-body);
   line-height: 1.6;
 }
-.manufacturer-quotes-page .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 7px;
-  padding: 10px 15px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.manufacturer-quotes-page .btn.primary {
-  background: #4663bc;
-  border-color: #4663bc;
-  color: white;
-}
-.manufacturer-quotes-page button:disabled,
-.manufacturer-quotes-page select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 .manufacturer-quotes-note {
-  color: #737d8e;
-  font-size: 12px;
+  color: var(--graphite);
+  font-size: var(--t-work-secondary);
   line-height: 1.6;
   margin: 14px 0 24px;
 }
@@ -46,103 +27,110 @@
   max-width: 1240px;
   margin: 8px auto 32px;
 }
+.sourcing-overview .manufacturer-quotes-heading h2 {
+  font-size: var(--t-gallery-section);
+  font-weight: var(--w-gallery-section);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.sourcing-overview .manufacturer-quotes-heading p {
+  font-size: var(--t-gallery-body);
+}
 .sourcing-overview-stats {
   display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.35fr) minmax(
+      0,
+      2fr
+    );
+  border-top: 1px solid var(--ink);
 }
 .sourcing-overview-stats > div {
-  grid-column: span 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
-  padding: 18px;
-  border: 1px solid #e1e5ed;
-  border-radius: 12px;
-  background: white;
-  font-size: 12px;
-  color: #697386;
+  padding: 18px 16px 6px 0;
+  font-size: var(--t-work-body);
+  color: var(--graphite);
 }
-.sourcing-overview-stats > div:nth-last-child(-n + 2) {
-  grid-column: span 5;
+.sourcing-overview-stats > div + div {
+  padding-left: 16px;
+  border-left: 1px solid var(--mist);
+}
+.sourcing-overview-stats > div > span {
+  min-height: 24px;
 }
 .sourcing-overview-stats strong {
-  color: #242529;
-  font-size: 28px;
+  margin-top: auto;
+  color: var(--ink);
+  font-size: 52px;
+  font-weight: var(--w-gallery-hero);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.sourcing-overview > .manufacturer-quotes-note {
+  margin-bottom: 72px;
 }
 .sourcing-overview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  column-gap: 40px;
+  border-top: 1px solid var(--ink);
 }
 .sourcing-overview-card {
-  --area-accent: #5065aa;
-  --area-tint: #edf1fd;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  column-gap: 14px;
+  align-items: start;
   min-width: 0;
-  padding: 24px 26px 0;
-  border: 1px solid #e1e5ed;
-  border-radius: 20px;
-  background: white;
-  color: inherit;
+  padding: 20px 0 22px;
+  border-bottom: 1px solid var(--mist);
+  color: var(--ink);
   text-decoration: none;
-  overflow: hidden;
 }
-.sourcing-overview-card.teal {
-  --area-accent: #428076;
-  --area-tint: #eaf5f1;
-}
-.sourcing-overview-card.violet {
-  --area-accent: #7962a1;
-  --area-tint: #f2eef9;
-}
-.sourcing-overview-card:hover {
-  border-color: var(--area-accent);
-  box-shadow: 0 10px 28px #2333550b;
-}
-.sourcing-overview-card:focus-visible {
-  outline: 3px solid var(--area-accent);
-  outline-offset: 4px;
+.sourcing-overview-card:hover h3,
+.sourcing-overview-card:hover .sourcing-overview-action span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 .sourcing-overview-icon {
+  grid-row: 1 / 5;
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 15px;
-  color: var(--area-accent);
-  background: var(--area-tint);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-fine);
+  color: var(--ink);
+  background: var(--mist-soft);
 }
 .sourcing-overview-card h3 {
-  font-size: 24px;
-  letter-spacing: -0.5px;
-  margin: 20px 0 12px;
+  font-size: var(--t-gallery-item);
+  font-weight: var(--w-gallery-item);
+  line-height: 1.3;
+  margin: 0 0 8px;
 }
 .sourcing-overview-card p {
-  color: #697386;
-  font-size: 14px;
-  line-height: 1.7;
-  margin: 0 0 20px;
+  color: var(--graphite);
+  font-size: var(--t-gallery-body);
+  line-height: 1.6;
+  margin: 0 0 16px;
 }
 .sourcing-overview-detail {
-  margin-top: auto;
-  padding-bottom: 20px;
-  color: #8490a3;
-  font-size: 12px;
+  color: var(--graphite);
+  font-size: var(--t-work-body);
   line-height: 1.6;
 }
 .sourcing-overview-action {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  min-height: 58px;
-  border-top: 1px solid #edf0f5;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--area-accent);
+  gap: 8px;
+  margin-top: 20px;
+  font-size: var(--t-work-body);
+  font-weight: var(--w-work-section);
+  color: var(--ink);
 }
 .quote-requests-toolbar {
   display: flex;
@@ -156,80 +144,73 @@
   align-items: center;
   gap: 8px;
   padding: 0 12px;
-  border: 1px solid #e3e3e6;
-  border-radius: 7px;
-  background: white;
-  color: #96979c;
-  min-width: 260px;
+  height: var(--h-input);
+  border: 1px solid var(--mist);
+  border-radius: var(--r-ctl);
+  background: var(--paper);
+  color: var(--graphite);
+  min-width: 220px;
   flex: 1;
   max-width: 350px;
+}
+.quote-requests-search:hover {
+  border-color: var(--ink);
 }
 .quote-requests-search input {
   border: 0;
   background: transparent;
   width: 100%;
-  padding: 10px 0;
-  font-size: 13px;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+  font-size: var(--t-work-secondary);
 }
 .quote-requests-toolbar select,
 .quote-comparison-selector select {
-  font-size: 13px;
-  background: white;
-  border: 1px solid #e3e3e6;
-  border-radius: 7px;
-  padding: 10px;
+  font-size: var(--t-work-secondary);
+  height: var(--h-input);
   max-width: 300px;
 }
 .quote-requests-archived {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #697386;
-  font-size: 13px;
+  color: var(--graphite);
+  font-size: var(--t-work-secondary);
 }
 .quote-requests-archived input {
   width: auto;
+  min-height: 0;
 }
 .manufacturer-quotes-table-wrap {
-  border: 1px solid #e4e4e7;
-  border-radius: 11px;
-  background: white;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
+  background: var(--paper);
   overflow: auto;
 }
-.manufacturer-quotes-table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 13px;
-}
-.manufacturer-quotes-table-wrap th,
-.manufacturer-quotes-table-wrap td {
-  padding: 17px 18px;
-  border-bottom: 1px solid #ebebee;
-  color: #6c6d75;
-}
-.manufacturer-quotes-table-wrap th {
-  color: #697386;
-  font-weight: 500;
-}
-.manufacturer-quotes-table-wrap tr:last-child td,
-.manufacturer-quotes-table-wrap tr:last-child th {
-  border-bottom: 0;
-}
-.manufacturer-quotes-page a:not(.btn):not(.sourcing-overview-card) {
-  color: #4663bc;
+.manufacturer-quotes-page a:not(.btn):not(.sourcing-overview-card):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .quote-requests-table {
   min-width: 880px;
 }
-.quote-requests-table th,
-.quote-requests-table .sourcing-status {
-  white-space: nowrap;
-}
 .quote-requests-table td {
-  min-width: 100px;
   max-width: 250px;
   overflow-wrap: anywhere;
+}
+.quote-product-name,
+.quote-comparison-product h2 {
+  font-size: var(--t-work-body);
+  font-weight: var(--w-work-item);
+}
+.manufacturer-quotes-table-wrap .quote-numeric {
+  text-align: right;
+}
+.manufacturer-quotes-table-wrap td.quote-numeric {
+  font-family: var(--font-mono);
+  font-size: var(--t-work-secondary);
+  font-variant-numeric: tabular-nums;
 }
 .quote-requests-table .sourcing-warning {
   display: inline-block;
@@ -237,28 +218,29 @@
 .quote-requests-product-note {
   display: block;
   margin-top: 6px;
-  color: #737d8e;
+  color: var(--graphite);
 }
 .manufacturer-quotes-empty {
   min-height: 320px;
-  border: 1px solid #e6e5e6;
-  border-radius: 12px;
-  background: white;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
+  background: var(--paper);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px;
   text-align: center;
-  color: #737d8e;
+  color: var(--graphite);
 }
 .manufacturer-quotes-empty h2 {
-  font-size: 18px;
-  color: #3e4048;
+  font-size: var(--t-work-section);
+  font-weight: var(--w-work-section);
+  color: var(--ink);
   margin: 20px 0 9px;
 }
 .manufacturer-quotes-empty p {
-  font-size: 13px;
+  font-size: var(--t-work-secondary);
   margin: 0 0 22px;
 }
 .manufacturer-quotes-actions {
@@ -267,9 +249,11 @@
 }
 .quote-comparison-selector {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--t-work-secondary);
+  font-weight: var(--w-work-section);
 }
 .quote-comparison-selector select {
   min-width: 280px;
@@ -283,17 +267,16 @@
 }
 .quote-comparison-product h2 {
   margin: 0;
-  font-size: 20px;
 }
 .quote-comparison-product a {
-  font-size: 13px;
+  font-size: var(--t-work-secondary);
 }
 .quote-comparison-notice {
-  color: #8c5a10;
-  background: #fff4d9;
-  border-radius: 7px;
+  color: var(--warn);
+  background: var(--warn-tint);
+  border-radius: var(--r-ctl);
   padding: 14px 16px;
-  font-size: 13px;
+  font-size: var(--t-work-secondary);
   line-height: 1.6;
 }
 .quote-comparison-table {
@@ -310,16 +293,15 @@
   width: 180px;
   position: sticky;
   left: 0;
-  background: #fafbfc;
+  background: var(--mist-soft);
 }
 .quote-comparison-table td.quote-comparison-best {
-  background: #eaf6ee;
-  color: #245e3f;
-  font-weight: 500;
+  background: var(--mist-soft);
 }
 .quote-comparison-best small {
   display: block;
   margin-top: 6px;
-  font-size: 11px;
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-size: var(--t-mono);
+  font-weight: var(--w-body);
 }
