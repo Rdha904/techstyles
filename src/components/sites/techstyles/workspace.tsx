@@ -15,7 +15,6 @@ import {
   Search,
   Plus,
   PanelLeft,
-  LifeBuoy,
   Settings,
   ChevronDown,
   Grid2X2,
@@ -40,6 +39,8 @@ import {
   Minimize2,
 } from "lucide-react";
 import type { Product, Manufacturer, QuoteRequest } from "@/lib/types";
+import type { BrandProfile } from "@/lib/brand-types";
+import { workspaceIdentity } from "@/lib/workspace-identity";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
@@ -144,6 +145,8 @@ export function Workspace({ path }: { path: string[] }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
+  const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
+  const identity = workspaceIdentity(brandProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebar, setSidebar] = useState(
@@ -168,12 +171,16 @@ export function Workspace({ path }: { path: string[] }) {
       request<Product[]>("/api/products"),
       manufacturersApi.list(),
       quoteRequestsApi.list(),
+      request<{ profile: BrandProfile | null }>("/api/brand-profile").catch(
+        () => ({ profile: null }),
+      ),
     ])
-      .then(([p, manufacturers, requests]) => {
+      .then(([p, manufacturers, requests, { profile }]) => {
         if (live) {
           setProducts(p);
           setManufacturers(manufacturers);
           setQuoteRequests(requests);
+          setBrandProfile(profile ?? null);
           setLoading(false);
         }
       })
@@ -509,9 +516,10 @@ export function Workspace({ path }: { path: string[] }) {
             })}
           </nav>
           <div className="module-footer">
-            <span className="avatar">LS</span>
+            <span className="avatar">{identity.initials}</span>
             <span>
-              Local Studio<small>Your workspace</small>
+              {identity.name}
+              <small>Your workspace</small>
             </span>
           </div>
         </aside>
@@ -631,16 +639,10 @@ export function Workspace({ path }: { path: string[] }) {
               </nav>
             )}
             <div className="sidebar-bottom">
-              <nav className="nav-links" style={{ marginBottom: 0 }}>
-                <a href="mailto:support@techstyles.io">
-                  <LifeBuoy size={16} />
-                  Support
-                </a>
-              </nav>
               <div className="profile">
-                <span className="avatar">LS</span>
+                <span className="avatar">{identity.initials}</span>
                 <div>
-                  <span>Local Studio</span>
+                  <span>{identity.name}</span>
                   <small style={{ display: "block", fontSize: 10 }}>
                     Your workspace
                   </small>
@@ -725,6 +727,7 @@ export function Workspace({ path }: { path: string[] }) {
           view.kind === "product-library") ? (
           <ProductEditor
             product={product}
+            identity={identity}
             manufacturers={manufacturers}
             onManufacturerSave={saveManufacturer}
             quoteRequests={quoteRequests.filter(
