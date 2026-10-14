@@ -50,6 +50,7 @@ import {
 import type {
   Product,
   Manufacturer,
+  QuoteRequest,
   ProductSnapshot,
   ProductSection,
   LibraryItem,
@@ -59,6 +60,7 @@ import { productSections } from "@/lib/types";
 import { BrandProfileSummary } from "./brand-profile";
 import { request, uploadFile, assetsPath } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
+import { SourcingPanel } from "./sourcing-panel";
 import { ProductForm } from "./product-form";
 import { useProductDraft, saveInBackground } from "./use-product-draft";
 const sectionLabels: Record<ProductSection, string> = {
@@ -226,12 +228,18 @@ export function ProductEditor({
   product,
   manufacturers,
   onManufacturerSave,
+  quoteRequests = [],
+  onQuoteRequestSave = () => {},
+  onQuoteRequestDelete = () => {},
   onChange,
   onToggleSidebar,
 }: {
   product: Product;
   manufacturers: Manufacturer[];
   onManufacturerSave: (manufacturer: Manufacturer) => void;
+  quoteRequests?: QuoteRequest[];
+  onQuoteRequestSave?: (request: QuoteRequest) => void;
+  onQuoteRequestDelete?: (id: string) => void;
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
 }) {
@@ -335,6 +343,9 @@ export function ProductEditor({
               ? "Not saved"
               : "Saved"}
         </small>
+        <a className="btn" href="#sourcing">
+          Sourcing
+        </a>
         <Link className="btn" href={`/products/${p.id}/print`}>
           <Download size={15} />
           Download PDF
@@ -1091,6 +1102,19 @@ export function ProductEditor({
             </Section>
           </div>
         </div>
+        <SourcingPanel
+          key={p.id}
+          product={p}
+          manufacturers={manufacturers}
+          requests={quoteRequests}
+          onManufacturerSave={onManufacturerSave}
+          onSave={onQuoteRequestSave}
+          onDelete={onQuoteRequestDelete}
+          onChoose={(manufacturerId) =>
+            draft.replace({ ...draft.state.product, manufacturerId })
+          }
+          onMoveToSampling={() => save({ stage: "Sampling" })}
+        />
       </main>
       {modal === "edit" && (
         <ProductForm

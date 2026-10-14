@@ -5,6 +5,7 @@ import type {
   ProductSnapshot,
   LibraryItem,
   Manufacturer,
+  QuoteRequest,
 } from "./types";
 import type { BrandBook, BrandProfile } from "./brand-types";
 
@@ -14,6 +15,7 @@ export interface WorkspaceData {
   brandBook?: BrandBook | null;
   products: Product[];
   manufacturers: Manufacturer[];
+  quoteRequests: QuoteRequest[];
   libraries: LibraryItem[];
 }
 export const dataDirectory =
@@ -58,6 +60,7 @@ export function emptyProduct(): Product {
     shareToken: null,
     createdAt: now,
     updatedAt: now,
+    techPackUpdatedAt: now,
   };
 }
 export function findProduct(database: WorkspaceData, id: string) {
@@ -65,23 +68,37 @@ export function findProduct(database: WorkspaceData, id: string) {
   if (!product) throw new ApiError("Product not found", 404);
   return product;
 }
+const snapshotFields = new Set<keyof ProductSnapshot>([
+  "name",
+  "code",
+  "category",
+  "stage",
+  "baseSize",
+  "project",
+  "description",
+  "cover",
+  "sketch",
+  "mockup",
+  "instructions",
+  "labels",
+  "colors",
+  "materials",
+  "measurements",
+  "comments",
+  "annotations",
+  "attachments",
+  "artworks",
+  "samples",
+  "excludedSections",
+  "archived",
+  "measurementUnit",
+]);
 export function snapshot(product: Product): ProductSnapshot {
-  const {
-    id: _id,
-    createdAt: _created,
-    updatedAt: _updated,
-    versions: _versions,
-    shareToken: _token,
-    manufacturerId: _manufacturer,
-    supplier: _supplier,
-    ...content
-  } = product as Product & { supplier?: unknown };
-  void _id;
-  void _created;
-  void _updated;
-  void _versions;
-  void _token;
-  void _manufacturer;
-  void _supplier;
-  return structuredClone(content);
+  return structuredClone(
+    Object.fromEntries(
+      Object.entries(product).filter(([key]) =>
+        snapshotFields.has(key as keyof ProductSnapshot),
+      ),
+    ),
+  ) as unknown as ProductSnapshot;
 }

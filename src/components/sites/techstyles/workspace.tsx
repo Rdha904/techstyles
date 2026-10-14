@@ -40,7 +40,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import type { Product, Manufacturer } from "@/lib/types";
+import type { Product, Manufacturer, QuoteRequest } from "@/lib/types";
 import { BrandProfilePage, BrandProfileSummary } from "./brand-profile";
 import { WorkspaceDashboard } from "./workspace-dashboard";
 import { ConceptOverview } from "./concept-overview";
@@ -48,7 +48,12 @@ import { BrandBookPage, BrandBookPrint, SharedBrandBook } from "./brand-book";
 import { LibraryPage } from "./libraries";
 import { ManufacturersPage } from "./manufacturers";
 import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
-import { request, assetsPath, manufacturersApi } from "@/lib/client-api";
+import {
+  request,
+  assetsPath,
+  manufacturersApi,
+  quoteRequestsApi,
+} from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
 import {
@@ -143,6 +148,7 @@ export function Workspace({ path }: { path: string[] }) {
   }
   const [products, setProducts] = useState<Product[]>([]);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sidebar, setSidebar] = useState(
@@ -163,11 +169,16 @@ export function Workspace({ path }: { path: string[] }) {
   useEffect(() => {
     if (pathKey.startsWith("share/")) return;
     let live = true;
-    Promise.all([request<Product[]>("/api/products"), manufacturersApi.list()])
-      .then(([p, manufacturers]) => {
+    Promise.all([
+      request<Product[]>("/api/products"),
+      manufacturersApi.list(),
+      quoteRequestsApi.list(),
+    ])
+      .then(([p, manufacturers, requests]) => {
         if (live) {
           setProducts(p);
           setManufacturers(manufacturers);
+          setQuoteRequests(requests);
           setLoading(false);
         }
       })
@@ -196,6 +207,24 @@ export function Workspace({ path }: { path: string[] }) {
         ? old.map((item) => (item.id === manufacturer.id ? manufacturer : item))
         : [manufacturer, ...old],
     );
+  }
+  function saveQuoteRequest(request: QuoteRequest) {
+    setQuoteRequests((old) => [
+      request,
+      ...old
+        .filter((item) => item.id !== request.id)
+        .map((item) =>
+          request.status === "chosen" &&
+          item.productId === request.productId &&
+          item.status === "chosen"
+            ? {
+                ...item,
+                status: "quoted" as const,
+                updatedAt: request.updatedAt,
+              }
+            : item,
+        ),
+    ]);
   }
   useEffect(() => {
     if (!sidebar) return;
@@ -305,6 +334,7 @@ export function Workspace({ path }: { path: string[] }) {
           <ManufacturersPage
             manufacturers={manufacturers}
             products={products}
+            quoteRequests={quoteRequests}
             onSave={saveManufacturer}
             onDelete={(id) =>
               setManufacturers((old) => old.filter((item) => item.id !== id))
@@ -655,6 +685,13 @@ export function Workspace({ path }: { path: string[] }) {
             product={product}
             manufacturers={manufacturers}
             onManufacturerSave={saveManufacturer}
+            quoteRequests={quoteRequests.filter(
+              (item) => item.productId === product.id,
+            )}
+            onQuoteRequestSave={saveQuoteRequest}
+            onQuoteRequestDelete={(id) =>
+              setQuoteRequests((old) => old.filter((item) => item.id !== id))
+            }
             onChange={(p) =>
               setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
             }

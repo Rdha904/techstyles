@@ -1089,3 +1089,30 @@ test("a retry started after reconciliation prevents its stale load from publishi
     unsaved: false,
   });
 });
+
+
+test("choosing a manufacturer during a pending save preserves edits and reconciles the chosen manufacturer", async () => {
+  const context = setup();
+  const { initial, draft, patches, loads } = context;
+  await failSave(context, { description: "Unsaved tech pack" });
+  const pending = draft.save({ labels: "New labels" });
+  await flush();
+  draft.replace({ ...draft.state.product, manufacturerId: "chosen-factory" });
+  assert.equal(draft.state.product.description, "Unsaved tech pack");
+  assert.equal(draft.state.product.labels, "New labels");
+  assert.equal(draft.state.product.manufacturerId, "chosen-factory");
+  patches[1].resolve({ ...initial, labels: "New labels", manufacturerId: null });
+  await pending;
+  assert.equal(draft.state.product.manufacturerId, "chosen-factory");
+  loads[0].resolve({ ...initial, labels: "New labels", manufacturerId: "chosen-factory" });
+  await flush();
+  assert.equal(draft.state.product.description, "Unsaved tech pack");
+  assert.equal(draft.state.product.manufacturerId, "chosen-factory");
+  const retry = draft.retry();
+  await flush();
+  assert.deepEqual(patches[2].data, { description: "Unsaved tech pack" });
+  patches[2].resolve({ ...draft.state.product });
+  await retry;
+  assert.equal(draft.state.product.manufacturerId, "chosen-factory");
+  assert.equal(draft.state.unsaved, false);
+});

@@ -112,6 +112,7 @@ test("restoreVersion restores content, backs up prior content, and preserves met
     ...before,
     ...structuredClone(target.snapshot),
     updatedAt: now,
+    techPackUpdatedAt: now,
     versions: [
       {
         id: backup.id,

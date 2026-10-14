@@ -191,7 +191,7 @@ test('delete rules list every referencing product and allow deletion once unused
   ] };
   const before = structuredClone(data);
   assert.throws(() => deleteManufacturer(data, manufacturer.id), error =>
-    error instanceof ApiError && error.status === 409 && error.message.includes('Hoodie') && error.message.includes('Archived dress'));
+    error instanceof ApiError && error.status === 409 && error.message === 'Manufacturer is used by products: Hoodie, Archived dress');
   assert.deepEqual(data, before);
   data.products.forEach(product => { product.manufacturerId = null; });
   deleteManufacturer(data, manufacturer.id);

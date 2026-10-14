@@ -56,11 +56,13 @@ The workflow up to a shared tech pack exists. What the founder does after sharin
 
 Delegated to Codex one at a time; each is reviewed and its gates re-run before the next starts.
 
-1. **Foundation** — Manufacturer model and API (including blocked delete), `manufacturerId` outside the tech pack snapshot, one-time migration, clean share/print/restore, basic Manufacturer select in the product form, dashboard stat rename. Status: implemented and reviewed 2026-10-14, uncommitted.
-2. **Directory and picker** — Manufacturers page (list/cards, search, country/category filters, edit, delete showing what uses it) and inline create in the product form's picker. Status: implemented, reviewed and browser-checked 2026-10-14, uncommitted.
-3. **Quote Requests and Sourcing panel** — criteria 4–6. Note: changing `manufacturerId` currently bumps the product's `updatedAt`, so "changed since sent" needs a tech-pack-only timestamp.
-4. **Module pages and cleanup** — criteria 8–9.
+1. **Foundation** — Manufacturer model and API (including blocked delete), `manufacturerId` outside the tech pack snapshot, one-time migration, clean share/print/restore, basic Manufacturer select in the product form, dashboard stat rename. Status: done, commit `d7f2b47`.
+2. **Directory and picker** — Manufacturers page (list/cards, search, country/category filters, edit, delete showing what uses it) and inline create in the product form's picker. Status: done, commit `52f41ac`.
+3. **Quote Requests and Sourcing panel** — criteria 4–6. Quote Requests are stored per workspace, not on the product. A product-level `techPackUpdatedAt` drives "changed since sent"; it ignores comments, archiving and stage (stage is workflow status, not specification). Product deletion via the API cascades to its Quote Requests; a manufacturer used by a Quote Request can't be deleted. Status: done.
+4. **Module pages and cleanup** — criteria 8–9. The app has no product delete button (products are archived), so the "delete confirmation shows the count" part of criterion 9 doesn't apply; the API cascade from task 3 covers the data side.
 
 ## Deferred
 
+Mobile layouts and mobile testing (desktop only from task 3 on, decided 2026-10-14).
+A product delete action in the UI.
 Samples & Approvals; per-manufacturer share links (after hosting); quotes priced by quantity, size or colorway; certifications, payment terms and ratings on manufacturers; Suppliers (mills, trim vendors) as directory records; dashboard cleanup.

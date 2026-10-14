@@ -2,9 +2,9 @@
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { Product, Manufacturer } from "@/lib/types";
-import { request, manufacturersApi } from "@/lib/client-api";
+import { request } from "@/lib/client-api";
 import { Modal } from "./ui";
-import "./product-form.css";
+import { ManufacturerPicker } from "./manufacturer-picker";
 
 export function ProductForm({
   product,
@@ -24,38 +24,10 @@ export function ProductForm({
   const [manufacturerId, setManufacturerId] = useState(
     product?.manufacturerId || "",
   );
-  const [creatingManufacturer, setCreatingManufacturer] = useState(false);
-  const [manufacturerName, setManufacturerName] = useState("");
-  const [manufacturerError, setManufacturerError] = useState("");
   const [manufacturerBusy, setManufacturerBusy] = useState(false);
-  function cancelManufacturer() {
-    setCreatingManufacturer(false);
-    setManufacturerName("");
-    setManufacturerError("");
-  }
-  async function addManufacturer() {
-    if (manufacturerBusy) return;
-    const name = manufacturerName.trim();
-    if (!name) {
-      setManufacturerError("Manufacturer name is required");
-      return;
-    }
-    setManufacturerBusy(true);
-    setManufacturerError("");
-    try {
-      const manufacturer = await manufacturersApi.create({ name });
-      onManufacturerSave(manufacturer);
-      setManufacturerId(manufacturer.id);
-      cancelManufacturer();
-    } catch (error) {
-      setManufacturerError((error as Error).message);
-    } finally {
-      setManufacturerBusy(false);
-    }
-  }
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (busy || creatingManufacturer || manufacturerBusy) return;
+    if (busy || manufacturerBusy) return;
     setBusy(true);
     setError("");
     const data = Object.fromEntries(new FormData(e.currentTarget));
@@ -162,75 +134,14 @@ export function ProductForm({
               placeholder="No project"
             />
           </label>
-          <label>
-            Manufacturer
-            <select
-              name="manufacturerId"
-              value={creatingManufacturer ? "__new__" : manufacturerId}
-              disabled={busy || manufacturerBusy}
-              onChange={(event) => {
-                if (event.target.value === "__new__") {
-                  setCreatingManufacturer(true);
-                  setManufacturerError("");
-                } else {
-                  setManufacturerId(event.target.value);
-                  cancelManufacturer();
-                }
-              }}
-            >
-              <option value="">None</option>
-              {manufacturers.map((manufacturer) => (
-                <option key={manufacturer.id} value={manufacturer.id}>
-                  {manufacturer.name}
-                </option>
-              ))}
-              <option value="__new__">+ New manufacturer…</option>
-            </select>
-          </label>
-          {creatingManufacturer && (
-            <div className="inline-manufacturer full">
-              <label>
-                New manufacturer name
-                <input
-                  value={manufacturerName}
-                  onChange={(event) => setManufacturerName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void addManufacturer();
-                    }
-                  }}
-                  maxLength={200}
-                  disabled={manufacturerBusy}
-                  placeholder="e.g. Knitwear Studio"
-                  autoFocus
-                />
-              </label>
-              <div className="inline-manufacturer-actions">
-                <button
-                  type="button"
-                  className="btn primary"
-                  disabled={manufacturerBusy}
-                  onClick={addManufacturer}
-                >
-                  {manufacturerBusy ? "Adding…" : "Add"}
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={manufacturerBusy}
-                  onClick={cancelManufacturer}
-                >
-                  Cancel
-                </button>
-              </div>
-              {manufacturerError && (
-                <p className="error" role="alert">
-                  {manufacturerError}
-                </p>
-              )}
-            </div>
-          )}
+          <ManufacturerPicker
+            manufacturers={manufacturers}
+            value={manufacturerId}
+            onChange={setManufacturerId}
+            onManufacturerSave={onManufacturerSave}
+            onActiveChange={setManufacturerBusy}
+            disabled={busy}
+          />
           <label className="full">
             Description
             <textarea
@@ -250,10 +161,7 @@ export function ProductForm({
           >
             Cancel
           </button>
-          <button
-            className="btn primary"
-            disabled={busy || creatingManufacturer || manufacturerBusy}
-          >
+          <button className="btn primary" disabled={busy || manufacturerBusy}>
             {busy
               ? "Saving…"
               : product

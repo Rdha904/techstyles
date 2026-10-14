@@ -109,6 +109,7 @@ export interface Product extends ProductSnapshot {
   versions: ProductVersion[];
   shareToken: string | null;
   manufacturerId: string | null;
+  techPackUpdatedAt: string;
 }
 export interface LibraryItem {
   id: string;
@@ -130,6 +131,32 @@ export interface Manufacturer {
   categories: string[];
   typicalMoq: string;
   notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Quote {
+  unitPrice: number;
+  currency: string;
+  moq: number | null;
+  productionLeadTimeDays: number | null;
+  sampleCost: number | null;
+  sampleLeadTimeDays: number | null;
+  receivedAt: string;
+  notes: string;
+  attachment: { name: string; url: string } | null;
+}
+export type QuoteRequestStatus =
+  "draft" | "sent" | "quoted" | "chosen" | "declined";
+export type QuoteRequestAction =
+  "send" | "decline" | "reopen" | "choose" | "unchoose";
+export interface QuoteRequest {
+  id: string;
+  productId: string;
+  manufacturerId: string;
+  status: QuoteRequestStatus;
+  sentAt: string | null;
+  quote: Quote | null;
   createdAt: string;
   updatedAt: string;
 }

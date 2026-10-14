@@ -32,9 +32,10 @@ export function restoreVersion(
     createdAt: now ?? new Date().toISOString(),
     snapshot: snapshot(product),
   };
-  // Preserve the route's separate clock reads when no timestamp is supplied.
+  const restoredAt = now ?? new Date().toISOString();
   Object.assign(product, snapshot({ ...product, ...version.snapshot }), {
-    updatedAt: now ?? new Date().toISOString(),
+    updatedAt: restoredAt,
+    techPackUpdatedAt: restoredAt,
   });
   product.versions.unshift(previous);
   product.versions = product.versions.slice(0, productVersionLimit);
@@ -48,4 +49,25 @@ export function shareProduct(product: Product): { token: string; url: string } {
 
 export function revokeProductShare(product: Product): void {
   product.shareToken = null;
+}
+
+export function patchProduct(
+  product: Product,
+  patch: Partial<Product>,
+  now = new Date().toISOString(),
+) {
+  const content = (value: Product) => {
+    // Stage tracks workflow, not the specification a manufacturer quotes against.
+    const { comments, archived, stage, ...pack } = snapshot(value);
+    void comments;
+    void archived;
+    void stage;
+    return pack;
+  };
+  const changed =
+    JSON.stringify(content(product)) !==
+    JSON.stringify(content({ ...product, ...patch }));
+  Object.assign(product, patch, { updatedAt: now });
+  if (changed) product.techPackUpdatedAt = now;
+  return product;
 }

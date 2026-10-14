@@ -81,11 +81,24 @@ export function deleteManufacturer(data: WorkspaceData, id: string) {
   const products = data.products.filter(
     (product) => product.manufacturerId === id,
   );
-  if (products.length)
+  const requests = (data.quoteRequests ?? []).filter(
+    (request) => request.manufacturerId === id,
+  );
+  if (products.length || requests.length) {
+    const usage = [];
+    if (products.length)
+      usage.push(
+        `products: ${products.map((product) => product.name).join(", ")}`,
+      );
+    if (requests.length)
+      usage.push(
+        `${requests.length} Quote Request${requests.length === 1 ? "" : "s"}`,
+      );
     throw new ApiError(
-      `Manufacturer is used by products: ${products.map((product) => product.name).join(", ")}`,
+      `Manufacturer is used by ${usage.join(" and by ")}`,
       409,
     );
+  }
   data.manufacturers = data.manufacturers.filter((item) => item.id !== id);
 }
 

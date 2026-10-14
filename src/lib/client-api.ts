@@ -1,4 +1,10 @@
-import type { Manufacturer } from "./types";
+import type {
+  Manufacturer,
+  Quote,
+  QuoteRequest,
+  QuoteRequestAction,
+  Product,
+} from "./types";
 
 export async function request<T>(
   url: string,
@@ -70,6 +76,33 @@ export const manufacturersApi = {
     }),
   delete: (id: string) =>
     request<{ ok: true }>(`/api/manufacturers/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+};
+
+export const quoteRequestsApi = {
+  list: (productId?: string) =>
+    request<QuoteRequest[]>(
+      `/api/quote-requests${productId === undefined ? "" : `?productId=${encodeURIComponent(productId)}`}`,
+    ),
+  create: (data: { productId: string; manufacturerId: string }) =>
+    request<QuoteRequest>("/api/quote-requests", {
+      method: "POST",
+      json: data,
+    }),
+  update: (
+    id: string,
+    data: { action: QuoteRequestAction } | { quote: Quote },
+  ) =>
+    request<{
+      request: QuoteRequest;
+      product: Pick<Product, "id" | "manufacturerId">;
+    }>(`/api/quote-requests/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      json: data,
+    }),
+  delete: (id: string) =>
+    request<{ ok: true }>(`/api/quote-requests/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
 };

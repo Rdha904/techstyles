@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import type { Manufacturer, Product } from "@/lib/types";
+import type { Manufacturer, Product, QuoteRequest } from "@/lib/types";
 import { manufacturersApi } from "@/lib/client-api";
 import {
   manufacturerFilterOptions,
@@ -24,11 +24,13 @@ import "./manufacturers.css";
 export function ManufacturersPage({
   manufacturers,
   products,
+  quoteRequests = [],
   onSave,
   onDelete,
 }: {
   manufacturers: Manufacturer[];
   products: Product[];
+  quoteRequests?: QuoteRequest[];
   onSave: (manufacturer: Manufacturer) => void;
   onDelete: (id: string) => void;
 }) {
@@ -60,6 +62,10 @@ export function ManufacturersPage({
   const using = deleting
     ? productsUsingManufacturer(products, deleting.id)
     : [];
+
+  const requestCount = deleting
+    ? quoteRequests.filter((item) => item.manufacturerId === deleting.id).length
+    : 0;
 
   function edit(manufacturer: Manufacturer | "new") {
     setError("");
@@ -102,7 +108,7 @@ export function ManufacturersPage({
     }
   }
   async function remove() {
-    if (busy || !deleting || using.length) return;
+    if (busy || !deleting || using.length || requestCount) return;
     setBusy(true);
     setError("");
     try {
@@ -479,6 +485,13 @@ export function ManufacturersPage({
               <p>Change their manufacturer before deleting this record.</p>
             </div>
           )}
+          {requestCount > 0 && (
+            <p className="manufacturer-usage">
+              {requestCount} Quote Request{requestCount === 1 ? "" : "s"}{" "}
+              {requestCount === 1 ? "uses" : "use"} this manufacturer. Delete
+              those Quote Requests before deleting this record.
+            </p>
+          )}
           {error && (
             <p className="error" role="alert">
               {error}
@@ -494,7 +507,7 @@ export function ManufacturersPage({
             </button>
             <button
               className="btn danger"
-              disabled={busy || using.length > 0}
+              disabled={busy || using.length > 0 || requestCount > 0}
               onClick={remove}
             >
               {busy ? "Deleting…" : "Delete manufacturer"}

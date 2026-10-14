@@ -2,7 +2,12 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { LibraryItem, Product } from "./types";
-import { dataDirectory, emptyProduct, type WorkspaceData } from "./store";
+import {
+  dataDirectory,
+  emptyProduct,
+  snapshot,
+  type WorkspaceData,
+} from "./store";
 import { migrateManufacturers } from "./manufacturers";
 import { DEFAULT_WORKSPACE_ID } from "./workspace";
 import type { WorkspaceRepository } from "./repository";
@@ -141,12 +146,25 @@ function seed(): WorkspaceData {
       createdAt: hoodie.createdAt,
     },
   );
-  return { products: [hoodie], libraries, manufacturers: [] };
+  return {
+    products: [hoodie],
+    libraries,
+    manufacturers: [],
+    quoteRequests: [],
+  };
 }
 
 function normalize(data: WorkspaceData) {
-  const changed = migrateManufacturers(data);
+  let changed = migrateManufacturers(data);
+  if (!Array.isArray(data.quoteRequests)) {
+    data.quoteRequests = [];
+    changed = true;
+  }
   for (const product of data.products) {
+    if (!product.techPackUpdatedAt) {
+      product.techPackUpdatedAt = product.updatedAt;
+      changed = true;
+    }
     const defaults = {
       measurementUnit: "cm" as const,
       attachments: [],
@@ -156,8 +174,12 @@ function normalize(data: WorkspaceData) {
       archived: false,
     };
     Object.assign(product, { ...defaults, ...product });
-    for (const version of product.versions)
-      version.snapshot = { ...defaults, ...version.snapshot };
+    for (const version of product.versions) {
+      const clean = snapshot({ ...defaults, ...version.snapshot } as Product);
+      if (JSON.stringify(clean) !== JSON.stringify(version.snapshot))
+        changed = true;
+      version.snapshot = clean;
+    }
   }
   return changed;
 }
@@ -196,7 +218,13 @@ function workspaceOf(file: DatabaseFile, workspaceId: string) {
   return (file.workspaces[workspaceId] ??=
     workspaceId === DEFAULT_WORKSPACE_ID
       ? seed()
-      : { brandProfile: null, products: [], libraries: [], manufacturers: [] });
+      : {
+          brandProfile: null,
+          products: [],
+          libraries: [],
+          manufacturers: [],
+          quoteRequests: [],
+        });
 }
 function settled() {
   return (globalStore.techstylesWrites || Promise.resolve()).catch(

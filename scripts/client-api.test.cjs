@@ -110,3 +110,29 @@ test('product-editor no longer imports from workspace', () => {
   const source = fs.readFileSync(path.join(__dirname, '../src/components/sites/techstyles/product-editor.tsx'), 'utf8');
   assert.doesNotMatch(source, /\bfrom\s+["']\.\/workspace["']/);
 });
+
+
+test('quoteRequestsApi encodes IDs, filters by product and forwards quote/action payloads and errors', async () => {
+  const { quoteRequestsApi } = require('../src/lib/client-api.ts');
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, method: init.method, json: init.body && JSON.parse(init.body) });
+    return Response.json({ saved: true });
+  };
+  await quoteRequestsApi.list();
+  await quoteRequestsApi.list('product / 1');
+  await quoteRequestsApi.create({ productId: 'p', manufacturerId: 'm' });
+  await quoteRequestsApi.update('request / 1', { action: 'choose' });
+  await quoteRequestsApi.update('request / 1', { quote: { unitPrice: 0, currency: 'EUR' } });
+  await quoteRequestsApi.delete('request / 1');
+  assert.deepEqual(calls, [
+    { url: '/api/quote-requests', method: 'GET', json: undefined },
+    { url: '/api/quote-requests?productId=product%20%2F%201', method: 'GET', json: undefined },
+    { url: '/api/quote-requests', method: 'POST', json: { productId: 'p', manufacturerId: 'm' } },
+    { url: '/api/quote-requests/request%20%2F%201', method: 'PATCH', json: { action: 'choose' } },
+    { url: '/api/quote-requests/request%20%2F%201', method: 'PATCH', json: { quote: { unitPrice: 0, currency: 'EUR' } } },
+    { url: '/api/quote-requests/request%20%2F%201', method: 'DELETE', json: undefined },
+  ]);
+  globalThis.fetch = async () => Response.json({ error: 'Request already exists' }, { status: 409 });
+  await assert.rejects(quoteRequestsApi.create({ productId: 'p', manufacturerId: 'm' }), { message: 'Request already exists' });
+});
