@@ -63,6 +63,7 @@ import { request, uploadFile, assetsPath } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { SourcingPanel } from "./sourcing-panel";
 import { ProductForm } from "./product-form";
+import { ProductImage } from "./product-image";
 import { useProductDraft, saveInBackground } from "./use-product-draft";
 const sectionLabels: Record<ProductSection, string> = {
   overview: "Overview",
@@ -135,11 +136,8 @@ function CommentBox({
   return (
     <details className="comment-box" open={comments.length > 0 || undefined}>
       <summary>
-        <MessageSquare
-          size={11}
-          style={{ verticalAlign: "middle", marginRight: 6 }}
-        />
-        COMMENTS {comments.length > 0 && `· ${comments.length}`}
+        <MessageSquare size={13} />
+        Comments {comments.length > 0 && `· ${comments.length}`}
       </summary>
       {comments.map((c) => (
         <div className="comment-item" key={c.id}>
@@ -213,7 +211,7 @@ function Section({
       <div className="section-heading">
         <h2>{title}</h2>
         {complete && (
-          <span className="badge blue">
+          <span className="badge complete-chip">
             <CircleCheck size={11} />
             Complete
           </span>
@@ -327,7 +325,7 @@ export function ProductEditor({
   }
   return (
     <>
-      <header className="app-header">
+      <header className="app-header product-editor-header">
         <button
           className="icon-button"
           aria-label="Toggle Sidebar"
@@ -393,19 +391,11 @@ export function ProductEditor({
         )}
         <div className="pack-layout">
           <aside className="pack-index">
-            <div style={{ position: "relative" }}>
-              {p.cover || p.sketch ? (
-                <img
-                  className="pack-cover"
-                  src={p.cover || p.sketch}
-                  alt={p.name}
-                />
-              ) : (
-                <div className="pack-cover empty">
-                  <Shirt size={70} />
-                </div>
-              )}
-              <div style={{ position: "absolute", bottom: 26, left: 8 }}>
+            <div className="pack-cover-wrap">
+              <div className="pack-cover" role="img" aria-label={p.name}>
+                <ProductImage product={p} size="tile" />
+              </div>
+              <div className="pack-cover-action">
                 <UploadButton
                   onUpload={(url) => saveInBackground(save, { cover: url })}
                 >
@@ -419,11 +409,10 @@ export function ProductEditor({
                 <small>export</small>
               </header>
               {sections.map(([id, title]) => (
-                <div key={id} style={{ display: "flex", alignItems: "center" }}>
+                <div key={id} className="contents-row">
                   <a
                     href={`#${id}`}
                     className={selected === id ? "current" : ""}
-                    style={{ flex: 1 }}
                     onClick={() => setSelected(id)}
                   >
                     <GripVertical size={11} />
@@ -490,8 +479,8 @@ export function ProductEditor({
                 }
               />
               <div className="toolbar">
-                <small>OWNERS</small>
-                <span className="badge blue">{identity.name}</span>
+                <small>Owners</small>
+                <span className="badge">{identity.name}</span>
                 <span className="spacer" />
                 <button
                   className="icon-button"
@@ -520,7 +509,7 @@ export function ProductEditor({
                     Change sketch
                   </UploadButton>
                   <button
-                    className="btn primary"
+                    className="btn"
                     onClick={() => openLibrary("sketches")}
                   >
                     <Plus size={15} />
@@ -583,10 +572,10 @@ export function ProductEditor({
                     </footer>
                   </div>
                   {p.annotations.length > 0 && (
-                    <div className="panel" style={{ padding: 20 }}>
-                      <small>CANVAS CALLOUTS</small>
+                    <div className="panel canvas-callouts">
+                      <small>Canvas callouts</small>
                       {p.annotations.map((a, i) => (
-                        <p key={a.id} style={{ marginTop: 15 }}>
+                        <p key={a.id} className="canvas-callout">
                           <span className="badge blue">{i + 1}</span> {a.text}
                         </p>
                       ))}
@@ -646,7 +635,9 @@ export function ProductEditor({
                       style={{ background: c.hex }}
                     />
                     <strong>{c.name}</strong>
-                    <p className="muted">{c.hex.toUpperCase()}</p>
+                    <p className="muted technical-value">
+                      {c.hex.toUpperCase()}
+                    </p>
                     <button
                       className="icon-button"
                       aria-label={`Remove ${c.name}`}
@@ -705,15 +696,23 @@ export function ProductEditor({
               }
             >
               <div className="table-wrap">
-                <table>
+                <table className="editable-table bom-table">
+                  <colgroup>
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                  </colgroup>
                   <thead>
                     <tr>
                       {[
-                        "MATERIAL",
-                        "COMPOSITION",
-                        "GSM / WEIGHT",
-                        "SUPPLIER",
-                        "PLACEMENT",
+                        "Material",
+                        "Composition",
+                        "GSM / weight",
+                        "Supplier",
+                        "Placement",
                         "",
                       ].map((h) => (
                         <th key={h}>{h}</th>
@@ -732,11 +731,19 @@ export function ProductEditor({
                             "placement",
                           ] as const
                         ).map((k) => (
-                          <td key={k}>
+                          <td
+                            key={k}
+                            className={
+                              k === "weight"
+                                ? "technical-value numeric-value"
+                                : undefined
+                            }
+                          >
                             <input
                               aria-label={`${m.name} ${k}`}
                               key={`${m.id}-${k}-${m[k]}`}
                               defaultValue={m[k]}
+                              title={m[k]}
                               onBlur={(e) => {
                                 if (e.target.value !== m[k])
                                   saveInBackground(save, {
@@ -939,10 +946,17 @@ export function ProductEditor({
               }
             >
               <div className="table-wrap">
-                <table>
+                <table className="editable-table samplings-table">
+                  <colgroup>
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                    <col />
+                  </colgroup>
                   <thead>
                     <tr>
-                      {["SIZE", "COLORWAY", "QUANTITY", "STATUS", ""].map(
+                      {["Size", "Colorway", "Quantity", "Status", ""].map(
                         (h) => (
                           <th key={h}>{h}</th>
                         ),
@@ -954,11 +968,19 @@ export function ProductEditor({
                       <tr key={s.id}>
                         {(["size", "color", "quantity", "status"] as const).map(
                           (k) => (
-                            <td key={k}>
+                            <td
+                              key={k}
+                              className={
+                                k === "quantity"
+                                  ? "technical-value numeric-value"
+                                  : undefined
+                              }
+                            >
                               <input
                                 aria-label={`Sample ${k}`}
                                 key={`${s.id}-${k}-${s[k]}`}
                                 defaultValue={s[k]}
+                                title={String(s[k])}
                                 type={k === "quantity" ? "number" : "text"}
                                 min={0}
                                 onBlur={(e) =>
@@ -1039,7 +1061,7 @@ export function ProductEditor({
                   ].map((src, i) => (
                     <div className="sketch-view" key={src}>
                       <img
-                        style={{ height: 180 }}
+                        className="pack-label-image"
                         src={assetsPath + src}
                         alt={
                           ["Hangtag", "Main label", "Care label", "Poly bag"][i]
@@ -1176,7 +1198,7 @@ export function ProductEditor({
                   name="hex"
                   type="color"
                   defaultValue="#e8d74c"
-                  style={{ width: "100%", height: 43 }}
+                  className="pack-color-input"
                 />
               </label>
             </div>
@@ -1222,14 +1244,14 @@ export function ProductEditor({
                 onChange={(e) => setLabel(e.target.value)}
                 required
                 autoFocus
-                style={{ width: "100%", marginTop: 20 }}
+                className="pack-modal-field"
               />
             ) : (
               <textarea
                 aria-label="Section content"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                style={{ width: "100%", minHeight: 300, marginTop: 20 }}
+                className="pack-modal-field pack-section-input"
               />
             )}
             <div className="modal-footer">
@@ -1249,7 +1271,7 @@ export function ProductEditor({
       )}
       {modal === "share" && (
         <Modal title="Share tech pack" onClose={() => setModal("")}>
-          <p style={{ marginTop: 20 }}>
+          <p className="pack-share-description">
             A live, read-only link for your manufacturer. Changes to this tech
             pack appear automatically.
           </p>
@@ -1336,12 +1358,7 @@ export function ProductEditor({
             library.map((item) => (
               <button
                 key={item.id}
-                className="btn"
-                style={{
-                  width: "100%",
-                  marginTop: 10,
-                  justifyContent: "flex-start",
-                }}
+                className="btn pack-library-option"
                 onClick={async () => {
                   const type = modal.split(":")[1];
                   if (type === "sketches")
@@ -1447,30 +1464,40 @@ function Overview({
 }) {
   return (
     <div className="overview-info">
-      <small>CORE PRODUCT INFORMATION</small>
+      <small>
+        {Heading === "h1"
+          ? "Core product information"
+          : "CORE PRODUCT INFORMATION"}
+      </small>
       <Heading className="overview-product-title">{p.name}</Heading>
       <div className="toolbar">
-        <span className="badge">{p.code}</span>
+        <span className="badge technical-value">{p.code}</span>
         <span className={`badge ${p.stage.toLowerCase()}`}>{p.stage}</span>
       </div>
       <div className="detail-grid">
         {[
-          ["ARTICLE CODE", p.code],
-          ["CATEGORY", p.category],
-          ["BASE SIZE", p.baseSize],
-          ["PROJECT", p.project],
-          ["STATUS", p.stage],
+          ["Article code", p.code],
+          ["Category", p.category],
+          ["Base size", p.baseSize],
+          ["Project", p.project],
+          ["Status", p.stage],
           ...(manufacturerName !== undefined
-            ? [["MANUFACTURER", manufacturerName]]
+            ? [["Manufacturer", manufacturerName]]
             : []),
         ].map(([label, value]) => (
           <div key={label}>
-            <small>{label}</small>
-            {value || "—"}
+            <small>{Heading === "h1" ? label : label.toUpperCase()}</small>
+            {label === "Article code" ? (
+              <span className="technical-value">{value || "—"}</span>
+            ) : label === "Status" && Heading === "h1" ? (
+              <span className="badge">{value || "—"}</span>
+            ) : (
+              value || "—"
+            )}
           </div>
         ))}
       </div>
-      <small>DESCRIPTION</small>
+      <small>{Heading === "h1" ? "Description" : "DESCRIPTION"}</small>
       <p>{p.description || "No description added."}</p>
     </div>
   );
@@ -1485,14 +1512,13 @@ function Measurements({
   const sizes = [
     ...new Set(p.measurements.flatMap((m) => Object.keys(m.values))),
   ];
-  return (
-    <div className="table-wrap">
-      <p className="muted">Measurements in {p.measurementUnit || "cm"}</p>
-      <table>
+  const table = (
+    <>
+      <table className={save ? "editable-table" : undefined}>
         <thead>
           <tr>
-            <th>POINT OF MEASUREMENT</th>
-            <th>TOLERANCE</th>
+            <th>{save ? "Point of measurement" : "POINT OF MEASUREMENT"}</th>
+            <th>{save ? "Tolerance" : "TOLERANCE"}</th>
             {sizes.map((s) => (
               <th key={s}>{s}</th>
             ))}
@@ -1595,6 +1621,19 @@ function Measurements({
           Link a size chart or add your own points of measurement.
         </div>
       )}
+    </>
+  );
+  return save ? (
+    <div className="measurement-section">
+      <p className="measurement-caption">
+        Measurements in {p.measurementUnit || "cm"}
+      </p>
+      <div className="table-wrap measurement-table">{table}</div>
+    </div>
+  ) : (
+    <div className="table-wrap measurement-table">
+      <p className="muted">Measurements in {p.measurementUnit || "cm"}</p>
+      {table}
     </div>
   );
 }
@@ -1614,13 +1653,7 @@ function AssetCards({
               <img
                 src={item.url}
                 alt={item.name}
-                style={{
-                  width: 100,
-                  height: 85,
-                  objectFit: "contain",
-                  display: "block",
-                  marginBottom: 10,
-                }}
+                className="pack-attachment-image"
               />
             ) : (
               <FileText size={24} />
@@ -1669,11 +1702,12 @@ function AIModal({
       }
       onClose={onClose}
     >
-      <p className="muted" style={{ marginTop: 18 }}>
+      <p className="muted pack-ai-description">
         Describe the garment, fit, material and details. Generation uses your
         configured AI provider.
       </p>
       <form
+        className="pack-ai-form"
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
@@ -1704,7 +1738,7 @@ function AIModal({
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="An oversized pullover hoodie, dropped shoulders, kangaroo pocket…"
           required
-          style={{ width: "100%", minHeight: 160 }}
+          className="pack-ai-prompt"
         />
         <label className="brand-ai-option">
           <input
@@ -1779,7 +1813,7 @@ export function SharedProduct({
         </div>
       </header>
       <h1>
-        {p.name} <span className="badge">{p.code}</span>
+        {p.name} <span className="badge technical-value">{p.code}</span>
       </h1>
       <p className="muted">
         Last updated {new Date(p.updatedAt).toLocaleString("en-US")}
@@ -1819,7 +1853,7 @@ export function SharedProduct({
               <div key={c.id} className="swatch">
                 <div className="swatch-color" style={{ background: c.hex }} />
                 {c.name}
-                <small> · {c.hex}</small>
+                <small className="technical-value"> · {c.hex}</small>
               </div>
             ))}
           </div>
@@ -1843,7 +1877,7 @@ export function SharedProduct({
                   <tr key={m.id}>
                     <td>{m.name}</td>
                     <td>{m.composition}</td>
-                    <td>{m.weight}</td>
+                    <td className="technical-value">{m.weight}</td>
                     <td>{m.placement}</td>
                   </tr>
                 ))}
@@ -1886,11 +1920,8 @@ export function SharedProduct({
           <div className="text-block">{p.labels}</div>
         </Section>
       )}
-      <footer
-        className="muted"
-        style={{ borderTop: "1px solid var(--line)", paddingTop: 20 }}
-      >
-        {p.name} · {p.code} · Tech pack
+      <footer className="muted print-pack-footer">
+        {p.name} · <span className="technical-value">{p.code}</span> · Tech pack
       </footer>
     </main>
   );
@@ -2081,11 +2112,11 @@ export function ProductCanvas({
       <header className="canvas-header">
         <Link className="btn" href={`/products/${p.id}`}>
           <ArrowLeft size={15} />
-          Back to Product
+          Back to product
         </Link>
         <h1>{p.name}</h1>
-        <span className="badge">{p.code}</span>
-        <span className="badge sampling">{p.stage}</span>
+        <span className="badge technical-value">{p.code}</span>
+        <span className={`badge ${p.stage.toLowerCase()}`}>{p.stage}</span>
         <span className="spacer" />
         <button
           className="icon-button"
@@ -2143,7 +2174,7 @@ export function ProductCanvas({
             </p>
           )}
           <div className="toolbar">
-            <small>COLORWAY</small>
+            <small>Colorway</small>
             <select
               aria-label="Canvas colorway"
               value={colorwayId}
@@ -2169,7 +2200,7 @@ export function ProductCanvas({
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              style={{ width: 42, padding: 4 }}
+              className="canvas-fill-input"
             />
             {tool === "Artwork" && (
               <UploadButton
@@ -2194,7 +2225,7 @@ export function ProductCanvas({
               </UploadButton>
             )}
           </div>
-          <p className="muted" style={{ margin: "12px 0" }}>
+          <p className="muted canvas-tool-help">
             {tool === "Fill"
               ? "Click inside a garment panel to fill it with the selected color."
               : tool === "Measure"
@@ -2214,7 +2245,6 @@ export function ProductCanvas({
             style={{
               width: `${(720 * zoom) / 100}px`,
               maxWidth: zoom <= 100 ? "100%" : "none",
-              touchAction: "none",
               transform: `translate(${pan.x}px,${pan.y}px)`,
             }}
             onPointerDown={(e) => {
@@ -2275,19 +2305,13 @@ export function ProductCanvas({
               ref={canvasRef}
               width={1200}
               height={900}
-              style={{ width: "100%", height: "100%", display: "block" }}
+              className="canvas-drawing"
               aria-label="Technical drawing canvas"
             />
             <svg
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                pointerEvents: "none",
-              }}
+              className="canvas-lines"
             >
               {annotations
                 .filter((a) => a.x2 !== undefined)
@@ -2298,7 +2322,6 @@ export function ProductCanvas({
                     y1={a.y}
                     x2={a.x2}
                     y2={a.y2}
-                    stroke="#4663bc"
                     strokeWidth=".3"
                   />
                 ))}
@@ -2325,7 +2348,6 @@ export function ProductCanvas({
                 {a.text}
                 <button
                   className="icon-button"
-                  style={{ padding: 2 }}
                   aria-label={`Remove annotation ${a.text}`}
                   onClick={() => {
                     setAnnotations((old) => old.filter((x) => x.id !== a.id));
@@ -2341,15 +2363,14 @@ export function ProductCanvas({
         <aside className="canvas-pages">
           <h2>Pages</h2>
           <button
-            className="btn primary"
+            className="btn canvas-save-pack"
             onClick={persist}
             disabled={busy}
-            style={{ width: "100%" }}
           >
             <Save size={15} />
             Save to tech pack
           </button>
-          <p className="muted" style={{ fontSize: 11, marginTop: 14 }}>
+          <p className="muted canvas-save-help">
             Updates the sketch and callouts in the tech pack, PDF and supplier
             view.
           </p>
@@ -2366,8 +2387,7 @@ export function ProductCanvas({
             Change sketch
           </UploadButton>
           <button
-            className="btn"
-            style={{ marginTop: 12 }}
+            className="btn canvas-export"
             onClick={() => {
               const c = canvasRef.current;
               if (c) {
@@ -2446,7 +2466,7 @@ export function ProductCanvas({
               onChange={(e) => setNote(e.target.value)}
               required
               autoFocus
-              style={{ width: "100%" }}
+              className="canvas-annotation-input"
             />
             <div className="modal-footer">
               <button className="btn primary">Add annotation</button>

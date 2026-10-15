@@ -54,6 +54,7 @@ import { ProductEditor, ProductCanvas, SharedProduct } from "./product-editor";
 import { request, manufacturersApi, quoteRequestsApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
+import { ProductImage } from "./product-image";
 import {
   navRoutes,
   moduleRoutes,
@@ -269,6 +270,7 @@ export function Workspace({ path }: { path: string[] }) {
             products={products}
             loading={loading}
             failed={!!error}
+            onCreate={() => setCreate(true)}
           />
         );
       case "brand-profile":
@@ -302,9 +304,16 @@ export function Workspace({ path }: { path: string[] }) {
                         : `/modules/${activeModule.id}/${pageSlug(page)}`
                     }
                   >
-                    <LayoutDashboard size={21} />
+                    <span className="module-page-icon">
+                      <LayoutDashboard size={18} />
+                    </span>
                     <h3>{page}</h3>
-                    <span>
+                    {page !== "Brand Profile" && (
+                      <span className="module-page-status">
+                        Tools in development
+                      </span>
+                    )}
+                    <span className="module-page-action">
                       Open workspace <ArrowUpRight size={16} />
                     </span>
                   </Link>
@@ -478,7 +487,6 @@ export function Workspace({ path }: { path: string[] }) {
               )}
             </button>
           </div>
-          <span className="nav-label">WORKSPACE</span>
           <nav
             className="nav-links module-links"
             aria-label="Primary navigation"
@@ -556,7 +564,7 @@ export function Workspace({ path }: { path: string[] }) {
                 >
                   <Search size={14} /> Search...
                 </button>
-                <span className="nav-label">MAIN</span>
+                <span className="nav-label">Main</span>
                 <nav className="nav-links" aria-label="Design pages">
                   {nav.slice(0, 2).map(([key, label, Icon]) => (
                     <div key={key}>
@@ -571,7 +579,7 @@ export function Workspace({ path }: { path: string[] }) {
                         {key === "products" && (
                           <ChevronDown
                             size={14}
-                            style={{ marginLeft: "auto" }}
+                            className="nav-expand-icon"
                           />
                         )}
                       </Link>
@@ -600,7 +608,7 @@ export function Workspace({ path }: { path: string[] }) {
                     Brand Profile
                   </Link>
                 </nav>
-                <span className="nav-label">LIBRARY</span>
+                <span className="nav-label">Library</span>
                 <nav className="nav-links" aria-label="Library">
                   {nav.slice(2).map(([key, label, Icon]) => (
                     <Link
@@ -644,15 +652,14 @@ export function Workspace({ path }: { path: string[] }) {
                 <span className="avatar">{identity.initials}</span>
                 <div>
                   <span>{identity.name}</span>
-                  <small style={{ display: "block", fontSize: 10 }}>
+                  <small className="workspace-caption">
                     Your workspace
                   </small>
                 </div>
                 <Link
                   aria-label="Settings"
                   href="/settings"
-                  className="icon-button"
-                  style={{ marginLeft: "auto" }}
+                  className="icon-button profile-settings"
                 >
                   <Settings size={15} />
                 </Link>
@@ -716,8 +723,10 @@ export function Workspace({ path }: { path: string[] }) {
               {focusMode ? "Exit focus" : "Focus mode"}
             </button>
           </div>
-          <Clock size={13} /> Independent workspace · Saved on this computer{" "}
-          <Link href="/settings" style={{ marginLeft: "auto" }}>
+          <span className="workspace-save-note">
+            <Clock size={13} /> Independent workspace · Saved on this computer
+          </span>
+          <Link href="/settings" className="workspace-settings-link">
             Workspace settings
           </Link>
         </div>
@@ -745,7 +754,7 @@ export function Workspace({ path }: { path: string[] }) {
           />
         ) : (
           <>
-            <header className="app-header">
+            <header className="app-header workspace-header">
               <button
                 className="icon-button mobile-only-toggle"
                 aria-label="Toggle navigation"
@@ -771,13 +780,9 @@ export function Workspace({ path }: { path: string[] }) {
               {section === "products" && (
                 <button className="btn primary" onClick={() => setCreate(true)}>
                   <Plus size={17} />
-                  Create New Tech Pack
+                  New tech pack
                 </button>
               )}
-              <Link className="btn" href="/settings">
-                <Settings size={14} />
-                <span className="header-subtitle">Workspace</span>
-              </Link>
               <button
                 className="icon-button"
                 aria-label="Recent activity"
@@ -812,7 +817,7 @@ export function Workspace({ path }: { path: string[] }) {
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
             placeholder="Search products, names or codes…"
-            style={{ width: "100%", margin: "20px 0" }}
+            className="workspace-search-input"
           />
           {products
             .filter((p) =>
@@ -911,11 +916,11 @@ function ProductLibrary({
           [
             category,
             setCategory,
-            "All Categories",
+            "All categories",
             products.map((p) => p.category),
           ],
-          [project, setProject, "All Projects", products.map((p) => p.project)],
-          [stage, setStage, "All Stages", products.map((p) => p.stage)],
+          [project, setProject, "All projects", products.map((p) => p.project)],
+          [stage, setStage, "All stages", products.map((p) => p.stage)],
         ].map(([v, set, label, options]) => (
           <select
             key={String(label)}
@@ -934,7 +939,7 @@ function ProductLibrary({
           value={manufacturerId}
           onChange={(e) => setManufacturerId(e.target.value)}
         >
-          <option value="">All Manufacturers</option>
+          <option value="">All manufacturers</option>
           {manufacturers.map((manufacturer) => (
             <option key={manufacturer.id} value={manufacturer.id}>
               {manufacturer.name}
@@ -950,7 +955,8 @@ function ProductLibrary({
           <option value="name">Name A–Z</option>
         </select>
         <button
-          className={`btn ${archived ? "primary" : ""}`}
+          className={`btn ${archived ? "selected" : ""}`}
+          aria-pressed={archived}
           onClick={() => setArchived(!archived)}
         >
           <Archive size={14} />
@@ -959,15 +965,17 @@ function ProductLibrary({
       </div>
       <div className="view-tools">
         <button
-          className={`btn ${!grid ? "primary" : ""}`}
+          className={`btn ${!grid ? "selected" : ""}`}
           aria-label="List view"
+          aria-pressed={!grid}
           onClick={() => setGrid(false)}
         >
           <List size={17} />
         </button>
         <button
-          className={`btn ${grid ? "primary" : ""}`}
+          className={`btn ${grid ? "selected" : ""}`}
           aria-label="Grid view"
+          aria-pressed={grid}
           onClick={() => setGrid(true)}
         >
           <Grid2X2 size={17} />
@@ -977,7 +985,7 @@ function ProductLibrary({
         {filtered.length} {filtered.length === 1 ? "style" : "styles"}
       </small>
       {!filtered.length ? (
-        <div className="panel empty" style={{ marginTop: 20 }}>
+        <div className="product-library-empty empty">
           <Shirt size={35} />
           <h3>
             {products.length
@@ -987,26 +995,24 @@ function ProductLibrary({
           <p>
             Keep every detail, from first sketch to production, in one place.
           </p>
-          <button className="btn primary" onClick={onCreate}>
+          <button className="btn" onClick={onCreate}>
             <Plus size={16} />
-            Create New Tech Pack
+            New tech pack
           </button>
         </div>
       ) : grid ? (
         <div className="product-grid">
           {filtered.map((p) => (
             <Link
-              className="panel product-card"
+              className="product-card"
               key={p.id}
               href={`/products/${p.id}`}
             >
               <div className="product-card-image">
-                {p.cover || p.sketch ? (
-                  <img src={p.cover || p.sketch} alt={p.name} />
-                ) : (
-                  <Shirt size={75} strokeWidth={0.8} />
-                )}
-                <span className={`badge ${p.stage.toLowerCase()}`}>
+                <ProductImage product={p} size="tile" />
+                <span
+                  className={`badge product-stage ${p.stage.toLowerCase()}`}
+                >
                   {p.stage}
                 </span>
               </div>
@@ -1014,22 +1020,19 @@ function ProductLibrary({
                 <h3>
                   {p.name}
                   {p.id === "demo-hoodie" && (
-                    <span className="badge sampling" style={{ marginLeft: 8 }}>
-                      DEMO
-                    </span>
+                    <span className="badge product-demo">Demo</span>
                   )}
                 </h3>
                 <code>{p.code}</code>
                 <p>
-                  {p.category}
-                  <span style={{ float: "right" }}>{p.project || "—"}</span>
+                  {p.category} · {p.project || "—"}
                 </p>
               </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="panel table-wrap" style={{ marginTop: 18 }}>
+        <div className="panel table-wrap product-list">
           <table>
             <thead>
               <tr>
@@ -1050,15 +1053,23 @@ function ProductLibrary({
               {filtered.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <Link href={`/products/${p.id}`}>{p.name}</Link>
+                    <Link
+                      className="product-list-name"
+                      href={`/products/${p.id}`}
+                    >
+                      <ProductImage product={p} size="thumb" />
+                      {p.name}
+                    </Link>
                   </td>
-                  <td>{p.code}</td>
+                  <td className="product-code">{p.code}</td>
                   <td>{p.category}</td>
                   <td>
                     <span className="badge">{p.stage}</span>
                   </td>
                   <td>{p.project || "—"}</td>
-                  <td>{new Date(p.updatedAt).toLocaleDateString("en-US")}</td>
+                  <td className="product-date">
+                    {new Date(p.updatedAt).toLocaleDateString("en-US")}
+                  </td>
                   <td>
                     <Link
                       aria-label={`Open ${p.name}`}
@@ -1078,71 +1089,77 @@ function ProductLibrary({
 }
 function SettingsPage({ notify }: { notify: (s: string) => void }) {
   return (
-    <section className="panel settings-panel">
+    <section className="settings-panel">
       <h1>Workspace settings</h1>
       <p className="muted">Your independent Techstyles workspace</p>
-      <h2 style={{ marginTop: 30 }}>Storage</h2>
-      <p>
-        Brand profiles, tech packs, libraries and uploads are saved on this
-        computer, inside this application&apos;s data folder.
-      </p>
-      <h2 style={{ marginTop: 30 }}>AI generation</h2>
-      <p>
-        Add your own <code>OPENAI_API_KEY</code> to <code>.env.local</code> and
-        restart the application to enable sketch and mockup generation. Without
-        a configured key, no AI request is sent.
-      </p>
-      <p className="muted">
-        This local workspace has no subscription or credit billing.
-      </p>
-      <h2 style={{ marginTop: 30 }}>Backup</h2>
-      <button
-        className="btn"
-        onClick={async () => {
-          try {
-            const [data, libraries, brand, manufacturers, quoteRequests] =
-              await Promise.all([
-                request("/api/products"),
-                request("/api/libraries"),
-                request<{ profile: unknown }>("/api/brand-profile"),
-                manufacturersApi.list(),
-                quoteRequestsApi.list(),
-              ]);
-            const url = URL.createObjectURL(
-              new Blob(
-                [
-                  JSON.stringify(
-                    {
-                      products: data,
-                      libraries,
-                      brandProfile: brand.profile,
-                      manufacturers,
-                      quoteRequests,
-                    },
-                    null,
-                    2,
-                  ),
-                ],
-                { type: "application/json" },
-              ),
-            );
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "techstyles-workspace.json";
-            a.click();
-            URL.revokeObjectURL(url);
-            notify("Workspace data exported");
-          } catch (e) {
-            notify((e as Error).message);
-          }
-        }}
-      >
-        Export workspace data
-      </button>
-      <p className="muted" style={{ marginTop: 12 }}>
-        Includes structured data. Keep the data/uploads folder with your backup
-        for uploaded files.
-      </p>
+      <section className="panel">
+        <h2>Storage</h2>
+        <p>
+          Brand profiles, tech packs, libraries and uploads are saved on this
+          computer, inside this application&apos;s data folder.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>AI generation</h2>
+        <p>
+          Add your own <code>OPENAI_API_KEY</code> to <code>.env.local</code>{" "}
+          and restart the application to enable sketch and mockup generation.
+          Without a configured key, no AI request is sent.
+        </p>
+        <p className="muted">
+          This local workspace has no subscription or credit billing.
+        </p>
+      </section>
+      <section className="panel">
+        <h2>Backup</h2>
+        <button
+          className="btn primary"
+          onClick={async () => {
+            try {
+              const [data, libraries, brand, manufacturers, quoteRequests] =
+                await Promise.all([
+                  request("/api/products"),
+                  request("/api/libraries"),
+                  request<{ profile: unknown }>("/api/brand-profile"),
+                  manufacturersApi.list(),
+                  quoteRequestsApi.list(),
+                ]);
+              const url = URL.createObjectURL(
+                new Blob(
+                  [
+                    JSON.stringify(
+                      {
+                        products: data,
+                        libraries,
+                        brandProfile: brand.profile,
+                        manufacturers,
+                        quoteRequests,
+                      },
+                      null,
+                      2,
+                    ),
+                  ],
+                  { type: "application/json" },
+                ),
+              );
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "techstyles-workspace.json";
+              a.click();
+              URL.revokeObjectURL(url);
+              notify("Workspace data exported");
+            } catch (e) {
+              notify((e as Error).message);
+            }
+          }}
+        >
+          Export workspace data
+        </button>
+        <p className="muted settings-help">
+          Includes structured data. Keep the data/uploads folder with your
+          backup for uploaded files.
+        </p>
+      </section>
     </section>
   );
 }

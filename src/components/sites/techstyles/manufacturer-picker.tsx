@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Manufacturer } from "@/lib/types";
 import { manufacturersApi } from "@/lib/client-api";
-import "./product-form.css";
+import "./sourcing-panel.css";
 
 export function ManufacturerPicker({
   manufacturers,
@@ -56,7 +56,7 @@ export function ManufacturerPicker({
   }
   return (
     <>
-      <label>
+      <label className="manufacturer-picker">
         {label}
         <select
           name="manufacturerId"
@@ -82,7 +82,7 @@ export function ManufacturerPicker({
         </select>
       </label>
       {creating && (
-        <div className="inline-manufacturer full">
+        <div className="inline-manufacturer manufacturer-picker-inline full">
           <label>
             New manufacturer name
             <input
@@ -103,7 +103,7 @@ export function ManufacturerPicker({
           <div className="inline-manufacturer-actions">
             <button
               type="button"
-              className="btn primary"
+              className="btn"
               disabled={busy || disabled}
               onClick={add}
             >

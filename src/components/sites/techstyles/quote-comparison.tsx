@@ -17,16 +17,19 @@ const fields: {
   label: string;
   value: (quote: Quote) => ReactNode;
   rank?: "price" | "lead";
+  numeric?: boolean;
 }[] = [
   {
     label: "Unit price",
+    numeric: true,
     value: (quote) =>
       quote.unitPrice != null ? `${quote.unitPrice} ${quote.currency}` : "—",
     rank: "price",
   },
-  { label: "MOQ", value: (quote) => quote.moq ?? "—" },
+  { label: "MOQ", numeric: true, value: (quote) => quote.moq ?? "—" },
   {
     label: "Production lead time",
+    numeric: true,
     value: (quote) =>
       quote.productionLeadTimeDays != null
         ? `${quote.productionLeadTimeDays} days`
@@ -35,11 +38,13 @@ const fields: {
   },
   {
     label: "Sample cost",
+    numeric: true,
     value: (quote) =>
       quote.sampleCost != null ? `${quote.sampleCost} ${quote.currency}` : "—",
   },
   {
     label: "Sample lead time",
+    numeric: true,
     value: (quote) =>
       quote.sampleLeadTimeDays != null
         ? `${quote.sampleLeadTimeDays} days`
@@ -47,6 +52,7 @@ const fields: {
   },
   {
     label: "Received date",
+    numeric: true,
     value: (quote) =>
       quote.receivedAt
         ? new Date(`${quote.receivedAt}T00:00:00`).toLocaleDateString()
@@ -274,7 +280,7 @@ export function QuoteComparisonPage({
                         return (
                           <td
                             key={quoteRequest.id}
-                            className={best ? "quote-comparison-best" : ""}
+                            className={`${field.numeric ? "quote-numeric" : ""}${best ? " quote-comparison-best" : ""}`}
                           >
                             {field.value(quoteRequest.quote!)}
                             {best && (
@@ -294,9 +300,10 @@ export function QuoteComparisonPage({
                     {quotes.map((quoteRequest) => (
                       <td key={quoteRequest.id}>
                         <button
-                          className={`btn ${quoteRequest.status === "quoted" ? "primary" : ""}`}
+                          className={`btn ${quoteRequest.status === "chosen" ? "selected" : ""}`}
+                          aria-pressed={quoteRequest.status === "chosen"}
                           disabled={busy}
-                          aria-label={`${quoteRequest.status === "chosen" ? "Unchoose" : "Choose"} ${manufacturerById.get(quoteRequest.manufacturerId)?.name || "manufacturer"}`}
+                          aria-label={`Choose ${manufacturerById.get(quoteRequest.manufacturerId)?.name || "manufacturer"}`}
                           onClick={() =>
                             action(
                               quoteRequest,
@@ -307,7 +314,7 @@ export function QuoteComparisonPage({
                           }
                         >
                           {quoteRequest.status === "chosen"
-                            ? "Unchoose"
+                            ? "Chosen"
                             : "Choose"}
                         </button>
                       </td>

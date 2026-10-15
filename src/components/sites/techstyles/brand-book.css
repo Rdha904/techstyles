@@ -11,8 +11,9 @@
 }
 .bb-toolbar h2 {
   margin: 12px 0 8px;
-  font-size: clamp(26px, 2.1vw, 32px);
-  letter-spacing: -0.8px;
+  font-size: var(--t-gallery-section);
+  font-weight: var(--w-gallery-section);
+  letter-spacing: -0.01em;
 }
 .bb-toolbar p {
   margin: 0;
@@ -39,7 +40,7 @@
   gap: 12px;
 }
 .bb-publish-copy > svg {
-  color: var(--blue);
+  color: var(--ink);
   flex: none;
 }
 .bb-publish-copy div {
@@ -62,9 +63,10 @@
 .bb-notice {
   margin: 0 0 16px;
   padding: 10px 14px;
-  border-radius: 8px;
-  background: #edf1fd;
-  color: #33468a;
+  border-radius: var(--r-ctl);
+  background: var(--mist-soft);
+  color: var(--graphite);
+  font-size: var(--t-work-secondary);
 }
 .bb-images {
   padding: 20px;
@@ -102,16 +104,16 @@
 }
 .bb-image-option {
   margin: 0;
-  border: 2px solid var(--line);
-  border-radius: 12px;
+  border: 2px solid var(--mist);
+  border-radius: var(--r-card);
   overflow: hidden;
-  background: white;
+  background: var(--paper);
 }
 .bb-image-option.included {
-  border-color: var(--blue);
+  border-color: var(--ink);
 }
 .bb-image-option.cover {
-  border-color: #2f3e7a;
+  border-color: var(--ink);
 }
 .bb-image-option img {
   display: block;
@@ -129,15 +131,15 @@
   align-items: center;
   gap: 4px;
   padding: 4px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: white;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
+  background: var(--paper);
   font-size: 12px;
 }
 .bb-chip.active {
-  border-color: var(--blue);
-  background: #edf1fd;
-  color: #33468a;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
 }
 .bb-start {
   max-width: 520px;
@@ -149,24 +151,26 @@
   place-items: center;
   width: 56px;
   height: 56px;
-  border-radius: 16px;
-  background: #eef1fb;
-  color: var(--blue);
+  border-radius: var(--r-card);
+  background: var(--mist-soft);
+  color: var(--ink);
 }
-.bb-start h2 {
+.bb-start h1 {
   margin: 18px 0 8px;
+  font-size: var(--t-work-section);
+  font-weight: var(--w-work-section);
 }
 .bb-start p {
   margin: 0 0 22px;
-  color: var(--muted);
+  color: var(--graphite);
   line-height: 1.6;
 }
 
 /* Document — shared by editor, print and published views */
 .bb-document {
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: white;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
+  background: var(--paper);
   overflow: hidden;
   counter-reset: bb-chapter;
 }
@@ -181,7 +185,7 @@
   overflow: hidden;
 }
 .bb-cover.dark {
-  color: white;
+  color: var(--paper);
 }
 .bb-cover.light {
   color: var(--ink);
@@ -198,7 +202,11 @@
   position: absolute;
   inset: -48px;
   z-index: -1;
-  background: linear-gradient(to top, #000000b3, #00000000 70%);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ink) 70%, transparent),
+    transparent 70%
+  );
 }
 .bb-cover-content {
   position: relative;
@@ -221,9 +229,8 @@
 }
 .bb-cover-content span {
   font-size: clamp(13px, 1.1vw, 17px);
-  font-weight: 600;
+  font-weight: 520;
   letter-spacing: 8px;
-  text-transform: uppercase;
   padding-left: 8px;
 }
 .bb-cover-content small {
@@ -236,10 +243,10 @@
   grid-template-columns: minmax(0, 230px) minmax(0, 1fr);
   gap: 44px;
   padding: 56px 48px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--mist);
 }
 .bb-chapter:nth-of-type(even) {
-  background: #faf9f8;
+  background: var(--mist-soft);
 }
 .bb-chapter-head {
   min-width: 0;
@@ -249,20 +256,20 @@
   display: block;
   margin-bottom: 12px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 520;
   letter-spacing: 1.5px;
-  color: var(--blue);
+  color: var(--ink);
 }
 .bb-chapter-head > h2 {
   margin: 0 0 12px;
   font-size: 21px;
-  font-weight: 600;
+  font-weight: 520;
   letter-spacing: -0.4px;
   color: var(--ink);
 }
 .bb-chapter-intro {
   margin: 0;
-  color: var(--muted);
+  color: var(--graphite);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -294,13 +301,13 @@
   font-size: 14px;
 }
 .bb-chapter.missing {
-  background: #fbfaf9;
+  background: var(--mist-soft);
 }
 .bb-missing {
-  color: var(--muted);
+  color: var(--graphite);
 }
 .bb-missing a {
-  color: var(--blue);
+  color: var(--ink);
   text-decoration: underline;
 }
 .bb-logo-grid {
@@ -317,9 +324,9 @@
   place-items: center;
   height: 180px;
   padding: 28px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: white;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
+  background: var(--paper);
 }
 .bb-logo-tile img {
   max-width: 70%;
@@ -329,7 +336,7 @@
 .bb-logo-grid figcaption,
 .bb-colors figcaption {
   margin-top: 8px;
-  color: var(--muted);
+  color: var(--graphite);
   font-size: 13px;
 }
 .bb-colors {
@@ -339,8 +346,8 @@
 }
 .bb-swatch {
   height: 156px;
-  border: 1px solid #00000014;
-  border-radius: 14px;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
 }
 .bb-colors figcaption {
   display: grid;
@@ -358,15 +365,14 @@
   flex-direction: column;
   gap: 4px;
   padding: 26px 28px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid var(--mist);
+  border-radius: var(--r-card);
 }
 .bb-font-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-size: var(--t-mono);
+  font-weight: 480;
+  letter-spacing: var(--tracking-mono);
+  color: var(--graphite);
 }
 .bb-font-name {
   font-size: clamp(32px, 4.5vw, 54px);
@@ -376,7 +382,7 @@
 }
 .bb-font-alpha {
   margin: 0;
-  color: var(--muted);
+  color: var(--graphite);
   letter-spacing: 0.6px;
   line-height: 1.5;
 }
@@ -385,7 +391,7 @@
 }
 .bb-chapter .bb-note {
   margin-top: 12px;
-  color: var(--muted);
+  color: var(--graphite);
   font-size: 12px;
 }
 .bb-imagery {
@@ -405,7 +411,7 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: var(--r-card);
 }
 .bb-standalone {
   max-width: 1000px;
@@ -418,6 +424,41 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.bb-toolbar p {
+  font-size: var(--t-gallery-body);
+  color: var(--graphite);
+}
+.bb-images header h3 {
+  font-size: var(--t-work-section);
+  font-weight: var(--w-work-section);
+}
+.bb-publish-copy .muted,
+.bb-images .muted {
+  font-size: var(--t-work-secondary);
+  color: var(--graphite);
+}
+.bb-publish-copy {
+  min-width: 0;
+}
+.bb-actions {
+  flex-shrink: 0;
+  max-width: 45%;
+}
+.bb-publish {
+  flex-wrap: wrap;
+}
+.bb-publish-link {
+  flex-wrap: wrap;
+}
+.bb-publish-link .destructive {
+  color: var(--danger);
+}
+.bb-document code {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono);
+  letter-spacing: var(--tracking-mono);
 }
 
 @media (max-width: 760px) {

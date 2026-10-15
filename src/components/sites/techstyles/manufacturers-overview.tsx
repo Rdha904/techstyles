@@ -24,7 +24,6 @@ export function ManufacturersOverview({
       title: "Manufacturers",
       slug: "manufacturers",
       icon: Factory,
-      tone: "blue",
       description:
         "Build your directory of garment manufacturers and keep contact details close at hand.",
       detail: `${manufacturers.length} manufacturer${manufacturers.length === 1 ? "" : "s"} in your directory`,
@@ -33,7 +32,6 @@ export function ManufacturersOverview({
       title: "Quote Requests",
       slug: "quote-requests",
       icon: FileText,
-      tone: "teal",
       description:
         "Follow requests across your products, from the first draft to a chosen quote.",
       detail: "Record requests and quotes in each product’s Sourcing panel.",
@@ -42,7 +40,6 @@ export function ManufacturersOverview({
       title: "Quote Comparison",
       slug: "quote-comparison",
       icon: Columns3,
-      tone: "violet",
       description:
         "Compare prices, minimum quantities and lead times, then choose a manufacturer for your product.",
       detail: `${counts.chosenProducts} product${counts.chosenProducts === 1 ? "" : "s"} with a chosen request`,
@@ -54,7 +51,6 @@ export function ManufacturersOverview({
       aria-labelledby="sourcing-overview-title"
     >
       <header className="manufacturer-quotes-heading">
-        <span className="module-eyebrow">MANUFACTURERS &amp; QUOTES</span>
         <h2 id="sourcing-overview-title">
           Find the right manufacturer for your products
         </h2>
@@ -86,10 +82,10 @@ export function ManufacturersOverview({
           <Link
             key={card.slug}
             href={`/modules/manufacturers/${card.slug}`}
-            className={`sourcing-overview-card ${card.tone}`}
+            className="sourcing-overview-card"
           >
             <span className="sourcing-overview-icon">
-              <card.icon size={26} strokeWidth={1.7} />
+              <card.icon size={18} strokeWidth={1.7} />
             </span>
             <h3>{card.title}</h3>
             <p>{card.description}</p>

@@ -35,11 +35,10 @@ export function ConceptOverview() {
 
   const cards = [
     {
-      title: "Brand Profile",
+      title: "Brand profile",
       slug: "brand-profile",
       icon: Fingerprint,
-      tone: "blue",
-      eyebrow: "YOUR FOUNDATION",
+      eyebrow: "Your foundation",
       description:
         "Define your identity, values and visual direction. One shared profile for your designs and marketing.",
       status:
@@ -62,14 +61,13 @@ export function ConceptOverview() {
       available: true,
     },
     {
-      title: "Audience & Market",
+      title: "Audience & market",
       slug: "audience-market",
       icon: Users,
-      tone: "teal",
-      eyebrow: "YOUR PEOPLE & MARKET",
+      eyebrow: "Your people & market",
       description:
         "Define who you design for and where you stand: style, needs, buying habits, competitors and price positioning.",
-      status: "Coming soon",
+      status: "Tools in development",
       action: "View audience workspace",
       detail: "Turn audience and market insights into a clear direction.",
       available: false,
@@ -78,21 +76,19 @@ export function ConceptOverview() {
       title: "Moodboards",
       slug: "moodboards",
       icon: Images,
-      tone: "amber",
-      eyebrow: "YOUR COLLECTION CONCEPT",
+      eyebrow: "Your collection concept",
       description:
         "Collect inspiration, seasonal colors, materials and silhouettes that set the direction for each collection.",
-      status: "Coming soon",
+      status: "Tools in development",
       action: "View moodboards",
       detail: "The bridge from brand concept to design and tech packs.",
       available: false,
     },
     {
-      title: "Brand Book",
+      title: "Brand book",
       slug: "brand-book",
       icon: BookOpen,
-      tone: "violet",
-      eyebrow: "YOUR GUIDELINES",
+      eyebrow: "Your guidelines",
       description:
         "Bring your logo, colors, typography and tone of voice together in a consistent brand guide to share.",
       status:
@@ -117,7 +113,7 @@ export function ConceptOverview() {
       aria-labelledby="concept-overview-title"
     >
       <header className="concept-overview-intro">
-        <span className="module-eyebrow">CONCEPT &amp; AUDIENCE</span>
+        <span className="module-eyebrow">Concept &amp; audience</span>
         <h2 id="concept-overview-title">Build the foundation of your brand</h2>
         <p>
           Define who you are, who you create for and how your brand shows up.
@@ -128,11 +124,11 @@ export function ConceptOverview() {
           <Link
             key={card.slug}
             href={`/modules/concept/${card.slug}`}
-            className={`concept-area-card ${card.tone}`}
+            className="concept-area-card"
           >
             <div className="concept-area-top">
               <span className="concept-area-icon">
-                <card.icon size={26} strokeWidth={1.7} />
+                <card.icon size={18} strokeWidth={1.7} />
               </span>
               <span
                 className={`concept-area-status ${card.available ? "available" : ""}`}

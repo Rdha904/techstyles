@@ -230,7 +230,7 @@ export function LibraryPage({ collection }: { collection: string }) {
     collection === "colors" ? (
       <div
         className="library-color"
-        style={{ backgroundColor: item.color || "#718792" }}
+        style={{ backgroundColor: item.color || "var(--graphite)" }}
       >
         <span>{item.color}</span>
       </div>
@@ -265,7 +265,7 @@ export function LibraryPage({ collection }: { collection: string }) {
         </a>
       )}
       <button
-        className="icon-button"
+        className="icon-button destructive"
         title={`Delete ${item.name}`}
         onClick={() => remove(item)}
       >
@@ -278,10 +278,15 @@ export function LibraryPage({ collection }: { collection: string }) {
     <div className="library-page">
       <div className="library-heading">
         <div>
-          <h1>{definition.title}</h1>
+          <h1>
+            {collection === "size-charts" ? "Size charts" : definition.title}
+          </h1>
           <p>{definition.description}</p>
         </div>
-        <button className="btn primary" onClick={() => openEditor()}>
+        <button
+          className={editing ? "btn" : "btn primary"}
+          onClick={() => openEditor()}
+        >
           <Plus size={17} /> Add{" "}
           {collection === "materials" && tab === "templates"
             ? "BOM template"
@@ -293,7 +298,7 @@ export function LibraryPage({ collection }: { collection: string }) {
           className={tab === "all" ? "active" : ""}
           onClick={() => setTab("all")}
         >
-          All {definition.title}{" "}
+          All {definition.title.toLowerCase()}{" "}
           <span>
             {collectionItems.filter((item) => !item.data?.isTemplate).length}
           </span>
@@ -303,7 +308,7 @@ export function LibraryPage({ collection }: { collection: string }) {
             className={tab === "templates" ? "active" : ""}
             onClick={() => setTab("templates")}
           >
-            BOM Templates{" "}
+            BOM templates{" "}
             <span>
               {collectionItems.filter((item) => item.data?.isTemplate).length}
             </span>
@@ -327,7 +332,7 @@ export function LibraryPage({ collection }: { collection: string }) {
               value={supplier}
               onChange={(event) => setSupplier(event.target.value)}
             >
-              <option value="">All Suppliers</option>
+              <option value="">All suppliers</option>
               {options("supplier").map((option) => (
                 <option key={option}>{option}</option>
               ))}
@@ -337,7 +342,7 @@ export function LibraryPage({ collection }: { collection: string }) {
               value={type}
               onChange={(event) => setType(event.target.value)}
             >
-              <option value="">All Types</option>
+              <option value="">All types</option>
               {options("type").map((option) => (
                 <option key={option}>{option}</option>
               ))}
@@ -356,6 +361,7 @@ export function LibraryPage({ collection }: { collection: string }) {
         )}
         <div className="library-view">
           <button
+            className={`btn ${view === "list" ? "selected" : ""}`}
             title="List view"
             aria-pressed={view === "list"}
             onClick={() => setView("list")}
@@ -363,6 +369,7 @@ export function LibraryPage({ collection }: { collection: string }) {
             <List size={17} />
           </button>
           <button
+            className={`btn ${view === "grid" ? "selected" : ""}`}
             title="Grid view"
             aria-pressed={view === "grid"}
             onClick={() => setView("grid")}
@@ -402,7 +409,7 @@ export function LibraryPage({ collection }: { collection: string }) {
               : `Add your first ${definition.singular} and make it part of your next collection.`}
           </p>
           {!(query || supplier || type || unit) && (
-            <button className="btn primary" onClick={() => openEditor()}>
+            <button className="btn" onClick={() => openEditor()}>
               <Plus size={16} /> Add{" "}
               {tab === "templates" ? "BOM template" : definition.singular}
             </button>
@@ -421,8 +428,12 @@ export function LibraryPage({ collection }: { collection: string }) {
               </button>
               <div className="library-card-info">
                 <div>
-                  <h3>{item.name}</h3>
-                  <p>
+                  <h3 title={item.name}>{item.name}</h3>
+                  <p
+                    className={
+                      collection === "size-charts" ? "library-mono" : undefined
+                    }
+                  >
                     {value(item, "type") ||
                       item.description ||
                       (collection === "size-charts"
@@ -475,13 +486,17 @@ export function LibraryPage({ collection }: { collection: string }) {
               {visibleItems.map((item) => (
                 <tr key={item.id}>
                   {collection === "materials" && (
-                    <td className="library-code">
+                    <td
+                      className="library-code"
+                      title={value(item, "code") || "—"}
+                    >
                       {value(item, "code") || "—"}
                     </td>
                   )}
                   <td>
                     <button
                       className="library-item-name"
+                      title={item.name}
                       onClick={() => openEditor(item)}
                     >
                       {collection === "colors" ? (
@@ -490,22 +505,41 @@ export function LibraryPage({ collection }: { collection: string }) {
                           style={{ backgroundColor: item.color }}
                         />
                       ) : (
-                        <Icon size={17} strokeWidth={1.5} />
+                        <Icon size={16} strokeWidth={1.5} />
                       )}
-                      {item.name}
+                      <span>{item.name}</span>
                     </button>
                   </td>
                   {collection === "materials" ? (
                     <>
                       <td>
-                        <span className="library-type">
+                        <span
+                          className="library-type"
+                          title={value(item, "type") || "—"}
+                        >
                           {value(item, "type") || "—"}
                         </span>
                       </td>
-                      <td>{value(item, "composition") || "—"}</td>
-                      <td>{value(item, "gsm") || "—"}</td>
-                      <td>{value(item, "supplier") || "—"}</td>
-                      <td>
+                      <td title={value(item, "composition") || "—"}>
+                        {value(item, "composition") || "—"}
+                      </td>
+                      <td
+                        className="library-mono"
+                        title={value(item, "gsm") || "—"}
+                      >
+                        {value(item, "gsm") || "—"}
+                      </td>
+                      <td title={value(item, "supplier") || "—"}>
+                        {value(item, "supplier") || "—"}
+                      </td>
+                      <td
+                        className="library-mono"
+                        title={
+                          value(item, "cost")
+                            ? `$${Number(value(item, "cost")).toFixed(2)}${value(item, "unit") ? ` / ${value(item, "unit")}` : ""}`
+                            : "—"
+                        }
+                      >
                         {value(item, "cost")
                           ? `$${Number(value(item, "cost")).toFixed(2)}${value(item, "unit") ? ` / ${value(item, "unit")}` : ""}`
                           : "—"}
@@ -513,14 +547,21 @@ export function LibraryPage({ collection }: { collection: string }) {
                     </>
                   ) : (
                     <>
-                      <td>
+                      <td
+                        className={
+                          collection === "colors" ||
+                          collection === "size-charts"
+                            ? "library-mono"
+                            : undefined
+                        }
+                      >
                         {collection === "colors"
                           ? item.color
                           : collection === "size-charts"
                             ? value(item, "sizes")
                             : item.description || "—"}
                       </td>
-                      <td>
+                      <td className="library-mono">
                         {new Date(item.createdAt).toLocaleDateString("en-GB", {
                           day: "numeric",
                           month: "short",
@@ -620,6 +661,11 @@ export function LibraryPage({ collection }: { collection: string }) {
                       <label key={key}>
                         {label}
                         <input
+                          className={
+                            key === "code" || key === "gsm" || key === "cost"
+                              ? "library-mono"
+                              : undefined
+                          }
                           type={
                             key === "cost" || key === "gsm" ? "number" : "text"
                           }
@@ -650,8 +696,9 @@ export function LibraryPage({ collection }: { collection: string }) {
                       }
                     />
                     <label>
-                      HEX color
+                      Hex color
                       <input
+                        className="library-mono"
                         required
                         pattern="#[0-9a-fA-F]{6}"
                         value={draft.color}
@@ -679,6 +726,7 @@ export function LibraryPage({ collection }: { collection: string }) {
                       <label>
                         Sizes
                         <input
+                          className="library-mono"
                           value={String(draft.data.sizes ?? "")}
                           onChange={(event) =>
                             updateData("sizes", event.target.value)
