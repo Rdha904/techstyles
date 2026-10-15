@@ -997,7 +997,7 @@ function ProductLibrary({
           </p>
           <button className="btn" onClick={onCreate}>
             <Plus size={16} />
-            Create New Tech Pack
+            New tech pack
           </button>
         </div>
       ) : grid ? (

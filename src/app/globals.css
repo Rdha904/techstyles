@@ -277,7 +277,7 @@ svg {
   text-align: center;
   color: var(--graphite);
 }
-.empty svg {
+.empty > svg {
   margin-bottom: 12px;
 }
 .empty h3 {
