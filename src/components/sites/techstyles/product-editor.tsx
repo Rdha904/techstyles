@@ -2245,7 +2245,6 @@ export function ProductCanvas({
             style={{
               width: `${(720 * zoom) / 100}px`,
               maxWidth: zoom <= 100 ? "100%" : "none",
-              touchAction: "none",
               transform: `translate(${pan.x}px,${pan.y}px)`,
             }}
             onPointerDown={(e) => {
@@ -2323,7 +2322,6 @@ export function ProductCanvas({
                     y1={a.y}
                     x2={a.x2}
                     y2={a.y2}
-                    stroke="#4663bc"
                     strokeWidth=".3"
                   />
                 ))}

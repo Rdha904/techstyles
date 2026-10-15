@@ -1,9 +1,9 @@
-// The design-token allowlist may only go down as legacy CSS migrates to tokens.
+// Every CSS file must have zero color, radius or element-weight drift outside
+// the top-level token block. Font-face weight ranges describe font metadata.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { readFileSync, readdirSync } = require("node:fs");
 const path = require("node:path");
-const allowlist = require("./design-tokens-allowlist.json");
 
 const root = path.resolve(__dirname, "..");
 
@@ -11,6 +11,11 @@ function countDrift(css, isGlobals = false) {
   css = css.replace(/\/\*[\s\S]*?\*\//g, "");
   // Only the first, top-level token block in globals.css is exempt.
   if (isGlobals) css = css.replace(/^\s*:root\s*\{[^{}]*\}/, "");
+  // Custom properties cannot be used in @font-face descriptors. Keep the
+  // supported variable-font range literal, while checking other declarations.
+  css = css.replace(/@font-face\s*\{[^{}]*\}/gi, (block) =>
+    block.replace(/font-weight\s*:[^;{}]+;/gi, ""),
+  );
 
   const counts = { hex: 0, rgb: 0, borderRadius: 0, fontWeight: 0 };
   for (const declaration of css.matchAll(
@@ -36,7 +41,7 @@ function countDrift(css, isGlobals = false) {
     }
     if (
       property === "font-weight" &&
-      !/^(?:300|320|340|400|480|520|700|inherit|var\([^)]*\))$/.test(value)
+      !/^(?:320|340|400|480|520|700|inherit|var\([^)]*\))$/.test(value)
     ) {
       counts.fontWeight++;
     }
@@ -48,16 +53,16 @@ for (const file of readdirSync(path.join(root, "src"), { recursive: true })
   .filter((file) => file.endsWith(".css"))
   .sort()) {
   const relativePath = `src/${file.split(path.sep).join("/")}`;
-  test(`${relativePath} stays within its design-token allowlist`, () => {
+  test(`${relativePath} has zero design-token drift`, () => {
     const counts = countDrift(
       readFileSync(path.join(root, relativePath), "utf8"),
       relativePath === "src/app/globals.css",
     );
     for (const [category, count] of Object.entries(counts)) {
-      const allowed = allowlist[relativePath]?.[category] ?? 0;
-      assert.ok(
-        count <= allowed,
-        `${relativePath}: ${category} has ${count}, allowed ${allowed}. Use design tokens; do not increase the allowlist.`,
+      assert.equal(
+        count,
+        0,
+        `${relativePath}: ${category} has ${count}, expected zero. Use design tokens.`,
       );
     }
   });

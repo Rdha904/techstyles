@@ -42,15 +42,10 @@
   --r-pill: 50px;
   --shadow-float: rgba(0, 0, 0, 0.1) 0 24px 70px 0;
   --modal-backdrop: rgba(255, 255, 255, 0.5);
+  --navigation-backdrop: #15203966;
   --h-ctl: 32px;
   --h-ctl-lg: 40px;
   --h-input: 36px;
-
-  /* Temporary aliases while individual pages migrate. */
-  --blue: var(--indigo);
-  --line: var(--mist);
-  --muted: var(--graphite);
-  --bg: var(--paper);
 }
 @font-face {
   font-family: "Inter";
@@ -533,8 +528,8 @@ td input:hover {
   display: flex;
   gap: 14px;
   align-items: center;
-  border-bottom: 1px solid var(--line);
-  background: #fdfcfb;
+  border-bottom: 1px solid var(--mist);
+  background: var(--paper);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -547,7 +542,7 @@ td input:hover {
   margin: 0 0 3px;
 }
 .app-header small {
-  font-size: 11px;
+  font-size: var(--t-mono);
 }
 .app-content {
   padding: 24px;
@@ -579,6 +574,14 @@ td input:hover {
 }
 .workspace-settings-link:hover {
   text-decoration: underline;
+}
+.nav-expand-icon,
+.profile-settings {
+  margin-left: auto;
+}
+.workspace-search-input {
+  width: 100%;
+  margin: 20px 0;
 }
 .product-filters {
   display: flex;
@@ -706,26 +709,12 @@ td input:hover {
 .product-list td {
   padding-block: 4px;
 }
-.demo-divider {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 11px;
-  color: #9a7544;
-  margin: 28px 0 14px;
-}
-.demo-divider:after {
-  content: "";
-  height: 1px;
-  background: #e7dbb6;
-  flex: 1;
-}
 .recent-product {
   display: flex;
   gap: 12px;
   align-items: center;
   padding: 16px 24px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--mist);
 }
 .recent-product img {
   width: 40px;
@@ -808,7 +797,7 @@ td input:hover {
   padding: 20px;
 }
 .overview-info > small {
-  font-size: 10px;
+  font-size: var(--t-mono);
   letter-spacing: 0.7px;
 }
 .overview-info h1,
@@ -828,7 +817,7 @@ td input:hover {
 }
 .detail-grid small {
   display: block;
-  font-size: 10px;
+  font-size: var(--t-mono);
   margin-bottom: 7px;
 }
 .overview-info p {
@@ -881,7 +870,7 @@ td input:hover {
 }
 .sketch-view {
   border: 1px solid var(--mist);
-  border-radius: 10px;
+  border-radius: var(--r-ctl);
   overflow: hidden;
   position: relative;
 }
@@ -936,12 +925,12 @@ td input:hover {
 }
 .swatch {
   border: 1px solid var(--mist);
-  border-radius: 9px;
+  border-radius: var(--r-ctl);
   padding: 14px;
 }
 .swatch-color {
   height: 76px;
-  border-radius: 5px;
+  border-radius: var(--r-ctl);
   margin-bottom: 12px;
 }
 .swatch p {
@@ -1052,6 +1041,7 @@ td input:hover {
   position: relative;
 }
 .artboard {
+  touch-action: none;
   width: min(720px, 100%);
   aspect-ratio: 4/3;
   background: var(--paper);
@@ -1268,10 +1258,6 @@ td input:hover {
     transform: translateX(-100%);
     transition: transform 0.2s;
   }
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 0 0 0 100vmax #0004;
-  }
   .app-main {
     margin-left: 0;
   }
@@ -1343,7 +1329,7 @@ td input:hover {
     padding: 10px;
   }
   .artboard {
-    border-radius: 12px;
+    border-radius: var(--r-card);
   }
   .modal {
     padding: 20px;
@@ -1352,7 +1338,7 @@ td input:hover {
     grid-template-columns: 1fr;
   }
   .local-banner {
-    font-size: 10px;
+    font-size: var(--t-mono);
   }
   .print-pack {
     padding: 16px;
@@ -1424,10 +1410,6 @@ td input:hover {
 .contents a {
   white-space: nowrap;
 }
-.sidebar .brand {
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
 .nav-links {
   margin-bottom: 32px;
 }
@@ -1439,8 +1421,8 @@ td input:hover {
   margin-bottom: 26px;
 }
 .recent-product img {
-  border-radius: 9px;
-  background: #f3f3f2;
+  border-radius: var(--r-ctl);
+  background: var(--mist-soft);
 }
 .pack-cover {
   display: block;
@@ -1683,7 +1665,7 @@ td input:hover {
     display: block;
     position: fixed;
     inset: 0;
-    background: #15203966;
+    background: var(--navigation-backdrop);
     border: 0;
     z-index: 39;
   }
@@ -1768,9 +1750,12 @@ td input:hover {
     margin-bottom: 18px;
   }
   .primary-collapsed .primary-heading .brand {
-    font-size: 0;
+    font-size: var(--t-mono);
     padding: 0 0 8px;
     gap: 0;
+    width: 26px;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .primary-collapsed .module-sidebar .nav-label,
   .primary-collapsed .module-links a span,
@@ -2181,6 +2166,9 @@ td input:hover {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+.canvas-lines line {
+  stroke: var(--indigo);
 }
 .canvas-note .icon-button {
   padding: 2px;

@@ -118,7 +118,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 | 3. Dashboard | done | c4da66f |
 | 4. Products library and editor | done | 0c67198 |
 | 5. Sourcing | done | 182fb1d |
-| 6. Libraries, Settings, Concept, Brand Profile and Brand Book | queued | |
+| 6. Libraries, Settings, Concept, Brand Profile and Brand Book | done | 102da2a |
 | 7. Cleanup | queued | |
 
 ### Needs your eyes
@@ -133,3 +133,6 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 - **Long BOM values are shortened with "…"** so all six columns fit at 1440px without sideways scrolling. Hovering shows the full value, and clicking edits it as before.
 - **Uppercase labels are now sentence case** in the editor (for example "CORE PRODUCT INFORMATION" became "Core product information", and table headers like "MATERIAL" became "Material"). Printed and shared tech packs keep their original casing and layout. Only their fonts and colors changed, and Inter's taller line spacing makes the page slightly longer.
 - **Quote states have one look everywhere.** Draft, Sent and Quoted are light gray. Chosen is black and Declined is red. In the comparison, a chosen manufacturer's button reads "Chosen", and screen readers announce it as a pressed "Choose" button.
+- **Labels are in sentence case across the app.** For example "Brand Book" became "Brand book", "BOM Templates" became "BOM templates", and "All Projects" became "All projects". Module and product names (for example "Brand Profile" in the sidebar) keep their capitals. Inside the brand book document, the cover's "BRAND BOOK" label and the "PRIMARY TYPEFACE" captions are now in sentence case too. Say if you want that document to keep uppercase.
+- **Settings is split into three panels** (Storage, AI generation, Backup). "Export workspace data" is the page's main button.
+- **Delete icons in library tables are gray until you hover over them**, then they turn red.

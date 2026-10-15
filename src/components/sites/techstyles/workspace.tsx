@@ -579,7 +579,7 @@ export function Workspace({ path }: { path: string[] }) {
                         {key === "products" && (
                           <ChevronDown
                             size={14}
-                            style={{ marginLeft: "auto" }}
+                            className="nav-expand-icon"
                           />
                         )}
                       </Link>
@@ -659,8 +659,7 @@ export function Workspace({ path }: { path: string[] }) {
                 <Link
                   aria-label="Settings"
                   href="/settings"
-                  className="icon-button"
-                  style={{ marginLeft: "auto" }}
+                  className="icon-button profile-settings"
                 >
                   <Settings size={15} />
                 </Link>
@@ -818,7 +817,7 @@ export function Workspace({ path }: { path: string[] }) {
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
             placeholder="Search products, names or codes…"
-            style={{ width: "100%", margin: "20px 0" }}
+            className="workspace-search-input"
           />
           {products
             .filter((p) =>
@@ -917,11 +916,11 @@ function ProductLibrary({
           [
             category,
             setCategory,
-            "All Categories",
+            "All categories",
             products.map((p) => p.category),
           ],
-          [project, setProject, "All Projects", products.map((p) => p.project)],
-          [stage, setStage, "All Stages", products.map((p) => p.stage)],
+          [project, setProject, "All projects", products.map((p) => p.project)],
+          [stage, setStage, "All stages", products.map((p) => p.stage)],
         ].map(([v, set, label, options]) => (
           <select
             key={String(label)}
@@ -940,7 +939,7 @@ function ProductLibrary({
           value={manufacturerId}
           onChange={(e) => setManufacturerId(e.target.value)}
         >
-          <option value="">All Manufacturers</option>
+          <option value="">All manufacturers</option>
           {manufacturers.map((manufacturer) => (
             <option key={manufacturer.id} value={manufacturer.id}>
               {manufacturer.name}

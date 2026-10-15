@@ -996,7 +996,7 @@ export function BrandProfilePage() {
                           <input
                             id="brand-field-fonts"
                             aria-label="Font family name"
-                            placeholder="e.g. Figtree"
+                            placeholder="e.g. Inter"
                             value={newFont}
                             maxLength={120}
                             onChange={(e) => setNewFont(e.target.value)}

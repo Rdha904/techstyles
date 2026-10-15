@@ -1,8 +1,8 @@
 .inline-manufacturer {
   padding: 16px;
-  border: 1px solid #e0e2e7;
+  border: 1px solid var(--mist);
   border-radius: 8px;
-  background: #fbfcfe;
+  background: var(--paper);
 }
 .inline-manufacturer-actions {
   display: flex;

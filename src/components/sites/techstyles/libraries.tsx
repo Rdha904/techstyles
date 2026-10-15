@@ -230,7 +230,7 @@ export function LibraryPage({ collection }: { collection: string }) {
     collection === "colors" ? (
       <div
         className="library-color"
-        style={{ backgroundColor: item.color || "#718792" }}
+        style={{ backgroundColor: item.color || "var(--graphite)" }}
       >
         <span>{item.color}</span>
       </div>
