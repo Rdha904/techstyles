@@ -6,6 +6,10 @@ A workspace where a fashion brand founder defines their brand, develops products
 
 ### Brand
 
+**Founder**:
+The person who runs a fashion brand and works in its Workspace. Techstyles is built for founders in general; one founder per Workspace for now.
+_Avoid_: User, owner, customer
+
 **Workspace**:
 One brand's space in Techstyles: its Brand Profile, products, libraries and sourcing. It goes by the Brand Profile's name, or "My workspace" until one is set.
 _Avoid_: Studio, account, Local Studio
