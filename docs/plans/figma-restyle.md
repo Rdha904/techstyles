@@ -1,6 +1,6 @@
 # Figma-style restyle — plan
 
-Status: approved 2026-10-15, in progress on branch `figma-restyle` (one PR, one commit per task).
+Status: implemented 2026-10-15 on branch `figma-restyle` (one PR, one commit per task).
 Visual reference: `docs/design/dashboard-preview-figma.html` (built from `docs/design/DESIGN_Figma.md`).
 Scope: the desktop app at 1440px, light theme only. Mobile stays out of scope.
 
@@ -119,7 +119,7 @@ Each task is one reviewable diff. `npm run check` and `npm test` must pass after
 | 4. Products library and editor | done | 0c67198 |
 | 5. Sourcing | done | 182fb1d |
 | 6. Libraries, Settings, Concept, Brand Profile and Brand Book | done | 102da2a |
-| 7. Cleanup | queued | |
+| 7. Cleanup | done | 3734bec |
 
 ### Needs your eyes
 
