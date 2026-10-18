@@ -64,6 +64,7 @@ import { Modal, Brand } from "./ui";
 import { SourcingPanel } from "./sourcing-panel";
 import { ProductForm } from "./product-form";
 import { ProductImage } from "./product-image";
+import { DeleteProductDialog } from "./delete-product-dialog";
 import { useProductDraft, saveInBackground } from "./use-product-draft";
 const sectionLabels: Record<ProductSection, string> = {
   overview: "Overview",
@@ -242,6 +243,7 @@ export function ProductEditor({
   onQuoteRequestDelete = () => {},
   onChange,
   onToggleSidebar,
+  onDeleted,
 }: {
   product: Product;
   identity: WorkspaceIdentity;
@@ -252,6 +254,7 @@ export function ProductEditor({
   onQuoteRequestDelete?: (id: string) => void;
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
+  onDeleted: (id: string) => void;
 }) {
   const {
     draft,
@@ -490,6 +493,14 @@ export function ProductEditor({
                 >
                   <Archive size={14} />
                   &nbsp; {p.archived ? "Unarchive" : "Archive"}
+                </button>
+                <button
+                  className="btn product-delete-action"
+                  disabled={saving}
+                  onClick={() => setModal("delete")}
+                >
+                  <Trash2 size={14} />
+                  Delete product
                 </button>
               </div>
             </Section>
@@ -1161,6 +1172,13 @@ export function ProductEditor({
             draft.replace(x);
             setModal("");
           }}
+        />
+      )}
+      {modal === "delete" && (
+        <DeleteProductDialog
+          product={p}
+          onClose={() => setModal("")}
+          onDeleted={onDeleted}
         />
       )}
       {modal === "color" && (

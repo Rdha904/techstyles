@@ -63,6 +63,13 @@ export async function uploadFile(
 
 export const assetsPath = "/sites/techstyles/";
 
+export const productsApi = {
+  delete: (id: string) =>
+    request<{ ok: true }>(`/api/products/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+};
+
 export const manufacturersApi = {
   list: () => request<Manufacturer[]>("/api/manufacturers"),
   get: (id: string) =>
