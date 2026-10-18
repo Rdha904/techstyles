@@ -47,7 +47,7 @@ A manufacturer's answer to a Quote Request: one unit price, MOQ and lead times f
 _Avoid_: Offer, bid, estimate
 
 **Sample**:
-One sample round a Manufacturer makes for a Quote Request, so for one product. It is requested, received and reviewed against the tech pack, and ends approved or with corrections that start the next round. Sourcing data, never part of the tech pack.
+One sample round a Manufacturer makes for a Quote Request, so for one product, against the tech pack as it was when requested. It is requested, received and reviewed area by area, and ends Approved, Corrections requested (the next round is a new Sample) or Cancelled. Sourcing data, never part of the tech pack.
 _Avoid_: Prototype, sampling (for the record; "Samplings" is the tech pack section describing what samples to make)
 
 **Correction Sheet**:
