@@ -9,6 +9,7 @@ import {
   type WorkspaceData,
 } from "./store";
 import { migrateManufacturers } from "./manufacturers";
+import { migrateSamplings } from "./samplings";
 import { DEFAULT_WORKSPACE_ID } from "./workspace";
 import type { WorkspaceRepository } from "./repository";
 
@@ -174,6 +175,10 @@ function normalize(data: WorkspaceData) {
       archived: false,
     };
     Object.assign(product, { ...defaults, ...product });
+    const samples = migrateSamplings(product.samples);
+    if (JSON.stringify(samples) !== JSON.stringify(product.samples))
+      changed = true;
+    product.samples = samples;
     for (const version of product.versions) {
       const clean = snapshot({ ...defaults, ...version.snapshot } as Product);
       if (JSON.stringify(clean) !== JSON.stringify(version.snapshot))

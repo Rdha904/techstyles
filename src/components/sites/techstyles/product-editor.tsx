@@ -945,7 +945,7 @@ export function ProductEditor({
                           size: p.baseSize || "M",
                           color: p.colors[0]?.name || "",
                           quantity: 1,
-                          status: "Requested",
+                          note: "",
                         },
                       ],
                     })
@@ -967,7 +967,7 @@ export function ProductEditor({
                   </colgroup>
                   <thead>
                     <tr>
-                      {["Size", "Colorway", "Quantity", "Status", ""].map(
+                      {["Size", "Colorway", "Quantity", "Note", ""].map(
                         (h) => (
                           <th key={h}>{h}</th>
                         ),
@@ -977,7 +977,7 @@ export function ProductEditor({
                   <tbody>
                     {p.samples.map((s) => (
                       <tr key={s.id}>
-                        {(["size", "color", "quantity", "status"] as const).map(
+                        {(["size", "color", "quantity", "note"] as const).map(
                           (k) => (
                             <td
                               key={k}
@@ -990,8 +990,8 @@ export function ProductEditor({
                               <input
                                 aria-label={`Sample ${k}`}
                                 key={`${s.id}-${k}-${s[k]}`}
-                                defaultValue={s[k]}
-                                title={String(s[k])}
+                                defaultValue={s[k] ?? ""}
+                                title={String(s[k] ?? "")}
                                 type={k === "quantity" ? "number" : "text"}
                                 min={0}
                                 onBlur={(e) =>
@@ -1928,7 +1928,8 @@ export function SharedProduct({
         <Section id="samplings" title="Samplings">
           {p.samples.map((s) => (
             <p key={s.id}>
-              {s.size} · {s.color} · {s.quantity} units · {s.status}
+              {s.size} · {s.color} · {s.quantity} units
+              {s.note && ` · ${s.note}`}
             </p>
           ))}
         </Section>

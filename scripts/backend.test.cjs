@@ -89,10 +89,10 @@ test('new production fields validate and shared payload redacts excluded section
   assert.equal(store.emptyProduct().measurementUnit,'cm');
   assert.equal(validation.productPatch({measurementUnit:'in'}).measurementUnit,'in');
   assert.throws(() => validation.productPatch({measurementUnit:'mm'}));
-  const patch = validation.productPatch({attachments:[{id:'a',name:'File',url:'/api/uploads/file.pdf'}],artworks:[],samples:[{id:'s',size:'M',color:'Black',quantity:2,status:'Requested'}],excludedSections:['attachments','samplings','bom','packaging','sketch'],archived:true,annotations:[{id:'m',text:'Width',x:0,y:20,x2:100,y2:20}]});
+  const patch = validation.productPatch({attachments:[{id:'a',name:'File',url:'/api/uploads/file.pdf'}],artworks:[],samples:[{id:'s',size:'M',color:'Black',quantity:2,note:'logo print, no wash'}],excludedSections:['attachments','samplings','bom','packaging','sketch'],archived:true,annotations:[{id:'m',text:'Width',x:0,y:20,x2:100,y2:20}]});
   assert.equal(patch.samples[0].quantity,2);
   assert.equal(patch.annotations[0].x2,100);
-  assert.throws(() => validation.productPatch({samples:[{id:'s',size:'M',color:'Black',quantity:-1,status:'Requested'}]}));
+  assert.throws(() => validation.productPatch({samples:[{id:'s',size:'M',color:'Black',quantity:-1,note:'logo print, no wash'}]}));
   assert.throws(() => validation.productPatch({attachments:[{id:'a',name:'Bad',url:'/sites/techstyles/../../secret'}]}));
   const product = {...store.emptyProduct(),...patch,comments:[{id:'c',section:'overview',author:'Me',text:'Private',createdAt:'now'}],labels:'Private label',sketch:'/sites/techstyles/image.png'};
   const shared = require('../src/lib/share.ts').sharedProduct(product);

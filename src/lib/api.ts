@@ -58,7 +58,7 @@ const rows = {
   annotations: ["id", "text"],
   attachments: ["id", "name", "url"],
   artworks: ["id", "name", "url"],
-  samples: ["id", "size", "color", "status"],
+  samples: ["id", "size", "color"],
 } as const;
 export function localAssetUrl(value: string) {
   return (
@@ -126,6 +126,7 @@ export function productPatch(input: Record<string, unknown>): Partial<Product> {
             throw new ApiError("Use an uploaded or bundled asset");
         }
         if (key === "samples") {
+          if (row.note !== undefined) clean.note = string(row.note, "note");
           if (
             typeof row.quantity !== "number" ||
             !Number.isInteger(row.quantity) ||

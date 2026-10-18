@@ -8,6 +8,7 @@ import type {
   QuoteRequest,
 } from "./types";
 import type { BrandBook, BrandProfile } from "./brand-types";
+import { migrateSamplings } from "./samplings";
 
 /** Everything that belongs to one workspace (one brand / customer). */
 export interface WorkspaceData {
@@ -94,11 +95,13 @@ const snapshotFields = new Set<keyof ProductSnapshot>([
   "measurementUnit",
 ]);
 export function snapshot(product: Product): ProductSnapshot {
-  return structuredClone(
+  const content = structuredClone(
     Object.fromEntries(
       Object.entries(product).filter(([key]) =>
         snapshotFields.has(key as keyof ProductSnapshot),
       ),
     ),
   ) as unknown as ProductSnapshot;
+  content.samples = migrateSamplings(content.samples ?? []);
+  return content;
 }

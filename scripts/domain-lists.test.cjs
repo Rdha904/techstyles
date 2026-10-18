@@ -35,7 +35,7 @@ function populatedProduct() {
     annotations: [{ id: 'a', x: 10, y: 20, text: 'Annotation' }],
     attachments: [{ id: 'a', name: 'File', url: '/api/uploads/file.pdf' }],
     artworks: [{ id: 'a', name: 'Print', url: '/api/uploads/print.png' }],
-    samples: [{ id: 's', size: 'M', color: 'Black', quantity: 2, status: 'Requested' }],
+    samples: [{ id: 's', size: 'M', color: 'Black', quantity: 2, note: 'logo print, no wash' }],
     versions: [{ id: 'v', name: 'Original', createdAt: 'now', snapshot: snapshot(emptyProduct()) }],
     shareToken: 'private-token',
   };
