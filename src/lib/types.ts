@@ -69,7 +69,7 @@ export interface ProductSample {
   size: string;
   color: string;
   quantity: number;
-  status: string;
+  note?: string;
 }
 export interface ProductSnapshot {
   name: string;

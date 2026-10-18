@@ -64,6 +64,7 @@ import { Modal, Brand } from "./ui";
 import { SourcingPanel } from "./sourcing-panel";
 import { ProductForm } from "./product-form";
 import { ProductImage } from "./product-image";
+import { DeleteProductDialog } from "./delete-product-dialog";
 import { useProductDraft, saveInBackground } from "./use-product-draft";
 const sectionLabels: Record<ProductSection, string> = {
   overview: "Overview",
@@ -242,6 +243,7 @@ export function ProductEditor({
   onQuoteRequestDelete = () => {},
   onChange,
   onToggleSidebar,
+  onDeleted,
 }: {
   product: Product;
   identity: WorkspaceIdentity;
@@ -252,6 +254,7 @@ export function ProductEditor({
   onQuoteRequestDelete?: (id: string) => void;
   onChange: (p: Product) => void;
   onToggleSidebar: () => void;
+  onDeleted: (id: string) => void;
 }) {
   const {
     draft,
@@ -490,6 +493,14 @@ export function ProductEditor({
                 >
                   <Archive size={14} />
                   &nbsp; {p.archived ? "Unarchive" : "Archive"}
+                </button>
+                <button
+                  className="btn product-delete-action"
+                  disabled={saving}
+                  onClick={() => setModal("delete")}
+                >
+                  <Trash2 size={14} />
+                  Delete product
                 </button>
               </div>
             </Section>
@@ -934,7 +945,7 @@ export function ProductEditor({
                           size: p.baseSize || "M",
                           color: p.colors[0]?.name || "",
                           quantity: 1,
-                          status: "Requested",
+                          note: "",
                         },
                       ],
                     })
@@ -956,7 +967,7 @@ export function ProductEditor({
                   </colgroup>
                   <thead>
                     <tr>
-                      {["Size", "Colorway", "Quantity", "Status", ""].map(
+                      {["Size", "Colorway", "Quantity", "Note", ""].map(
                         (h) => (
                           <th key={h}>{h}</th>
                         ),
@@ -966,7 +977,7 @@ export function ProductEditor({
                   <tbody>
                     {p.samples.map((s) => (
                       <tr key={s.id}>
-                        {(["size", "color", "quantity", "status"] as const).map(
+                        {(["size", "color", "quantity", "note"] as const).map(
                           (k) => (
                             <td
                               key={k}
@@ -979,8 +990,8 @@ export function ProductEditor({
                               <input
                                 aria-label={`Sample ${k}`}
                                 key={`${s.id}-${k}-${s[k]}`}
-                                defaultValue={s[k]}
-                                title={String(s[k])}
+                                defaultValue={s[k] ?? ""}
+                                title={String(s[k] ?? "")}
                                 type={k === "quantity" ? "number" : "text"}
                                 min={0}
                                 onBlur={(e) =>
@@ -1161,6 +1172,13 @@ export function ProductEditor({
             draft.replace(x);
             setModal("");
           }}
+        />
+      )}
+      {modal === "delete" && (
+        <DeleteProductDialog
+          product={p}
+          onClose={() => setModal("")}
+          onDeleted={onDeleted}
         />
       )}
       {modal === "color" && (
@@ -1910,7 +1928,8 @@ export function SharedProduct({
         <Section id="samplings" title="Samplings">
           {p.samples.map((s) => (
             <p key={s.id}>
-              {s.size} · {s.color} · {s.quantity} units · {s.status}
+              {s.size} · {s.color} · {s.quantity} units
+              {s.note && ` · ${s.note}`}
             </p>
           ))}
         </Section>

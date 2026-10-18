@@ -25,7 +25,7 @@ import {
   Clock,
   Bell,
   Archive,
-  MoreHorizontal,
+  Trash2,
   Lightbulb,
   Factory,
   ClipboardCheck,
@@ -55,6 +55,7 @@ import { request, manufacturersApi, quoteRequestsApi } from "@/lib/client-api";
 import { Modal, Brand } from "./ui";
 import { ProductForm } from "./product-form";
 import { ProductImage } from "./product-image";
+import { DeleteProductDialog } from "./delete-product-dialog";
 import {
   navRoutes,
   moduleRoutes,
@@ -211,6 +212,11 @@ export function Workspace({ path }: { path: string[] }) {
         ? old.map((item) => (item.id === manufacturer.id ? manufacturer : item))
         : [manufacturer, ...old],
     );
+  }
+  function productDeleted(id: string) {
+    setProducts((old) => old.filter((item) => item.id !== id));
+    setQuoteRequests((old) => old.filter((item) => item.productId !== id));
+    notify("Product deleted.");
   }
   function saveQuoteRequest(request: QuoteRequest) {
     setQuoteRequests((old) => [
@@ -423,6 +429,7 @@ export function Workspace({ path }: { path: string[] }) {
             products={products}
             manufacturers={manufacturers}
             onCreate={() => setCreate(true)}
+            onDeleted={productDeleted}
           />
         );
       case "product-library":
@@ -431,6 +438,7 @@ export function Workspace({ path }: { path: string[] }) {
             products={products}
             manufacturers={manufacturers}
             onCreate={() => setCreate(true)}
+            onDeleted={productDeleted}
           />
         );
       case "settings":
@@ -751,6 +759,10 @@ export function Workspace({ path }: { path: string[] }) {
               setProducts((old) => old.map((x) => (x.id === p.id ? p : x)))
             }
             onToggleSidebar={toggleSecondary}
+            onDeleted={(id) => {
+              productDeleted(id);
+              router.replace("/products");
+            }}
           />
         ) : (
           <>
@@ -872,10 +884,12 @@ function ProductLibrary({
   products,
   manufacturers,
   onCreate,
+  onDeleted,
 }: {
   products: Product[];
   manufacturers: Manufacturer[];
   onCreate: () => void;
+  onDeleted: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -885,6 +899,7 @@ function ProductLibrary({
   const [sort, setSort] = useState("updated");
   const [grid, setGrid] = useState(true);
   const [archived, setArchived] = useState(false);
+  const [deleting, setDeleting] = useState<Product | null>(null);
   const filtered = products
     .filter(
       (p) =>
@@ -1003,32 +1018,40 @@ function ProductLibrary({
       ) : grid ? (
         <div className="product-grid">
           {filtered.map((p) => (
-            <Link
-              className="product-card"
-              key={p.id}
-              href={`/products/${p.id}`}
-            >
-              <div className="product-card-image">
-                <ProductImage product={p} size="tile" />
-                <span
-                  className={`badge product-stage ${p.stage.toLowerCase()}`}
+            <article className="product-card" key={p.id}>
+              <Link href={`/products/${p.id}`}>
+                <div className="product-card-image">
+                  <ProductImage product={p} size="tile" />
+                  <span
+                    className={`badge product-stage ${p.stage.toLowerCase()}`}
+                  >
+                    {p.stage}
+                  </span>
+                </div>
+                <div className="product-card-text">
+                  <h3>
+                    {p.name}
+                    {p.id === "demo-hoodie" && (
+                      <span className="badge product-demo">Demo</span>
+                    )}
+                  </h3>
+                  <code>{p.code}</code>
+                  <p>
+                    {p.category} · {p.project || "—"}
+                  </p>
+                </div>
+              </Link>
+              <div className="product-card-actions">
+                <button
+                  className="btn product-delete-action"
+                  aria-label={`Delete ${p.name}`}
+                  onClick={() => setDeleting(p)}
                 >
-                  {p.stage}
-                </span>
+                  <Trash2 size={14} />
+                  Delete
+                </button>
               </div>
-              <div className="product-card-text">
-                <h3>
-                  {p.name}
-                  {p.id === "demo-hoodie" && (
-                    <span className="badge product-demo">Demo</span>
-                  )}
-                </h3>
-                <code>{p.code}</code>
-                <p>
-                  {p.category} · {p.project || "—"}
-                </p>
-              </div>
-            </Link>
+            </article>
           ))}
         </div>
       ) : (
@@ -1071,18 +1094,30 @@ function ProductLibrary({
                     {new Date(p.updatedAt).toLocaleDateString("en-US")}
                   </td>
                   <td>
-                    <Link
-                      aria-label={`Open ${p.name}`}
-                      href={`/products/${p.id}`}
+                    <button
+                      className="btn product-delete-action"
+                      aria-label={`Delete ${p.name}`}
+                      onClick={() => setDeleting(p)}
                     >
-                      <MoreHorizontal size={16} />
-                    </Link>
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {deleting && (
+        <DeleteProductDialog
+          product={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={(id) => {
+            setDeleting(null);
+            onDeleted(id);
+          }}
+        />
       )}
     </>
   );
