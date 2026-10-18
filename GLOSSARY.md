@@ -45,3 +45,11 @@ _Avoid_: RFQ, inquiry, sourcing request
 **Quote**:
 A manufacturer's answer to a Quote Request: one unit price, MOQ and lead times for the whole product. Part of its Quote Request, not a record of its own.
 _Avoid_: Offer, bid, estimate
+
+**Sample**:
+One sample round a Manufacturer makes for a Quote Request, so for one product. It is requested, received and reviewed against the tech pack, and ends approved or with corrections that start the next round. Sourcing data, never part of the tech pack.
+_Avoid_: Prototype, sampling (for the record; "Samplings" is the tech pack section describing what samples to make)
+
+**Correction Sheet**:
+The printed or PDF summary of one Sample's review that the founder sends to its Manufacturer: the corrections and the tech pack sections they refer to, nothing about other Manufacturers or prices.
+_Avoid_: Comments, feedback report
